@@ -52,7 +52,7 @@
 ### Enabler EN3 — Export — `src/Shared/BuildingBlocks/Export/`
 - [x] **T017 — Export packages.** Add `ClosedXML` + `QuestPDF` to `Directory.Packages.props`; reference from `BuildingBlocks.csproj`.
   - *Accept:* restore succeeds; versions pinned.
-- [ ] **T018 — Export contracts + Excel.** `ExportFormat` enum, `ExportColumn` record, `IGridExporter` interface; `ExcelGridExporter` (ClosedXML) — headers from `ExportColumn`, typed cells.
+- [x] **T018 — Export contracts + Excel.** `ExportFormat` enum, `ExportColumn` record, `IGridExporter` interface; `ExcelGridExporter` (ClosedXML) — headers from `ExportColumn`, typed cells.
   - *Accept:* produces a valid `.xlsx` byte array from sample rows.
 - [ ] **T019 — PDF exporter (RTL).** `PdfGridExporter` (QuestPDF) — document `DirectionFromRightToLeft`, embed Arabic font (Cairo/Amiri under `BuildingBlocks/Assets/`), table of columns/rows, title.
   - *Accept:* Arabic header text renders RTL in the produced PDF.
