@@ -11,4 +11,3 @@ public interface IExpenseRepository
     /** <summary>Saves.</summary> */
     Task SaveChangesAsync(CancellationToken ct);
 }
-

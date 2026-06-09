@@ -20,4 +20,3 @@ public sealed class ExpensesModule:IModule
     /** <inheritdoc/> */
     public void MapEndpoints(IEndpointRouteBuilder endpoints)=>endpoints.MapEndpointsFromAssembly(typeof(ExpensesModule).Assembly);
 }
-

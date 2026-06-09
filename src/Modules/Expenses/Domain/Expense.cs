@@ -28,4 +28,3 @@ public sealed class Expense : AggregateRoot
     { if(string.IsNullOrWhiteSpace(category))return ExpenseErrors.CategoryRequired; if(amount<=0)return ExpenseErrors.AmountInvalid; if(string.IsNullOrWhiteSpace(payee))return ExpenseErrors.PayeeRequired; Category=category.Trim(); Amount=amount; Date=date; Payee=payee.Trim(); Notes=Normalize(notes); UpdatedAtUtc=DateTime.UtcNow; return this; }
     private static string? Normalize(string? value)=>string.IsNullOrWhiteSpace(value)?null:value.Trim();
 }
-

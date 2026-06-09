@@ -12,4 +12,3 @@ public static class ExpenseErrors
     /** <summary>Not found.</summary> */
     public static Error NotFound(Guid id)=>Error.NotFound("expenses.not_found",$"Expense '{id}' was not found.");
 }
-

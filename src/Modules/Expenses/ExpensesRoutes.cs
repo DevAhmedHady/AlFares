@@ -7,4 +7,3 @@ public static class ExpensesRoutes
     /** <summary>Tag.</summary> */
     public const string Tag="Expenses";
 }
-
