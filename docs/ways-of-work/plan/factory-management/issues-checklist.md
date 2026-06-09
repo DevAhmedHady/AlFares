@@ -106,7 +106,7 @@
 - [x] **T061 — Persistence.** `DashboardChartsDbContext` schema `dashboard`; `chart_definitions` table with `colors_json`/`filters_json` as `jsonb`; factory.
 - [x] **T062 — Registry consumer.** `ChartDataSourceRegistry(IEnumerable<IChartDataSource>)` — `All()` → metadata list, `Get(key)`; register scoped.
 - [x] **T063 — Features.** CreateChart/UpdateChart/DeleteChart/GetCharts; GetDatasources (from registry); GetChartData (load def → `registry.Get(DatasourceKey)` → build `ChartComputeRequest` → `ComputeAsync`; missing key → `Error.NotFound`); PreviewChartData (unsaved def).
-- [ ] **T064 — Endpoints.** `GET /api/dashboard/datasources` (manage), `GET/POST /charts` , `PUT/DELETE /charts/{id}`, `GET /charts/{id}/data` (read), `POST /charts/preview` (manage). Permissions `dashboard.charts.read/manage`.
+- [x] **T064 — Endpoints.** `GET /api/dashboard/datasources` (manage), `GET/POST /charts` , `PUT/DELETE /charts/{id}`, `GET /charts/{id}/data` (read), `POST /charts/preview` (manage). Permissions `dashboard.charts.read/manage`.
 - [ ] **T065 — Palette + default charts seeder.** `DashboardPalette` constant; `DashboardChartsSeeder` (idempotent by Title): Pie clients-by-status(Count); Bar expenses-by-category(Sum); Bar todos-by-priority(Count); Line expenses-over-time(Sum, month-bucket).
 - [ ] **T066 — TEST: Dashboard.** Preview pie(clients,status,Count) → series; save → appears in `GET /charts`; `GET /charts/{id}/data` returns series; removed datasource key → NotFound.
 
