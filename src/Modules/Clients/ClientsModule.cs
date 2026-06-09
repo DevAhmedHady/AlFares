@@ -1,4 +1,6 @@
 using BuildingBlocks.Endpoints;
+using BuildingBlocks.Charts;
+using Clients.Charts;
 using BuildingBlocks.Modules;
 using BuildingBlocks.Persistence;
 using Clients.Domain;
@@ -19,6 +21,7 @@ public sealed class ClientsModule : IModule
         ArgumentNullException.ThrowIfNull(config);
         services.AddModuleDbContext<ClientsDbContext>(config, Name, ClientsDbContext.Schema);
         services.AddScoped<IClientRepository, ClientRepository>();
+        services.AddScoped<IChartDataSource, ClientsChartDataSource>();
     }
     /// <inheritdoc />
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => endpoints.MapEndpointsFromAssembly(typeof(ClientsModule).Assembly);
