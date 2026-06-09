@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Framework-free domain primitives shared by every module. -->
+
+</Project>

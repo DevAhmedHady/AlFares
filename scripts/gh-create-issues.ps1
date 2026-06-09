@@ -10,19 +10,25 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$IssuesFile = "$PSScriptRoot/issues.json",
-    [string]$MapFile    = "$PSScriptRoot/issue-map.json"
+    [string]$IssuesFile,
+    [string]$MapFile
 )
 
 $ErrorActionPreference = 'Stop'
 
-$tasks = Get-Content $IssuesFile -Raw | ConvertFrom-Json
+if (-not $IssuesFile) { $IssuesFile = Join-Path $PSScriptRoot 'issues.json' }
+if (-not $MapFile) { $MapFile = Join-Path $PSScriptRoot 'issue-map.json' }
+
+$tasks = Get-Content $IssuesFile -Raw -Encoding utf8 | ConvertFrom-Json
 
 # Existing titles (avoid duplicates on re-run)
 $existing = @{}
-gh issue list --state all --limit 500 --json number,title |
-    ConvertFrom-Json |
-    ForEach-Object { $existing[$_.title] = $_.number }
+$existingIssues = gh issue list --state all --limit 500 --json number,title | ConvertFrom-Json
+foreach ($issue in @($existingIssues)) {
+    if ($null -ne $issue -and $null -ne $issue.title) {
+        $existing[$issue.title] = $issue.number
+    }
+}
 
 $map = @{}
 

@@ -19,12 +19,12 @@
 
 ## Milestone M0 — Scaffold & Config  (Feature F1, P0)
 
-- [ ] **T001 — Copy template → Factory solution.** Copy `knights-templates` to `C:\Users\AhmedHady\source\repos\Factory`. Rename `knights.slnx` → `Factory.slnx`. Update solution-name references.
+- [x] **T001 — Copy template → Factory solution.** Copy `knights-templates` to `C:\Users\AhmedHady\source\repos\Factory`. Rename `knights.slnx` → `Factory.slnx`. Update solution-name references.
   - *Files:* whole tree; `Factory.slnx`.
   - *Accept:* `dotnet build Factory.slnx` succeeds on the unmodified copy.
-- [ ] **T002 — Remove sample modules.** Delete `src/Modules/Catalog` and `src/Modules/Ordering`; remove their `ProjectReference` from `src/Api/Api.csproj` and their `typeof(...).Assembly` lines + `using` from `src/Api/Program.cs`.
+- [x] **T002 — Remove sample modules.** Delete `src/Modules/Catalog` and `src/Modules/Ordering`; remove their `ProjectReference` from `src/Api/Api.csproj` and their `typeof(...).Assembly` lines + `using` from `src/Api/Program.cs`.
   - *Accept:* `dotnet build` succeeds; no Catalog/Ordering symbols remain.
-- [ ] **T003 — App config for الفارس.** In `src/Api/appsettings.json`: `ConnectionStrings:Default` → `Database=alfaris`; `Jwt:Issuer`/`Audience` → `al-faris`; add `Seed` section: `AdminEmail=admin@alfaris.local`, `AdminPassword`, `TenantName=الفارس`, `TenantSlug=al-faris`. Add a strongly-typed `SeedOptions` bound via `IConfiguration`.
+- [x] **T003 — App config for الفارس.** In `src/Api/appsettings.json`: `ConnectionStrings:Default` → `Database=alfaris`; `Jwt:Issuer`/`Audience` → `al-faris`; add `Seed` section: `AdminEmail=admin@alfaris.local`, `AdminPassword`, `TenantName=الفارس`, `TenantSlug=al-faris`. Add a strongly-typed `SeedOptions` bound via `IConfiguration`.
   - *Files:* `appsettings.json`, `appsettings.Development.json`, new `Api/Configuration/SeedOptions.cs`.
   - *Accept:* app boots reading `SeedOptions`; secrets not hard-coded.
 
@@ -33,32 +33,32 @@
 ## Milestone M1 — Shared Infra (Feature F2, P0) 🔶 linchpin
 
 ### Enabler EN1 — Grid query engine — `src/Shared/BuildingBlocks/Grids/`
-- [ ] **T010 — Grid DTOs.** `GridQuery`, `GridSort`, `GridFilter`, `GridFilterOp` enum, `PagedResult<T>` (with `TotalPages`).
+- [x] **T010 — Grid DTOs.** `GridQuery`, `GridSort`, `GridFilter`, `GridFilterOp` enum, `PagedResult<T>` (with `TotalPages`).
   - *Accept:* records compile; `PageSize` clamped helper present.
-- [ ] **T011 — Grid field metadata.** `GridFieldType` enum; `GridField` record (Key, DisplayName, Type, Searchable, Sortable, Filterable, Chartable); `GridFieldMap<T>` (Fields list + `Expression<Func<T,object?>> Selector(string key)`).
+- [x] **T011 — Grid field metadata.** `GridFieldType` enum; `GridField` record (Key, DisplayName, Type, Searchable, Sortable, Filterable, Chartable); `GridFieldMap<T>` (Fields list + `Expression<Func<T,object?>> Selector(string key)`).
   - *Accept:* a map can be built statically per entity; lookups by key O(1).
-- [ ] **T012 — `ApplyGridQuery` engine.** `GridQueryExtensions.ApplyGridQuery<T>(IQueryable<T>, GridQuery, GridFieldMap<T>) → Result<IQueryable<T>>`: validate every Sort/Filter/Search field against the map (unknown → `Error.Validation("grid.unknown_field", key)`); fold Sort into `OrderBy/ThenBy`; AND per-column filters (build `BinaryExpression`/`string.Contains`/comparisons per op, parse value to CLR type from `GridFieldType`); OR global `Search` across `Searchable` text fields. **Hand-rolled expressions — do NOT add System.Linq.Dynamic.Core.**
+- [x] **T012 — `ApplyGridQuery` engine.** `GridQueryExtensions.ApplyGridQuery<T>(IQueryable<T>, GridQuery, GridFieldMap<T>) → Result<IQueryable<T>>`: validate every Sort/Filter/Search field against the map (unknown → `Error.Validation("grid.unknown_field", key)`); fold Sort into `OrderBy/ThenBy`; AND per-column filters (build `BinaryExpression`/`string.Contains`/comparisons per op, parse value to CLR type from `GridFieldType`); OR global `Search` across `Searchable` text fields. **Hand-rolled expressions — do NOT add System.Linq.Dynamic.Core.**
   - *Accept:* unknown field returns failure (no exception); valid query returns filtered `IQueryable`.
-- [ ] **T013 — `ToPagedResultAsync`.** `ToPagedResultAsync<T,TOut>(IQueryable<T>, GridQuery, Expression<Func<T,TOut>> projection, CancellationToken) → Task<PagedResult<TOut>>`: COUNT then Skip/Take; clamp `PageSize` to [1..200].
+- [x] **T013 — `ToPagedResultAsync`.** `ToPagedResultAsync<T,TOut>(IQueryable<T>, GridQuery, Expression<Func<T,TOut>> projection, CancellationToken) → Task<PagedResult<TOut>>`: COUNT then Skip/Take; clamp `PageSize` to [1..200].
   - *Accept:* returns correct `TotalCount` + page slice.
-- [ ] **T014 — TEST: grid engine.** Unit tests over an in-memory/SQLite `IQueryable`: each `GridFilterOp`, multi-column sort precedence, global search OR, unknown-field rejection, page clamping.
+- [x] **T014 — TEST: grid engine.** Unit tests over an in-memory/SQLite `IQueryable`: each `GridFilterOp`, multi-column sort precedence, global search OR, unknown-field rejection, page clamping.
   - *Accept:* all pass.
 
 ### Enabler EN2 — Chart registry contracts — `src/Shared/BuildingBlocks/Charts/`
-- [ ] **T015 — Chart contracts.** `ChartAggregation` enum; `ChartPoint`, `ChartSeries`, `ChartFieldDescriptor`, `ChartDataSourceMetadata`, `ChartComputeRequest` (reuse `GridFilter`/`GridFieldType`).
-- [ ] **T016 — `IChartDataSource`.** Interface: `Key`, `DisplayName`, `Describe()`, `ComputeAsync(ChartComputeRequest, CancellationToken)`. XML-doc the inversion contract (implemented by grid modules, consumed by Dashboard via DI).
+- [x] **T015 — Chart contracts.** `ChartAggregation` enum; `ChartPoint`, `ChartSeries`, `ChartFieldDescriptor`, `ChartDataSourceMetadata`, `ChartComputeRequest` (reuse `GridFilter`/`GridFieldType`).
+- [x] **T016 — `IChartDataSource`.** Interface: `Key`, `DisplayName`, `Describe()`, `ComputeAsync(ChartComputeRequest, CancellationToken)`. XML-doc the inversion contract (implemented by grid modules, consumed by Dashboard via DI).
   - *Accept:* interface compiles; no dependency on any module.
 
 ### Enabler EN3 — Export — `src/Shared/BuildingBlocks/Export/`
-- [ ] **T017 — Export packages.** Add `ClosedXML` + `QuestPDF` to `Directory.Packages.props`; reference from `BuildingBlocks.csproj`.
+- [x] **T017 — Export packages.** Add `ClosedXML` + `QuestPDF` to `Directory.Packages.props`; reference from `BuildingBlocks.csproj`.
   - *Accept:* restore succeeds; versions pinned.
-- [ ] **T018 — Export contracts + Excel.** `ExportFormat` enum, `ExportColumn` record, `IGridExporter` interface; `ExcelGridExporter` (ClosedXML) — headers from `ExportColumn`, typed cells.
+- [x] **T018 — Export contracts + Excel.** `ExportFormat` enum, `ExportColumn` record, `IGridExporter` interface; `ExcelGridExporter` (ClosedXML) — headers from `ExportColumn`, typed cells.
   - *Accept:* produces a valid `.xlsx` byte array from sample rows.
-- [ ] **T019 — PDF exporter (RTL).** `PdfGridExporter` (QuestPDF) — document `DirectionFromRightToLeft`, embed Arabic font (Cairo/Amiri under `BuildingBlocks/Assets/`), table of columns/rows, title.
+- [x] **T019 — PDF exporter (RTL).** `PdfGridExporter` (QuestPDF) — document `DirectionFromRightToLeft`, embed Arabic font (Cairo/Amiri under `BuildingBlocks/Assets/`), table of columns/rows, title.
   - *Accept:* Arabic header text renders RTL in the produced PDF.
-- [ ] **T020 — Export DI registration.** Register both exporters keyed by `ExportFormat`; a small factory/resolver `IGridExporterFactory.For(ExportFormat)`. Clamp exports to ~50k rows.
+- [x] **T020 — Export DI registration.** Register both exporters keyed by `ExportFormat`; a small factory/resolver `IGridExporterFactory.For(ExportFormat)`. Clamp exports to ~50k rows.
   - *Accept:* resolving by format returns the right exporter.
-- [ ] **T021 — TEST: exporters.** Round-trip xlsx (open + read header/first row); PDF non-empty + contains Arabic glyphs.
+- [x] **T021 — TEST: exporters.** Round-trip xlsx (open + read header/first row); PDF non-empty + contains Arabic glyphs.
 
 > 🔶 **REVIEW GATE M1** — freeze `GridQuery`/`PagedResult`/`IChartDataSource`/`IGridExporter` contracts before building modules.
 
