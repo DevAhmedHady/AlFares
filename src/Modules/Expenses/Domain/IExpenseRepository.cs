@@ -1,13 +1,14 @@
-namespace Expenses.Domain;
-/// <summary>Expense repository.</summary>
+﻿namespace Expenses.Domain;
+/** <summary>Expense repository.</summary> */
 public interface IExpenseRepository
 {
-    /// <summary>Gets by id.</summary>
+    /** <summary>Gets by id.</summary> */
     Task<Expense?> GetByIdAsync(Guid id,CancellationToken ct);
-    /// <summary>Adds.</summary>
+    /** <summary>Adds.</summary> */
     void Add(Expense expense);
-    /// <summary>Removes.</summary>
+    /** <summary>Removes.</summary> */
     void Remove(Expense expense);
-    /// <summary>Saves.</summary>
+    /** <summary>Saves.</summary> */
     Task SaveChangesAsync(CancellationToken ct);
 }
+
