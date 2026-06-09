@@ -116,11 +116,11 @@
 
 ## Milestone M4 — Identity, Auth & User Management (Feature F7, P0)
 
-- [ ] **T070 — Extend permission catalog.** In `Identity/Persistence/Seed/IdentitySeeder.cs` add all `clients.*`, `expenses.*`, `todos.*`, `dashboard.charts.*` codes.
-- [ ] **T071 — Role templates.** Owner = all; Admin = all except `identity.tenants.manage`; Member = `*.read` only. Idempotent upsert.
-- [ ] **T072 — Single-tenant + admin seed.** New `IdentityTenantSeeder` invoked from existing `IdentitySeedHostedService` after perms/roles: idempotent by slug `al-faris` — create tenant الفارس + admin `User` (from `SeedOptions`) + Owner membership.
-- [ ] **T073 — Users grid endpoint.** `GET /api/admin/users/grid` (or POST) over `IdentityDbContext.Users` using shared `GridQuery` infra + a `UserGrid` field map. Permission `identity.users.read`.
-- [ ] **T074 — TEST: auth + RBAC.** Login as seeded admin → JWT; Member token → 403 on a write/manage endpoint; users grid returns paged users.
+- [x] **T070 — Extend permission catalog.** In `Identity/Persistence/Seed/IdentitySeeder.cs` add all `clients.*`, `expenses.*`, `todos.*`, `dashboard.charts.*` codes.
+- [x] **T071 — Role templates.** Owner = all; Admin = all except `identity.tenants.manage`; Member = `*.read` only. Idempotent upsert.
+- [x] **T072 — Single-tenant + admin seed.** New `IdentityTenantSeeder` invoked from existing `IdentitySeedHostedService` after perms/roles: idempotent by slug `al-faris` — create tenant الفارس + admin `User` (from `SeedOptions`) + Owner membership.
+- [x] **T073 — Users grid endpoint.** `GET /api/admin/users/grid` (or POST) over `IdentityDbContext.Users` using shared `GridQuery` infra + a `UserGrid` field map. Permission `identity.users.read`.
+- [x] **T074 — TEST: auth + RBAC.** Login as seeded admin → JWT; Member token → 403 on a write/manage endpoint; users grid returns paged users.
 
 ---
 
