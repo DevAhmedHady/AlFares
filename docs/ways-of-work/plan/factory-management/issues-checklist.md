@@ -19,7 +19,7 @@
 
 ## Milestone M0 — Scaffold & Config  (Feature F1, P0)
 
-- [ ] **T001 — Copy template → Factory solution.** Copy `knights-templates` to `C:\Users\AhmedHady\source\repos\Factory`. Rename `knights.slnx` → `Factory.slnx`. Update solution-name references.
+- [x] **T001 — Copy template → Factory solution.** Copy `knights-templates` to `C:\Users\AhmedHady\source\repos\Factory`. Rename `knights.slnx` → `Factory.slnx`. Update solution-name references.
   - *Files:* whole tree; `Factory.slnx`.
   - *Accept:* `dotnet build Factory.slnx` succeeds on the unmodified copy.
 - [ ] **T002 — Remove sample modules.** Delete `src/Modules/Catalog` and `src/Modules/Ordering`; remove their `ProjectReference` from `src/Api/Api.csproj` and their `typeof(...).Assembly` lines + `using` from `src/Api/Program.cs`.

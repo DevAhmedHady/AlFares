@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Api/Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/SharedKernel/SharedKernel.csproj" />
+    <Project Path="src/Shared/BuildingBlocks/BuildingBlocks.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="src/Modules/Catalog/Catalog.csproj" />
+    <Project Path="src/Modules/Ordering/Ordering.csproj" />
+    <Project Path="src/Modules/Identity/Identity.csproj" />
+  </Folder>
+</Solution>
