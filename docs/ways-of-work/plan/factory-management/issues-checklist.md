@@ -73,7 +73,7 @@
 - [x] **T033 — Contracts + Mapping.** Request/Response records; `ClientsMappingConfig : IRegister` (entity→response unwrapping VOs, request→command).
 - [x] **T034 — CRUD features.** Create/Update/SetStatus/Delete/GetById commands+queries+handlers (+ FluentValidation validators). All return `Result<T>`.
 - [x] **T035 — Grid query + field map.** `ClientGrid` static (GridFieldMap + projection, Arabic DisplayNames, Chartable flags on status/activityLevel/accountBalance/createdAt); `GetClientsGridQuery` + handler using `ApplyGridQuery`/`ToPagedResultAsync`.
-- [ ] **T036 — Endpoints.** `POST /api/clients` (write), `PUT /{id}` (write), `DELETE /{id}` (delete), `GET /{id}` (read), `POST /api/clients/grid` (read), `POST /api/clients/export` (export, strip paging → full filtered set via `IGridExporter`). Permissions `clients.read/write/delete/export`.
+- [x] **T036 — Endpoints.** `POST /api/clients` (write), `PUT /{id}` (write), `DELETE /{id}` (delete), `GET /{id}` (read), `POST /api/clients/grid` (read), `POST /api/clients/export` (export, strip paging → full filtered set via `IGridExporter`). Permissions `clients.read/write/delete/export`.
 - [ ] **T037 — ClientsChartDataSource.** Implement `IChartDataSource` (Key `clients`): `Describe()` lists chartable fields; `ComputeAsync` groups by X, aggregates Y (Count/Sum/Avg switch over allow-listed selector). Register `AddScoped<IChartDataSource, ClientsChartDataSource>()`.
 - [ ] **T038 — Seeder.** `ClientsSeeder` + `ClientsSeedHostedService` (~15 rows across statuses/levels; idempotent if `Any()`).
 - [ ] **T039 — TEST: Clients vertical.** Integration: create→grid(filter+sort)→export(xlsx); chart compute x=status,Count returns correct buckets.
