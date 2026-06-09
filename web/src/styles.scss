@@ -1,5 +1,5 @@
-/* الفارس — global RTL Arabic-first theme on PrimeNG (Aura). */
-@import 'primeicons/primeicons.css';
+/* الفارس — global RTL Arabic-first theme on PrimeNG (Aura).
+   primeicons is registered in angular.json "styles" (Sass leaves .css @imports unresolved). */
 
 /* Self-hosted Arabic font (no CDN dependency → no tofu offline). */
 @font-face {
