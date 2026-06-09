@@ -17,6 +17,8 @@ public sealed class GridQueryExtensionsTests
         (new GridField("date", "Date", GridFieldType.Date, false), x => x.Date),
         (new GridField("active", "Active", GridFieldType.Boolean, false), x => x.Active),
         (new GridField("status", "Status", GridFieldType.Enum, false), x => x.Status)
+        ,(new GridField("notes", "Notes", GridFieldType.Text, true), x => x.Notes)
+        ,(new GridField("score", "Score", GridFieldType.Number, false), x => x.Score)
     });
 
     /// <summary>Verifies each supported filter operation.</summary>
@@ -99,6 +101,19 @@ public sealed class GridQueryExtensionsTests
         result.Error.Code.Should().Be("grid.unknown_field");
     }
 
+    /// <summary>Verifies nullable text and numeric selectors do not throw.</summary>
+    [TestMethod]
+    public void ApplyGridQuery_NullableSelectors_FilterSafely()
+    {
+        var textResult = Seed().AsQueryable().ApplyGridQuery(
+            new GridQuery { Filters = [new GridFilter("notes", GridFilterOp.Contains, "vip")] }, FieldMap);
+        var numberResult = Seed().AsQueryable().ApplyGridQuery(
+            new GridQuery { Filters = [new GridFilter("score", GridFilterOp.Gte, "2")] }, FieldMap);
+
+        textResult.Value.Select(x => x.Name).Should().Equal("Alice");
+        numberResult.Value.Select(x => x.Name).Should().Equal("Charlie");
+    }
+
     /// <summary>Verifies page-size and page-number clamping.</summary>
     [TestMethod]
     public async Task ToPagedResultAsync_OutOfRangePage_ClampsBounds()
@@ -125,9 +140,9 @@ public sealed class GridQueryExtensionsTests
 
     private static Row[] Seed() =>
     [
-        new() { Id = 1, Name = "Alice", City = "Cairo", Amount = 20, Date = new DateOnly(2026, 1, 1), Active = true, Status = RowStatus.Open },
+        new() { Id = 1, Name = "Alice", City = "Cairo", Amount = 20, Date = new DateOnly(2026, 1, 1), Active = true, Status = RowStatus.Open, Notes = "vip", Score = 1 },
         new() { Id = 2, Name = "Bob", City = "Giza", Amount = 10, Date = new DateOnly(2026, 1, 2), Active = false, Status = RowStatus.Closed },
-        new() { Id = 3, Name = "Charlie", City = "Alex", Amount = 30, Date = new DateOnly(2026, 1, 3), Active = true, Status = RowStatus.Open },
+        new() { Id = 3, Name = "Charlie", City = "Alex", Amount = 30, Date = new DateOnly(2026, 1, 3), Active = true, Status = RowStatus.Open, Score = 3 },
         new() { Id = 4, Name = "Alina", City = "Cairo", Amount = 20, Date = new DateOnly(2026, 1, 4), Active = true, Status = RowStatus.Closed }
     ];
 
@@ -145,6 +160,8 @@ public sealed class GridQueryExtensionsTests
         public DateOnly Date { get; init; }
         public bool Active { get; init; }
         public RowStatus Status { get; init; }
+        public string? Notes { get; init; }
+        public decimal? Score { get; init; }
     }
 
     private enum RowStatus { Open, Closed }

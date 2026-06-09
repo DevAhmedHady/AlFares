@@ -74,8 +74,10 @@ public static class GridQueryExtensions
             foreach (var field in fieldMap.Fields.Where(x => x.Searchable && x.Type == GridFieldType.Text))
             {
                 var member = ReplaceParameter(fieldMap.Selector(field.Key), parameter);
-                var contains = Expression.Call(member, nameof(string.Contains), Type.EmptyTypes,
+                Expression contains = Expression.Call(member, nameof(string.Contains), Type.EmptyTypes,
                     Expression.Constant(query.Search.Trim()));
+                contains = Expression.AndAlso(
+                    Expression.NotEqual(member, Expression.Constant(null, member.Type)), contains);
                 searchBody = searchBody is null ? contains : Expression.OrElse(searchBody, contains);
             }
 
@@ -120,10 +122,16 @@ public static class GridQueryExtensions
             {
                 if (targetType != typeof(string)) return InvalidOperation(field.Key, filter.Op);
                 var value = Expression.Constant(filter.Value ?? string.Empty);
-                return Result.Success<Expression>(Expression.Call(member,
+                var textOperation = Expression.Call(member,
                     filter.Op == GridFilterOp.Contains ? nameof(string.Contains) : nameof(string.StartsWith),
-                    Type.EmptyTypes, value));
+                    Type.EmptyTypes, value);
+                return Result.Success<Expression>(Expression.AndAlso(
+                    Expression.NotEqual(member, Expression.Constant(null, member.Type)), textOperation));
             }
+
+            var nullableType = Nullable.GetUnderlyingType(member.Type);
+            var comparableMember = nullableType is null ? member : Expression.Property(member, nameof(Nullable<int>.Value));
+            var hasValue = nullableType is null ? null : Expression.Property(member, nameof(Nullable<int>.HasValue));
 
             if (filter.Op == GridFilterOp.In)
             {
@@ -134,12 +142,13 @@ public static class GridQueryExtensions
                 var contains = typeof(Enumerable).GetMethods(BindingFlags.Public | BindingFlags.Static)
                     .Single(x => x.Name == nameof(Enumerable.Contains) && x.GetParameters().Length == 2)
                     .MakeGenericMethod(targetType);
-                return Result.Success<Expression>(Expression.Call(contains, Expression.Constant(array), member));
+                var inExpression = Expression.Call(contains, Expression.Constant(array), comparableMember);
+                return Result.Success<Expression>(hasValue is null ? inExpression : Expression.AndAlso(hasValue, inExpression));
             }
 
-            var left = member;
+            var left = comparableMember;
             var right = Expression.Constant(Parse(filter.Value, targetType), targetType);
-            return filter.Op switch
+            var comparison = filter.Op switch
             {
                 GridFilterOp.Eq => Result.Success<Expression>(Expression.Equal(left, right)),
                 GridFilterOp.Neq => Result.Success<Expression>(Expression.NotEqual(left, right)),
@@ -152,6 +161,8 @@ public static class GridQueryExtensions
                     Expression.LessThanOrEqual(left, Expression.Constant(Parse(filter.Value2, targetType), targetType)))),
                 _ => InvalidOperation(field.Key, filter.Op)
             };
+            if (comparison.IsFailure || hasValue is null) return comparison;
+            return Result.Success<Expression>(Expression.AndAlso(hasValue, comparison.Value));
         }
         catch (Exception exception) when (exception is FormatException or InvalidCastException or ArgumentException)
         {
