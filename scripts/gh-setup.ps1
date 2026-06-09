@@ -35,6 +35,7 @@ Ensure-Label 'user-story'  '1D76DB' 'User-focused requirement'
 Ensure-Label 'enabler'     '5319E7' 'Technical/architectural work'
 Ensure-Label 'test'        'FBCA04' 'Quality assurance work'
 Ensure-Label 'task'        'C5DEF5' 'Implementation task'
+Ensure-Label 'in-progress' '1D76DB' 'Work currently in progress'
 # Component
 Ensure-Label 'backend'        '0052CC' 'ASP.NET Core / EF Core'
 Ensure-Label 'frontend'       'D93F0B' 'Angular RTL SPA'
