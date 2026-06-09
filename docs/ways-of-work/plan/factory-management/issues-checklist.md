@@ -35,7 +35,7 @@
 ### Enabler EN1 — Grid query engine — `src/Shared/BuildingBlocks/Grids/`
 - [x] **T010 — Grid DTOs.** `GridQuery`, `GridSort`, `GridFilter`, `GridFilterOp` enum, `PagedResult<T>` (with `TotalPages`).
   - *Accept:* records compile; `PageSize` clamped helper present.
-- [ ] **T011 — Grid field metadata.** `GridFieldType` enum; `GridField` record (Key, DisplayName, Type, Searchable, Sortable, Filterable, Chartable); `GridFieldMap<T>` (Fields list + `Expression<Func<T,object?>> Selector(string key)`).
+- [x] **T011 — Grid field metadata.** `GridFieldType` enum; `GridField` record (Key, DisplayName, Type, Searchable, Sortable, Filterable, Chartable); `GridFieldMap<T>` (Fields list + `Expression<Func<T,object?>> Selector(string key)`).
   - *Accept:* a map can be built statically per entity; lookups by key O(1).
 - [ ] **T012 — `ApplyGridQuery` engine.** `GridQueryExtensions.ApplyGridQuery<T>(IQueryable<T>, GridQuery, GridFieldMap<T>) → Result<IQueryable<T>>`: validate every Sort/Filter/Search field against the map (unknown → `Error.Validation("grid.unknown_field", key)`); fold Sort into `OrderBy/ThenBy`; AND per-column filters (build `BinaryExpression`/`string.Contains`/comparisons per op, parse value to CLR type from `GridFieldType`); OR global `Search` across `Searchable` text fields. **Hand-rolled expressions — do NOT add System.Linq.Dynamic.Core.**
   - *Accept:* unknown field returns failure (no exception); valid query returns filtered `IQueryable`.
