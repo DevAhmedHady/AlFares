@@ -96,7 +96,7 @@
 - [x] **T053 — Endpoints + permissions.** `/api/todos` CRUD + `/grid` + `/export`; `todos.read/write/delete/export`.
 - [x] **T054 — TodosChartDataSource.** Key `todos`; x=priority/status Count.
 - [x] **T055 — Seeder.** ~10 rows across priorities/statuses, future due dates (idempotent).
-- [ ] **T056 — TEST: Todos vertical** (DueDate invariant, grid, chart).
+- [x] **T056 — TEST: Todos vertical** (DueDate invariant, grid, chart).
 
 ---
 
