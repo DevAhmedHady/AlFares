@@ -1,10 +1,12 @@
 using BuildingBlocks.Authentication;
 using BuildingBlocks.Endpoints;
+using BuildingBlocks.Grids;
 using BuildingBlocks.Http;
 using BuildingBlocks.Messaging;
 using Identity.Contracts;
 using Identity.Features.AddTenantUser;
 using Identity.Features.AssignTenantRole;
+using Identity.Features.GetUsersGrid;
 using MapsterMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +17,7 @@ namespace Identity.Endpoints;
 public sealed class AdminEndpoints : IEndpoint
 {
     private const string ManageUsers = "identity.users.manage";
+    private const string ReadUsers = "identity.users.read";
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
@@ -29,5 +32,9 @@ public sealed class AdminEndpoints : IEndpoint
                 (await d.Send<bool>(map.Map<AssignTenantRoleCommand>(req), ct))
                     .ToHttpResult(_ => Results.NoContent()))
             .RequirePermission(ManageUsers);
+
+        group.MapPost("/users/grid", async (GridQuery req, IDispatcher d, CancellationToken ct) =>
+                (await d.Send<PagedResult<UserResponse>>(new GetUsersGridQuery(req), ct)).ToHttpResult())
+            .RequirePermission(ReadUsers);
     }
 }
