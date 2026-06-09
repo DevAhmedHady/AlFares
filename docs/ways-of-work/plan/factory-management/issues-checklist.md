@@ -94,7 +94,7 @@
 - [x] **T051 — Persistence + Contracts + Mapping.** Schema `todos`; config; factory; DTOs; mapping.
 - [x] **T052 — Features + Grid.** Create/Update/ChangeStatus/Delete/GetById; `TodoGrid` map; `GetTodosGridQuery`.
 - [x] **T053 — Endpoints + permissions.** `/api/todos` CRUD + `/grid` + `/export`; `todos.read/write/delete/export`.
-- [ ] **T054 — TodosChartDataSource.** Key `todos`; x=priority/status Count.
+- [x] **T054 — TodosChartDataSource.** Key `todos`; x=priority/status Count.
 - [ ] **T055 — Seeder.** ~10 rows across priorities/statuses, future due dates (idempotent).
 - [ ] **T056 — TEST: Todos vertical** (DueDate invariant, grid, chart).
 
