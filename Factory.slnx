@@ -9,4 +9,7 @@
   <Folder Name="/src/Modules/">
     <Project Path="src/Modules/Identity/Identity.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BuildingBlocks.Tests/BuildingBlocks.Tests.csproj" />
+  </Folder>
 </Solution>

@@ -41,7 +41,7 @@
   - *Accept:* unknown field returns failure (no exception); valid query returns filtered `IQueryable`.
 - [x] **T013 — `ToPagedResultAsync`.** `ToPagedResultAsync<T,TOut>(IQueryable<T>, GridQuery, Expression<Func<T,TOut>> projection, CancellationToken) → Task<PagedResult<TOut>>`: COUNT then Skip/Take; clamp `PageSize` to [1..200].
   - *Accept:* returns correct `TotalCount` + page slice.
-- [ ] **T014 — TEST: grid engine.** Unit tests over an in-memory/SQLite `IQueryable`: each `GridFilterOp`, multi-column sort precedence, global search OR, unknown-field rejection, page clamping.
+- [x] **T014 — TEST: grid engine.** Unit tests over an in-memory/SQLite `IQueryable`: each `GridFilterOp`, multi-column sort precedence, global search OR, unknown-field rejection, page clamping.
   - *Accept:* all pass.
 
 ### Enabler EN2 — Chart registry contracts — `src/Shared/BuildingBlocks/Charts/`
