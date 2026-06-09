@@ -1,0 +1,103 @@
+<div class="grid-card card">
+  <div class="grid-toolbar">
+    <h2>{{ title() }}</h2>
+    <input class="search" type="search" placeholder="بحث..."
+           [ngModel]="search()" (ngModelChange)="onSearch($event)" />
+    <span class="spacer"></span>
+
+    @if (canCreate() && createPermission()) {
+      <button (click)="createClicked.emit()">+ جديد</button>
+    }
+
+    <div class="cols-menu">
+      <button class="ghost" (click)="showColumnMenu.set(!showColumnMenu())">الأعمدة ▾</button>
+      @if (showColumnMenu()) {
+        <div class="menu">
+          @for (col of columns(); track col.key) {
+            <label class="menu-item">
+              <input type="checkbox" [checked]="!isHidden(col.key)" (change)="toggleColumn(col.key)" />
+              {{ col.header }}
+            </label>
+          }
+        </div>
+      }
+    </div>
+
+    <button class="ghost" (click)="clearFilters()">مسح الفلاتر</button>
+
+    @if (canExport() && source().export) {
+      <button class="ghost" (click)="exportAs(Xlsx)">Excel</button>
+      <button class="ghost" (click)="exportAs(Pdf)">PDF</button>
+    }
+  </div>
+
+  @if (error()) { <p class="error-text">{{ error() }}</p> }
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          @for (col of orderedColumns(); track col.key) {
+            <th draggable="true"
+                (dragstart)="onDragStart(col.key)"
+                (dragover)="$event.preventDefault()"
+                (drop)="onDrop(col.key)"
+                (click)="toggleSort(col)"
+                [class.sortable]="col.sortable !== false">
+              {{ col.header }} <span class="sort">{{ sortIcon(col) }}</span>
+            </th>
+          }
+          @if (rowActions()) { <th class="actions-col">إجراءات</th> }
+        </tr>
+        <tr class="filter-row">
+          @for (col of orderedColumns(); track col.key) {
+            <th>
+              @if (col.filterable !== false) {
+                @if (col.options) {
+                  <select [ngModel]="''" (ngModelChange)="setFilter(col.key, $event)">
+                    <option value="">الكل</option>
+                    @for (opt of col.options; track opt[0]) {
+                      <option [value]="opt[0]">{{ opt[1] }}</option>
+                    }
+                  </select>
+                } @else {
+                  <input type="text" placeholder="تصفية"
+                         (input)="setFilter(col.key, $any($event.target).value)" />
+                }
+              }
+            </th>
+          }
+          @if (rowActions()) { <th></th> }
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr><td [attr.colspan]="orderedColumns().length + (rowActions() ? 1 : 0)" class="state">جارٍ التحميل…</td></tr>
+        } @else if ((result()?.items?.length ?? 0) === 0) {
+          <tr><td [attr.colspan]="orderedColumns().length + (rowActions() ? 1 : 0)" class="state">لا توجد بيانات</td></tr>
+        } @else {
+          @for (row of result()!.items; track $index) {
+            <tr>
+              @for (col of orderedColumns(); track col.key) {
+                <td>{{ cellValue(row, col) }}</td>
+              }
+              @if (rowActions()) {
+                <td class="actions-col">
+                  <ng-container [ngTemplateOutlet]="rowActions()!" [ngTemplateOutletContext]="{ $implicit: row }" />
+                </td>
+              }
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-footer">
+    <span class="muted">الإجمالي: {{ result()?.totalCount ?? 0 }}</span>
+    <span class="spacer"></span>
+    <button class="ghost" (click)="prev()" [disabled]="currentPage <= 1">السابق</button>
+    <span class="muted">{{ currentPage }} / {{ totalPages }}</span>
+    <button class="ghost" (click)="next()" [disabled]="currentPage >= totalPages">التالي</button>
+  </div>
+</div>

@@ -1,0 +1,42 @@
+<app-grid
+  title="المهام"
+  exportName="todos"
+  [columns]="columns"
+  [source]="service"
+  [rowActions]="actions"
+  [exportPermission]="'todos.export'"
+  [createPermission]="'todos.write'"
+  (createClicked)="openCreate()" />
+
+<ng-template #actions let-row>
+  @if (canWrite) { <button class="ghost" (click)="cycleStatus(row)">الحالة ↻</button> }
+  @if (canWrite) { <button class="ghost" (click)="openEdit(row)">تعديل</button> }
+  @if (canDelete) { <button class="ghost danger-text" (click)="remove(row)">حذف</button> }
+</ng-template>
+
+@if (showForm()) {
+  <app-modal (closed)="showForm.set(false)">
+    <h2>{{ editing() ? 'تعديل مهمة' : 'مهمة جديدة' }}</h2>
+    <div class="field">
+      <label>العنوان</label>
+      <input [ngModel]="form().title" (ngModelChange)="patch('title', $event)" />
+    </div>
+    <div class="row">
+      <div class="field spacer"><label>تاريخ الاستحقاق</label>
+        <input type="date" [min]="today" [ngModel]="form().dueDate" (ngModelChange)="patch('dueDate', $event)" /></div>
+      <div class="field spacer"><label>الأولوية</label>
+        <select [ngModel]="form().priority" (ngModelChange)="patch('priority', +$event)">
+          @for (opt of priorityOptions; track opt[0]) { <option [value]="opt[0]">{{ opt[1] }}</option> }
+        </select></div>
+    </div>
+    <div class="field">
+      <label>ملاحظات</label>
+      <textarea rows="2" [ngModel]="form().notes" (ngModelChange)="patch('notes', $event)"></textarea>
+    </div>
+    <div class="row">
+      <span class="spacer"></span>
+      <button class="ghost" (click)="showForm.set(false)">إلغاء</button>
+      <button (click)="save()" [disabled]="saving() || !form().title">حفظ</button>
+    </div>
+  </app-modal>
+}

@@ -1,0 +1,17 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">الفارس</div>
+    <nav>
+      @for (item of nav(); track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+      }
+    </nav>
+    <div class="sidebar-footer">
+      <span class="muted user">{{ email() }}</span>
+      <button class="ghost" (click)="logout()">تسجيل الخروج</button>
+    </div>
+  </aside>
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

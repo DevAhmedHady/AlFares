@@ -1,0 +1,52 @@
+.grid-card { padding: 1rem; }
+
+.grid-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+
+  h2 { margin: 0; font-size: 1.1rem; }
+  .search { width: 220px; }
+}
+
+.cols-menu { position: relative; }
+.cols-menu .menu {
+  position: absolute;
+  top: 110%;
+  inset-inline-end: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 0.4rem;
+  z-index: 20;
+  min-width: 180px;
+}
+.menu-item { display: flex; align-items: center; gap: 0.4rem; padding: 0.25rem; margin: 0; color: var(--text); }
+.menu-item input { width: auto; }
+
+.table-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+thead th {
+  text-align: start;
+  padding: 0.55rem 0.6rem;
+  border-bottom: 2px solid var(--border);
+  background: var(--bg);
+  user-select: none;
+  white-space: nowrap;
+}
+thead th.sortable { cursor: pointer; }
+thead th .sort { color: var(--primary); font-size: 0.75rem; }
+.filter-row th { padding: 0.3rem 0.4rem; background: var(--surface); border-bottom: 1px solid var(--border); }
+.filter-row input, .filter-row select { padding: 0.3rem 0.4rem; font-size: 0.82rem; }
+
+tbody td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); }
+tbody tr:hover { background: #f8fafc; }
+td.state { text-align: center; color: var(--muted); padding: 1.5rem; }
+
+.actions-col { width: 1%; white-space: nowrap; }
+
+.grid-footer { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.75rem; }

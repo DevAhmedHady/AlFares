@@ -1,0 +1,21 @@
+<div class="login-page">
+  <form class="card login-card" (ngSubmit)="submit()">
+    <h1>الفارس</h1>
+    <p class="muted subtitle">{{ tenant()?.name || 'نظام الإدارة' }}</p>
+
+    <div class="field">
+      <label>البريد الإلكتروني</label>
+      <input type="email" autocomplete="username" [ngModel]="email()" (ngModelChange)="email.set($event)" name="email" required />
+    </div>
+    <div class="field">
+      <label>كلمة المرور</label>
+      <input type="password" autocomplete="current-password" [ngModel]="password()" (ngModelChange)="password.set($event)" name="password" required />
+    </div>
+
+    @if (error()) { <p class="error-text">{{ error() }}</p> }
+
+    <button type="submit" [disabled]="busy() || !tenant()">
+      {{ busy() ? 'جارٍ الدخول…' : 'تسجيل الدخول' }}
+    </button>
+  </form>
+</div>

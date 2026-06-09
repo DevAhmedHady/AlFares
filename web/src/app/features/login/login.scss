@@ -1,0 +1,16 @@
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #1e293b, #2563eb);
+}
+.login-card {
+  width: 360px;
+  max-width: 90vw;
+  text-align: center;
+
+  h1 { margin: 0; color: var(--primary); font-size: 2rem; }
+  .subtitle { margin: 0.25rem 0 1.5rem; }
+  .field { text-align: start; }
+  button { width: 100%; margin-top: 0.5rem; }
+}

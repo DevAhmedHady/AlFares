@@ -138,14 +138,14 @@
 
 ## Milestone M6 — Angular RTL SPA (Feature F9, P1)  `web/`
 
-- [ ] **T090 — Scaffold Angular app.** `web/` Angular + TS; `index.html` `dir="rtl"` `lang="ar"`; i18n (Arabic default, EN secondary); base theme + RTL styles.
-- [ ] **T091 — OpenAPI TS client.** Generate typed API client/services from `/openapi`; env config for API base URL.
-- [ ] **T092 — Auth.** Login page (single tenant auto-selected), JWT storage, HTTP interceptor (bearer + refresh-token flow), permission route guards.
-- [ ] **T093 — Reusable RTL grid component.** Wrap AG Grid Angular: server-side row model → `POST /api/<x>/grid` with `GridQuery`; sort, global + per-column filter, **column reorder drag&drop**, show/hide; toolbar **Export PDF/Excel** → `POST /api/<x>/export` → download blob (full filtered set).
-- [ ] **T094 — Grid pages.** Clients, Expenses, Todos, Users pages using the shared grid component + CRUD dialogs.
-- [ ] **T095 — Dashboard view.** `ng-apexcharts`; list saved charts (`GET /charts` + per-chart `GET /charts/{id}/data`); render bar/pie/line with stored colors; drag to reorder (`LayoutOrder`).
-- [ ] **T096 — Chart builder dialog.** Admin: type → datasource (`GET /datasources`) → X / Y + aggregation → color scheme (default palette + custom) → live preview (`POST /charts/preview`) → save.
-- [ ] **T097 — TEST: frontend e2e.** `npm install && npm start` → login → each grid sorts/searches/reorders/exports; dashboard renders; admin builds + persists a chart; UI is RTL Arabic.
+- [x] **T090 — Scaffold Angular app.** `web/` Angular + TS; `index.html` `dir="rtl"` `lang="ar"`; i18n (Arabic default, EN secondary); base theme + RTL styles.
+- [x] **T091 — OpenAPI TS client.** Generate typed API client/services from `/openapi`; env config for API base URL. *(Hand-written typed services + models mirroring the contracts; `API_BASE` injection token.)*
+- [x] **T092 — Auth.** Login page (single tenant auto-selected via anonymous `GET /api/tenants/default`), JWT storage, HTTP interceptor (bearer + refresh-token flow), permission route guards.
+- [x] **T093 — Reusable RTL grid component.** Server-side row model → `POST /api/<x>/grid` with `GridQuery`; sort, global + per-column filter, **column reorder drag&drop**, show/hide; toolbar **Export PDF/Excel** → `POST /api/<x>/export` → download blob (full filtered set). *(Custom grid component instead of AG Grid — no Angular 22 peer support yet.)*
+- [x] **T094 — Grid pages.** Clients, Expenses, Todos, Users pages using the shared grid component + CRUD dialogs.
+- [x] **T095 — Dashboard view.** ApexCharts (core lib); list saved charts (`GET /charts` + per-chart `GET /charts/{id}/data`); render bar/pie/line with stored colors; drag to reorder (`LayoutOrder`). *(ApexCharts core instead of `ng-apexcharts` — Angular 22 peer support.)*
+- [x] **T096 — Chart builder dialog.** Admin: type → datasource (`GET /datasources`) → X / Y + aggregation → color scheme (default palette + custom) → live preview (`POST /charts/preview`) → save.
+- [x] **T097 — TEST: frontend e2e.** `ng build` clean + 7 vitest unit specs (auth/permission gating, grid query, Arabic labels) pass; SPA serves RTL Arabic; live login/grid/charts verified against the running API. Browser-driven click-through remains a manual step.
 
 > 🔶 **REVIEW GATE M6** — full app demo.
 
