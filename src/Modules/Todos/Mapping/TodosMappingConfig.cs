@@ -1,0 +1,1 @@
+using Mapster;using Todos.Contracts;using Todos.Domain;namespace Todos.Mapping;/** <summary>Mappings.</summary> */ public sealed class TodosMappingConfig:IRegister{/** <inheritdoc/> */ public void Register(TypeAdapterConfig c)=>c.NewConfig<TodoItem,TodoResponse>();}
