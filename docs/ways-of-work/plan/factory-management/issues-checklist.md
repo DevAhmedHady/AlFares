@@ -83,7 +83,7 @@
 ### Feature F4 — Expenses  `src/Modules/Expenses/` (schema `expenses`)
 - [x] **T040 — Module + Domain.** `Expense`(Category, Amount(Money), Date(DateOnly), Payee, Notes, timestamps); factory; repo; errors. (Mirror Clients structure.)
 - [x] **T041 — Persistence + Contracts + Mapping.** `ExpensesDbContext` schema `expenses`; config; factory; DTOs; mapping.
-- [ ] **T042 — CRUD + Grid.** Create/Update/Delete/GetById; `ExpenseGrid` map; `GetExpensesGridQuery`.
+- [x] **T042 — CRUD + Grid.** Create/Update/Delete/GetById; `ExpenseGrid` map; `GetExpensesGridQuery`.
 - [ ] **T043 — Endpoints + permissions.** `/api/expenses` CRUD + `/grid` + `/export`; `expenses.read/write/delete/export`.
 - [ ] **T044 — ExpensesChartDataSource.** Implement `IChartDataSource` (Key `expenses`); support **month-bucketing** of `Date` for the Line chart; Sum on `amount`.
 - [ ] **T045 — Seeder.** ~30 rows over several months + categories (idempotent).
