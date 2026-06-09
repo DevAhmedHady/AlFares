@@ -1,0 +1,1 @@
+namespace Todos;/** <summary>Todo routes.</summary> */ public static class TodosRoutes{/** <summary>Base.</summary> */ public const string Base="/api/todos";/** <summary>Tag.</summary> */ public const string Tag="Todos";}

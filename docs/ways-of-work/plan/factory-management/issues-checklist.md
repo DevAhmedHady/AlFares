@@ -90,7 +90,7 @@
 - [x] **T046 — TEST: Expenses vertical** (grid + export + chart month-bucket sum).
 
 ### Feature F5 — Todos  `src/Modules/Todos/` (schema `todos`)
-- [ ] **T050 — Module + Domain.** `TodoItem`(Title, DueDate, `Status{Open,InProgress,Done}`, `Priority{Low,Normal,High,Urgent}`, Notes, timestamps); **factory enforces DueDate ≥ today** (time-restricted invariant); repo; errors.
+- [x] **T050 — Module + Domain.** `TodoItem`(Title, DueDate, `Status{Open,InProgress,Done}`, `Priority{Low,Normal,High,Urgent}`, Notes, timestamps); **factory enforces DueDate ≥ today** (time-restricted invariant); repo; errors.
 - [ ] **T051 — Persistence + Contracts + Mapping.** Schema `todos`; config; factory; DTOs; mapping.
 - [ ] **T052 — Features + Grid.** Create/Update/ChangeStatus/Delete/GetById; `TodoGrid` map; `GetTodosGridQuery`.
 - [ ] **T053 — Endpoints + permissions.** `/api/todos` CRUD + `/grid` + `/export`; `todos.read/write/delete/export`.
