@@ -56,7 +56,7 @@
   - *Accept:* produces a valid `.xlsx` byte array from sample rows.
 - [x] **T019 — PDF exporter (RTL).** `PdfGridExporter` (QuestPDF) — document `DirectionFromRightToLeft`, embed Arabic font (Cairo/Amiri under `BuildingBlocks/Assets/`), table of columns/rows, title.
   - *Accept:* Arabic header text renders RTL in the produced PDF.
-- [ ] **T020 — Export DI registration.** Register both exporters keyed by `ExportFormat`; a small factory/resolver `IGridExporterFactory.For(ExportFormat)`. Clamp exports to ~50k rows.
+- [x] **T020 — Export DI registration.** Register both exporters keyed by `ExportFormat`; a small factory/resolver `IGridExporterFactory.For(ExportFormat)`. Clamp exports to ~50k rows.
   - *Accept:* resolving by format returns the right exporter.
 - [ ] **T021 — TEST: exporters.** Round-trip xlsx (open + read header/first row); PDF non-empty + contains Arabic glyphs.
 

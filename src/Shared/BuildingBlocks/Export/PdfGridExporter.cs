@@ -26,6 +26,7 @@ public sealed class PdfGridExporter : IGridExporter
         ArgumentNullException.ThrowIfNull(columns);
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
 
+        var exportRows = rows.Take(GridExportLimits.MaxRows).ToArray();
         return Document.Create(document => document.Page(page =>
         {
             page.Size(PageSizes.A4.Landscape());
@@ -48,7 +49,7 @@ public sealed class PdfGridExporter : IGridExporter
                             header.Cell().Element(HeaderCell).Text(column.Header).Bold().DirectionFromRightToLeft();
                     });
 
-                    foreach (var row in rows)
+                    foreach (var row in exportRows)
                     foreach (var column in columns)
                     {
                         var value = FormatValue(ExportValueAccessor.GetValue(row, column.Key));

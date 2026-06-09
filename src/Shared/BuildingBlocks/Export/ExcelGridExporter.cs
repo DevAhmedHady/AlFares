@@ -15,6 +15,7 @@ public sealed class ExcelGridExporter : IGridExporter
         ArgumentNullException.ThrowIfNull(columns);
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
 
+        var exportRows = rows.Take(GridExportLimits.MaxRows).ToArray();
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Data");
         worksheet.RightToLeft = true;
@@ -28,11 +29,11 @@ public sealed class ExcelGridExporter : IGridExporter
             cell.Style.Font.SetBold();
         }
 
-        for (var rowIndex = 0; rowIndex < rows.Count; rowIndex++)
+        for (var rowIndex = 0; rowIndex < exportRows.Length; rowIndex++)
         {
             for (var columnIndex = 0; columnIndex < columns.Count; columnIndex++)
             {
-                var value = ExportValueAccessor.GetValue(rows[rowIndex], columns[columnIndex].Key);
+                var value = ExportValueAccessor.GetValue(exportRows[rowIndex], columns[columnIndex].Key);
                 SetCellValue(worksheet.Cell(rowIndex + 3, columnIndex + 1), value);
             }
         }
