@@ -126,11 +126,11 @@
 
 ## Milestone M5 — API Wiring & Migrations (Feature F8, P0)
 
-- [ ] **T080 — Register modules.** `src/Api/Program.cs`: `AddModules(... IdentityModule, ClientsModule, ExpensesModule, TodosModule, DashboardChartsModule)`; add `ProjectReference`s in `Api.csproj`.
-- [ ] **T081 — RTL font + CORS.** Register QuestPDF Arabic font once at startup; add CORS policy for Angular dev origin (`http://localhost:4200`).
-- [ ] **T082 — Migrations.** For Identity, Clients, Expenses, Todos, DashboardCharts run `dotnet ef migrations add InitialCreate -p Modules/<X> -s Api -c <X>DbContext -o Persistence/Migrations` then `database update`.
+- [x] **T080 — Register modules.** `src/Api/Program.cs`: `AddModules(... IdentityModule, ClientsModule, ExpensesModule, TodosModule, DashboardChartsModule)`; add `ProjectReference`s in `Api.csproj`.
+- [x] **T081 — RTL font + CORS.** Register QuestPDF Arabic font once at startup; add CORS policy for Angular dev origin (`http://localhost:4200`).
+- [x] **T082 — Migrations.** For Identity, Clients, Expenses, Todos, DashboardCharts run `dotnet ef migrations add InitialCreate -p Modules/<X> -s Api -c <X>DbContext -o Persistence/Migrations` then `database update`.
   - *Accept:* schemas `identity/clients/expenses/todos/dashboard` exist with `__ef_migrations_history` each.
-- [ ] **T083 — TEST: boot + seed e2e.** `dotnet run` → seeders log; DB has tenant الفارس, admin, sample clients/expenses/todos, 4 default charts; `/health` green; `POST /api/clients/grid` returns `PagedResult`; unknown field → 400 `grid.unknown_field`.
+- [x] **T083 — TEST: boot + seed e2e.** `dotnet run` → seeders log; DB has tenant الفارس, admin, sample clients/expenses/todos, 4 default charts; `/health` green; `POST /api/clients/grid` returns `PagedResult`; unknown field → 400 `grid.unknown_field`.
 
 > 🔶 **REVIEW GATE M5** — backend complete + verifiable via Scalar before frontend.
 
