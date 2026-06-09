@@ -87,7 +87,7 @@
 - [x] **T043 — Endpoints + permissions.** `/api/expenses` CRUD + `/grid` + `/export`; `expenses.read/write/delete/export`.
 - [x] **T044 — ExpensesChartDataSource.** Implement `IChartDataSource` (Key `expenses`); support **month-bucketing** of `Date` for the Line chart; Sum on `amount`.
 - [x] **T045 — Seeder.** ~30 rows over several months + categories (idempotent).
-- [ ] **T046 — TEST: Expenses vertical** (grid + export + chart month-bucket sum).
+- [x] **T046 — TEST: Expenses vertical** (grid + export + chart month-bucket sum).
 
 ### Feature F5 — Todos  `src/Modules/Todos/` (schema `todos`)
 - [ ] **T050 — Module + Domain.** `TodoItem`(Title, DueDate, `Status{Open,InProgress,Done}`, `Priority{Low,Normal,High,Urgent}`, Notes, timestamps); **factory enforces DueDate ≥ today** (time-restricted invariant); repo; errors.
