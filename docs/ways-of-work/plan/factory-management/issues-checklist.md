@@ -33,7 +33,7 @@
 ## Milestone M1 — Shared Infra (Feature F2, P0) 🔶 linchpin
 
 ### Enabler EN1 — Grid query engine — `src/Shared/BuildingBlocks/Grids/`
-- [ ] **T010 — Grid DTOs.** `GridQuery`, `GridSort`, `GridFilter`, `GridFilterOp` enum, `PagedResult<T>` (with `TotalPages`).
+- [x] **T010 — Grid DTOs.** `GridQuery`, `GridSort`, `GridFilter`, `GridFilterOp` enum, `PagedResult<T>` (with `TotalPages`).
   - *Accept:* records compile; `PageSize` clamped helper present.
 - [ ] **T011 — Grid field metadata.** `GridFieldType` enum; `GridField` record (Key, DisplayName, Type, Searchable, Sortable, Filterable, Chartable); `GridFieldMap<T>` (Fields list + `Expression<Func<T,object?>> Selector(string key)`).
   - *Accept:* a map can be built statically per entity; lookups by key O(1).
