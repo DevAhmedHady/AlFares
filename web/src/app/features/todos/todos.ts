@@ -10,7 +10,7 @@ import { GridComponent } from '../../shared/grid/grid';
 import { ColumnDef } from '../../shared/grid/grid-column';
 import { TodosService } from '../../core/api/resources';
 import { AuthStore } from '../../core/auth/auth.store';
-import { GridFieldType } from '../../core/grid.models';
+import { emptyGridQuery, GridFieldType, GridFilterOp } from '../../core/grid.models';
 import { CreateTodoRequest, TodoPriority, TodoResponse, TodoStatus } from '../../core/models';
 import { formatDate, optionsFrom, todoPriorityLabels, todoStatusLabels } from '../../core/labels';
 
@@ -31,12 +31,15 @@ export class TodosComponent {
   readonly canWrite = this.store.has('todos.write');
   readonly canDelete = this.store.has('todos.delete');
   readonly priorityOptions = optionsFrom(todoPriorityLabels);
+  readonly todoPriorityLabels = todoPriorityLabels;
   readonly statusOptions = optionsFrom(todoStatusLabels);
   readonly today = new Date().toISOString().slice(0, 10);
+  readonly todayTasks = signal<TodoResponse[]>([]);
 
   readonly columns: ColumnDef<TodoResponse>[] = [
     { key: 'title', header: 'العنوان', type: GridFieldType.Text },
     { key: 'dueDate', header: 'تاريخ الاستحقاق', type: GridFieldType.Date, format: (r) => formatDate(r.dueDate) },
+    { key: 'dueTime', header: 'وقت الاستحقاق', type: GridFieldType.Text, filterable: false },
     { key: 'status', header: 'الحالة', type: GridFieldType.Enum, options: optionsFrom(todoStatusLabels), format: (r) => todoStatusLabels[r.status] },
     { key: 'priority', header: 'الأولوية', type: GridFieldType.Enum, options: optionsFrom(todoPriorityLabels), format: (r) => todoPriorityLabels[r.priority] },
     { key: 'notes', header: 'ملاحظات', type: GridFieldType.Text, filterable: false },
@@ -48,7 +51,7 @@ export class TodosComponent {
   readonly form = signal<CreateTodoRequest>(this.blank());
 
   private blank(): CreateTodoRequest {
-    return { title: '', dueDate: this.today, priority: TodoPriority.Normal, notes: '' };
+    return { title: '', dueDate: this.today, dueTime: null, priority: TodoPriority.Normal, notes: '' };
   }
 
   patch<K extends keyof CreateTodoRequest>(key: K, value: CreateTodoRequest[K]): void {
@@ -58,7 +61,7 @@ export class TodosComponent {
   openCreate(): void { this.editing.set(null); this.form.set(this.blank()); this.showForm.set(true); }
   openEdit(row: TodoResponse): void {
     this.editing.set(row);
-    this.form.set({ title: row.title, dueDate: row.dueDate.slice(0, 10), priority: row.priority, notes: row.notes ?? '' });
+    this.form.set({ title: row.title, dueDate: row.dueDate.slice(0, 10), dueTime: row.dueTime ?? null, priority: row.priority, notes: row.notes ?? '' });
     this.showForm.set(true);
   }
 
@@ -80,5 +83,11 @@ export class TodosComponent {
   remove(row: TodoResponse): void {
     if (!confirm(`حذف المهمة "${row.title}"؟`)) return;
     this.service.remove(row.id).subscribe(() => this.grid().load());
+  }
+
+  constructor() {
+    const query = emptyGridQuery(100);
+    query.filters = [{ field: 'dueDate', op: GridFilterOp.Eq, value: this.today }];
+    this.service.grid(query).subscribe((x) => this.todayTasks.set(x.items));
   }
 }

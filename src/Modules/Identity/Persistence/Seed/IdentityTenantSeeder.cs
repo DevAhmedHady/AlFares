@@ -19,7 +19,7 @@ public static class IdentityTenantSeeder
     /// <param name="options">Bootstrap tenant/admin settings.</param>
     /// <param name="ct">Cancellation token.</param>
     public static async Task SeedAsync(
-        IdentityDbContext db,
+        IMainDbContext db,
         IPasswordHasher<User> hasher,
         SeedOptions options,
         CancellationToken ct = default)
@@ -35,7 +35,7 @@ public static class IdentityTenantSeeder
 
         // Idempotency guard: the tenant already exists, nothing to do. Compare the whole value
         // object (not .Value) so EF applies the configured value converter and the query translates.
-        if (await db.Tenants.AnyAsync(t => t.Slug == slug, ct))
+        if (await db.Set<Tenant>().AnyAsync(t => t.Slug == slug, ct))
             return;
 
         var emailResult = Email.Create(options.AdminEmail);
@@ -47,10 +47,10 @@ public static class IdentityTenantSeeder
         if (tenantResult.IsFailure)
             throw new InvalidOperationException($"Invalid Seed:TenantName: {tenantResult.Error.Code}.");
         var tenant = tenantResult.Value;
-        db.Tenants.Add(tenant);
+        db.Set<Tenant>().Add(tenant);
 
         // Reuse an existing admin user (e.g. previously registered) or create one from config.
-        var admin = await db.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
+        var admin = await db.Set<User>().FirstOrDefaultAsync(u => u.Email == email, ct);
         if (admin is null)
         {
             var userResult = User.Create(email, options.TenantName);
@@ -58,17 +58,17 @@ public static class IdentityTenantSeeder
                 throw new InvalidOperationException($"Cannot create admin user: {userResult.Error.Code}.");
             admin = userResult.Value;
             admin.SetPasswordHash(hasher.HashPassword(admin, options.AdminPassword));
-            db.Users.Add(admin);
+            db.Set<User>().Add(admin);
         }
 
         // Clone the global role templates (Owner/Admin/Member) into tenant-owned roles + permissions.
-        var templates = await db.Roles
+        var templates = await db.Set<Role>()
             .Where(r => r.IsSystem)
             .Select(r => new
             {
                 r.Id,
                 r.Name,
-                PermissionIds = db.RolePermissions.Where(rp => rp.RoleId == r.Id).Select(rp => rp.PermissionId).ToList()
+                PermissionIds = db.Set<RolePermission>().Where(rp => rp.RoleId == r.Id).Select(rp => rp.PermissionId).ToList()
             })
             .ToListAsync(ct);
 
@@ -76,9 +76,9 @@ public static class IdentityTenantSeeder
         foreach (var template in templates)
         {
             var tenantRole = new TenantRole(tenant.Id, template.Name, template.Id, isSystem: true);
-            db.TenantRoles.Add(tenantRole);
+            db.Set<TenantRole>().Add(tenantRole);
             foreach (var permissionId in template.PermissionIds)
-                db.TenantPermissions.Add(new TenantPermission(tenantRole.Id, permissionId));
+                db.Set<TenantPermission>().Add(new TenantPermission(tenantRole.Id, permissionId));
 
             if (template.Name == IdentitySeeder.OwnerRoleName)
                 ownerRole = tenantRole;
@@ -88,8 +88,8 @@ public static class IdentityTenantSeeder
             throw new InvalidOperationException("Owner role template missing; run IdentitySeeder first.");
 
         var membership = new TenantUser(tenant.Id, admin.Id);
-        db.TenantUsers.Add(membership);
-        db.TenantUserRoles.Add(new TenantUserRole(membership.Id, ownerRole.Id));
+        db.Set<TenantUser>().Add(membership);
+        db.Set<TenantUserRole>().Add(new TenantUserRole(membership.Id, ownerRole.Id));
 
         await db.SaveChangesAsync(ct);
     }

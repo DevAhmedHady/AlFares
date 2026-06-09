@@ -6,7 +6,7 @@
   title="قائمة العملاء"
   exportName="clients"
   [columns]="columns"
-  [source]="service"
+  [source]="source"
   [rowActions]="actions"
   [exportPermission]="'clients.export'"
   [createPermission]="'clients.write'"
@@ -38,7 +38,7 @@
       <input pInputText class="w-full" [ngModel]="form().email" (ngModelChange)="patch('email', $event)" /></div>
   </div>
   <div class="row">
-    <div class="field spacer"><label>الرصيد</label>
+    <div class="field spacer"><label>الرصيد الافتتاحي</label>
       <p-inputnumber class="w-full" mode="decimal" [minFractionDigits]="2"
                      [ngModel]="form().accountBalance" (ngModelChange)="patch('accountBalance', $event || 0)" /></div>
     <div class="field spacer"><label>مستوى النشاط</label>

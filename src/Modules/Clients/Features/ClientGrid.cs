@@ -31,13 +31,13 @@ public static class ClientGrid
 public sealed record GetClientsGridQuery(GridQuery Grid) : IQuery<PagedResult<ClientResponse>>;
 
 /// <summary>Handles Clients grid queries.</summary>
-public sealed class GetClientsGridHandler(ClientsDbContext dbContext) : IQueryHandler<GetClientsGridQuery, PagedResult<ClientResponse>>
+public sealed class GetClientsGridHandler(IMainDbContext dbContext) : IQueryHandler<GetClientsGridQuery, PagedResult<ClientResponse>>
 {
-    private readonly ClientsDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    private readonly IMainDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     /// <inheritdoc />
     public async Task<Result<PagedResult<ClientResponse>>> Handle(GetClientsGridQuery query, CancellationToken ct)
     {
-        var applied = dbContext.Clients.AsNoTracking().ApplyGridQuery(query.Grid, ClientGrid.Fields);
+        var applied = dbContext.Set<Client>().AsNoTracking().ApplyGridQuery(query.Grid, ClientGrid.Fields);
         if (applied.IsFailure) return applied.Error;
         return await applied.Value.ToPagedResultAsync(query.Grid, ClientGrid.Projection, ct).ConfigureAwait(false);
     }

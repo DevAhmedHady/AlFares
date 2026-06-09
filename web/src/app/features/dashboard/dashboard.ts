@@ -41,8 +41,14 @@ export class DashboardComponent {
         this.charts.set([...charts].sort((a, b) => a.layoutOrder - b.layoutOrder));
         this.loading.set(false);
         for (const chart of charts) {
-          this.service.data(chart.id).subscribe((series) =>
-            this.data.update((d) => ({ ...d, [chart.id]: series })));
+          this.service.data(chart.id).subscribe({
+            next: (series) => this.data.update((d) => ({ ...d, [chart.id]: series })),
+            error: () => this.data.update((d) => {
+              const next = { ...d };
+              delete next[chart.id];
+              return next;
+            }),
+          });
         }
       },
       error: () => this.loading.set(false),

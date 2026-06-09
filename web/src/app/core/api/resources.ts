@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { API_BASE } from '../config';
 import { GridClient } from './grid-client';
 import {
-  ClientResponse, ExpenseResponse, TodoResponse, UserResponse, TodoStatus, ClientStatus,
+  ClientResponse, ExpenseResponse, TodoResponse, UserResponse, TodoStatus, ClientStatus, RevenueResponse, CarResponse, WorkerResponse, ExpenseTypeResponse, RevenueTypeResponse, ExpenseScope, OwnerLedgerResponse, OwnerType, OwnerBalance, WorkerReportResponse,
 } from '../models';
 import { PagedResult, GridQuery } from '../grid.models';
 
@@ -20,8 +20,15 @@ export class ClientsService extends GridClient<ClientResponse> {
 
 @Injectable({ providedIn: 'root' })
 export class ExpensesService extends GridClient<ExpenseResponse> {
+  private readonly client=inject(HttpClient);private readonly base=inject(API_BASE);
   constructor() { super(inject(HttpClient), inject(API_BASE), 'expenses'); }
+  types(scope?:ExpenseScope):Observable<ExpenseTypeResponse[]>{return this.client.get<ExpenseTypeResponse[]>(`${this.base}/api/expenses/types${scope===undefined?'':`?scope=${scope}`}`);}
 }
+
+@Injectable({providedIn:'root'}) export class RevenuesService extends GridClient<RevenueResponse>{private readonly client=inject(HttpClient);private readonly base=inject(API_BASE);constructor(){super(inject(HttpClient),inject(API_BASE),'revenues');}types():Observable<RevenueTypeResponse[]>{return this.client.get<RevenueTypeResponse[]>(`${this.base}/api/revenues/types`);}}
+@Injectable({providedIn:'root'}) export class CarsService extends GridClient<CarResponse>{constructor(){super(inject(HttpClient),inject(API_BASE),'cars');}}
+@Injectable({providedIn:'root'}) export class WorkersService extends GridClient<WorkerResponse>{private readonly client=inject(HttpClient);private readonly base=inject(API_BASE);constructor(){super(inject(HttpClient),inject(API_BASE),'workers');}advance(id:string,body:unknown){return this.client.post(`${this.base}/api/workers/${id}/advances`,body);}settle(id:string,body:unknown){return this.client.post(`${this.base}/api/workers/${id}/settlements`,body);}report(body:unknown){return this.client.post<WorkerReportResponse>(`${this.base}/api/workers/report`,body);}}
+@Injectable({providedIn:'root'}) export class ReportsService{private readonly client=inject(HttpClient);private readonly base=inject(API_BASE);ledger(ownerType:OwnerType,ownerId:string,from?:string,to?:string){return this.client.post<OwnerLedgerResponse>(`${this.base}/api/reports/owner-ledger`,{ownerType,ownerId,from:from||null,to:to||null});}balances(ownerType:OwnerType,ids:string[]){return this.client.post<Record<string,OwnerBalance>>(`${this.base}/api/reports/owner-balances`,{ownerType,ids});}}
 
 @Injectable({ providedIn: 'root' })
 export class TodosService extends GridClient<TodoResponse> {

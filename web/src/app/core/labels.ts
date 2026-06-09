@@ -1,4 +1,4 @@
-import { ActivityLevel, ChartType, ClientStatus, TodoPriority, TodoStatus } from './models';
+import { ActivityLevel, CarType, ChartType, ClientStatus, ExpenseScope, OwnerType, TodoPriority, TodoStatus } from './models';
 
 export const clientStatusLabels: Record<number, string> = { [ClientStatus.Active]: 'نشط', [ClientStatus.Inactive]: 'غير نشط' };
 export const activityLabels: Record<number, string> = {
@@ -13,6 +13,9 @@ export const todoPriorityLabels: Record<number, string> = {
 export const chartTypeLabels: Record<number, string> = {
   [ChartType.Bar]: 'أعمدة', [ChartType.Pie]: 'دائري', [ChartType.Line]: 'خطي',
 };
+export const carTypeLabels:Record<number,string>={[CarType.Owned]:'مملوكة',[CarType.Rented]:'مؤجرة'};
+export const expenseScopeLabels:Record<number,string>={[ExpenseScope.General]:'عام',[ExpenseScope.Car]:'سيارة'};
+export const ownerTypeLabels:Record<number,string>={[OwnerType.General]:'عام',[OwnerType.Client]:'عميل',[OwnerType.OwnedCar]:'سيارة مملوكة',[OwnerType.RentedCar]:'سيارة مؤجرة',[OwnerType.Worker]:'عامل'};
 
 export function optionsFrom(labels: Record<number, string>): [string, string][] {
   return Object.entries(labels).map(([k, v]) => [k, v]);

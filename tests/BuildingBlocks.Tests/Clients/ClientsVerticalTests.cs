@@ -42,7 +42,7 @@ public sealed class ClientsVerticalTests
     public async Task Chart_StatusCount_ReturnsBuckets()
     {
         await using var db = CreateDb();
-        db.Clients.Add(Create("نشط", ClientStatus.Active)); db.Clients.Add(Create("غير نشط", ClientStatus.Inactive)); db.Clients.Add(Create("نشط 2", ClientStatus.Active)); await db.SaveChangesAsync();
+        db.Set<Client>().Add(Create("نشط", ClientStatus.Active)); db.Set<Client>().Add(Create("غير نشط", ClientStatus.Inactive)); db.Set<Client>().Add(Create("نشط 2", ClientStatus.Active)); await db.SaveChangesAsync();
         var series = await new ClientsChartDataSource(db).ComputeAsync(new ChartComputeRequest("status", null, ChartAggregation.Count, []), default);
         series.Points.Should().Contain(x => x.Label == "Active" && x.Value == 2);
         series.Points.Should().Contain(x => x.Label == "Inactive" && x.Value == 1);
@@ -52,7 +52,7 @@ public sealed class ClientsVerticalTests
     [TestMethod]
     public void Create_NegativeBalance_Fails() => Client.Create("x", Contact.Create("n", "p", null).Value, -1, ActivityLevel.Low, null).IsFailure.Should().BeTrue();
 
-    private static ClientsDbContext CreateDb() => new(new DbContextOptionsBuilder<ClientsDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+    private static global::Api.Persistence.MainDbContext CreateDb() => MainDbTestFactory.Create();
     private static IMapper CreateMapper() { var config = new TypeAdapterConfig(); new ClientsMappingConfig().Register(config); return new Mapper(config); }
     private static Client Create(string name, ClientStatus status) { var client = Client.Create(name, Contact.Create("contact", "phone", null).Value, 10, ActivityLevel.Medium, null).Value; client.SetStatus(status); return client; }
 }

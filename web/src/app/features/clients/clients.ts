@@ -9,10 +9,11 @@ import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { GridComponent } from '../../shared/grid/grid';
 import { ColumnDef } from '../../shared/grid/grid-column';
-import { ClientsService } from '../../core/api/resources';
+import { ClientsService, ReportsService } from '../../core/api/resources';
+import { map, switchMap } from 'rxjs';
 import { AuthStore } from '../../core/auth/auth.store';
 import { GridFieldType } from '../../core/grid.models';
-import { ActivityLevel, ClientResponse, ClientStatus, CreateClientRequest } from '../../core/models';
+import { ActivityLevel, ClientResponse, ClientStatus, CreateClientRequest, OwnerType } from '../../core/models';
 import {
   activityLabels, clientStatusLabels, formatDate, formatMoney, optionsFrom,
 } from '../../core/labels';
@@ -28,6 +29,7 @@ import {
 })
 export class ClientsComponent {
   readonly service = inject(ClientsService);
+  private readonly reports = inject(ReportsService);
   private readonly store = inject(AuthStore);
   private readonly grid = viewChild.required(GridComponent);
 
@@ -43,7 +45,7 @@ export class ClientsComponent {
     { key: 'contactName', header: 'جهة الاتصال', type: GridFieldType.Text },
     { key: 'phone', header: 'الهاتف', type: GridFieldType.Text },
     { key: 'email', header: 'البريد', type: GridFieldType.Text },
-    { key: 'accountBalance', header: 'الرصيد', type: GridFieldType.Number, filterable: false, format: (r) => formatMoney(r.accountBalance) },
+    { key: 'accountBalance', header: 'الرصيد الحالي', type: GridFieldType.Number, filterable: false, format: (r) => formatMoney(r.displayBalance ?? r.accountBalance) },
     { key: 'activityLevel', header: 'النشاط', type: GridFieldType.Enum, options: optionsFrom(activityLabels), format: (r) => activityLabels[r.activityLevel] },
     { key: 'status', header: 'الحالة', type: GridFieldType.Enum, options: optionsFrom(clientStatusLabels), format: (r) => clientStatusLabels[r.status] },
     { key: 'createdAt', header: 'تاريخ الإنشاء', type: GridFieldType.Date, filterable: false, format: (r) => formatDate(r.createdAtUtc) },
@@ -53,6 +55,13 @@ export class ClientsComponent {
   readonly showForm = signal(false);
   readonly saving = signal(false);
   readonly form = signal<CreateClientRequest>(this.blank());
+  readonly source = {
+    grid: (query: import('../../core/grid.models').GridQuery) => this.service.grid(query).pipe(
+      switchMap((page) => this.reports.balances(OwnerType.Client, page.items.map((x) => x.id)).pipe(
+        map((balances) => ({ ...page, items: page.items.map((x) => ({ ...x, displayBalance: x.accountBalance + (balances[x.id]?.net ?? 0) })) })),
+      ))),
+    export: (format: import('../../core/grid.models').ExportFormat, query: import('../../core/grid.models').GridQuery) => this.service.export(format, query),
+  };
 
   private blank(): CreateClientRequest {
     return { name: '', contactName: '', phone: '', email: '', accountBalance: 0, activityLevel: ActivityLevel.Medium, notes: '' };

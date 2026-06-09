@@ -56,8 +56,8 @@ Roles: **Owner**=all · **Admin**=all except `identity.tenants.manage` · **Memb
 dotnet build Factory.slnx
 dotnet test tests/BuildingBlocks.Tests/BuildingBlocks.Tests.csproj
 # Postgres on :5432 (alfaris db). Override with env: ConnectionStrings__Default + Seed__AdminPassword
-dotnet ef migrations add InitialCreate -p src/Modules/<X> -s src/Api -c <X>DbContext -o Persistence/Migrations
-dotnet ef database update           -p src/Modules/<X> -s src/Api -c <X>DbContext
+dotnet ef migrations add <Name> -p src/Api -s src/Api -c MainDbContext -o Persistence/Migrations
+dotnet ef database update -p src/Api -s src/Api -c MainDbContext
 dotnet run --project src/Api        # Scalar UI at /scalar/v1 ; health at /health
 ```
 Seeders create tenant الفارس, an admin (`Seed:AdminEmail` / `Seed:AdminPassword`), demo

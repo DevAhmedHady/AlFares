@@ -1,7 +1,87 @@
-﻿using BuildingBlocks.Charts; using BuildingBlocks.Grids; using Expenses.Features; using Expenses.Persistence; using Microsoft.EntityFrameworkCore;
+using BuildingBlocks.Charts;
+using BuildingBlocks.Grids;
+using Expenses.Features;
+using Microsoft.EntityFrameworkCore;
+
 namespace Expenses.Charts;
-/** <summary>Expense chart datasource.</summary> */ public sealed class ExpensesChartDataSource(ExpensesDbContext db):IChartDataSource
-{/** <inheritdoc/> */ public string Key=>"expenses";/** <inheritdoc/> */ public string DisplayName=>"المصروفات";/** <inheritdoc/> */ public ChartDataSourceMetadata Describe()=>new(Key,DisplayName,[new("category","الفئة",GridFieldType.Text,true,false),new("date","الشهر",GridFieldType.Date,true,false),new("amount","المبلغ",GridFieldType.Number,false,true)]);
-/** <inheritdoc/> */ public async Task<ChartSeries> ComputeAsync(ChartComputeRequest r,CancellationToken ct){var q=db.Expenses.AsNoTracking().ApplyGridQuery(new GridQuery{Filters=r.Filters},ExpenseGrid.Fields);if(q.IsFailure)throw new ArgumentException(q.Error.Description,nameof(r));if(r.Aggregation!=ChartAggregation.Count&&r.YField!="amount")throw new ArgumentException("Amount required.",nameof(r));IReadOnlyList<ChartPoint> points=r.XField switch{"category"=>await ByCategory(q.Value,r.Aggregation,ct),"date"=>await ByMonth(q.Value,r.Aggregation,ct),_=>throw new ArgumentException("Unknown X field.",nameof(r))};return new(DisplayName,points);}
-private static async Task<IReadOnlyList<ChartPoint>> ByCategory(IQueryable<Domain.Expense> q,ChartAggregation a,CancellationToken ct){var rows=a switch{ChartAggregation.Count=>await q.GroupBy(x=>x.Category).Select(g=>new{Label=g.Key,Value=(decimal)g.Count()}).ToListAsync(ct),ChartAggregation.Sum=>await q.GroupBy(x=>x.Category).Select(g=>new{Label=g.Key,Value=g.Sum(x=>x.Amount)}).ToListAsync(ct),ChartAggregation.Avg=>await q.GroupBy(x=>x.Category).Select(g=>new{Label=g.Key,Value=g.Average(x=>x.Amount)}).ToListAsync(ct),_=>throw new ArgumentException("Unsupported aggregation.")};return rows.Select(x=>new ChartPoint(x.Label,x.Value)).ToArray();}
-private static async Task<IReadOnlyList<ChartPoint>> ByMonth(IQueryable<Domain.Expense> q,ChartAggregation a,CancellationToken ct){var rows=a switch{ChartAggregation.Count=>await q.GroupBy(x=>new{x.Date.Year,x.Date.Month}).Select(g=>new{g.Key.Year,g.Key.Month,Value=(decimal)g.Count()}).ToListAsync(ct),ChartAggregation.Sum=>await q.GroupBy(x=>new{x.Date.Year,x.Date.Month}).Select(g=>new{g.Key.Year,g.Key.Month,Value=g.Sum(x=>x.Amount)}).ToListAsync(ct),ChartAggregation.Avg=>await q.GroupBy(x=>new{x.Date.Year,x.Date.Month}).Select(g=>new{g.Key.Year,g.Key.Month,Value=g.Average(x=>x.Amount)}).ToListAsync(ct),_=>throw new ArgumentException("Unsupported aggregation.")};return rows.OrderBy(x=>x.Year).ThenBy(x=>x.Month).Select(x=>new ChartPoint($"{x.Year:D4}-{x.Month:D2}",x.Value)).ToArray();}}
+
+/// <summary>Provides expense chart data.</summary>
+public sealed class ExpensesChartDataSource(IMainDbContext db) : IChartDataSource
+{
+    /// <inheritdoc />
+    public string Key => "expenses";
+
+    /// <inheritdoc />
+    public string DisplayName => "المصروفات";
+
+    /// <inheritdoc />
+    public ChartDataSourceMetadata Describe() => new(
+        Key,
+        DisplayName,
+        [
+            new("expenseTypeName", "النوع", GridFieldType.Text, true, false),
+            new("date", "الشهر", GridFieldType.Date, true, false),
+            new("amount", "المبلغ", GridFieldType.Number, false, true)
+        ]);
+
+    /// <inheritdoc />
+    public async Task<ChartSeries> ComputeAsync(
+        ChartComputeRequest request,
+        CancellationToken cancellationToken)
+    {
+        var applied = ExpenseGrid.Query(db).ApplyGridQuery(
+            new GridQuery { Filters = request.Filters }, ExpenseGrid.Fields);
+        if (applied.IsFailure)
+            throw new ArgumentException(applied.Error.Description, nameof(request));
+
+        IReadOnlyList<ChartPoint> points;
+        if (request.XField == "expenseTypeName")
+        {
+            var rows = await applied.Value
+                .Select(row => new { Label = row.ExpenseTypeName, row.Amount })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            points = rows
+                .GroupBy(row => row.Label)
+                .Select(group => new ChartPoint(
+                    group.Key, Aggregate(group.Select(row => row.Amount), request.Aggregation)))
+                .OrderBy(point => point.Label)
+                .ToArray();
+        }
+        else if (request.XField == "date")
+        {
+            var rows = await applied.Value
+                .Select(row => new { row.Date, row.Amount })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            points = rows
+                .GroupBy(row => new { row.Date.Year, row.Date.Month })
+                .OrderBy(group => group.Key.Year)
+                .ThenBy(group => group.Key.Month)
+                .Select(group => new ChartPoint(
+                    $"{group.Key.Year:D4}-{group.Key.Month:D2}",
+                    Aggregate(group.Select(row => row.Amount), request.Aggregation)))
+                .ToArray();
+        }
+        else
+        {
+            throw new ArgumentException("Unknown expense chart grouping field.", nameof(request));
+        }
+
+        return new ChartSeries(DisplayName, points);
+    }
+
+    private static decimal Aggregate(IEnumerable<decimal> values, ChartAggregation aggregation)
+    {
+        var amounts = values as decimal[] ?? values.ToArray();
+        return aggregation switch
+        {
+            ChartAggregation.Count => amounts.Length,
+            ChartAggregation.Sum => amounts.Sum(),
+            ChartAggregation.Avg => amounts.Average(),
+            ChartAggregation.Min => amounts.Min(),
+            ChartAggregation.Max => amounts.Max(),
+            _ => throw new ArgumentOutOfRangeException(nameof(aggregation), aggregation, null)
+        };
+    }
+}

@@ -1,5 +1,6 @@
 using BuildingBlocks.Messaging;
 using Identity.Contracts;
+using Identity.Domain;
 using Identity.Persistence;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
@@ -13,15 +14,15 @@ namespace Identity.Features.GetDefaultTenant;
 public sealed record GetDefaultTenantQuery : IQuery<TenantResponse>;
 
 /// <summary>Handles <see cref="GetDefaultTenantQuery"/> over the active tenants.</summary>
-public sealed class GetDefaultTenantHandler(IdentityDbContext dbContext)
+public sealed class GetDefaultTenantHandler(IMainDbContext dbContext)
     : IQueryHandler<GetDefaultTenantQuery, TenantResponse>
 {
-    private readonly IdentityDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    private readonly IMainDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 
     /// <inheritdoc />
     public async Task<Result<TenantResponse>> Handle(GetDefaultTenantQuery query, CancellationToken ct)
     {
-        var tenant = await dbContext.Tenants.AsNoTracking()
+        var tenant = await dbContext.Set<Tenant>().AsNoTracking()
             .Where(t => t.IsActive)
             .OrderBy(t => t.CreatedAtUtc)
             .Select(t => new TenantResponse(t.Id, t.Name, t.Slug.Value))

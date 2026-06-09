@@ -23,5 +23,9 @@
     <ProjectReference Include="../../src/Modules/Expenses/Expenses.csproj" />
     <ProjectReference Include="../../src/Modules/Todos/Todos.csproj" />
     <ProjectReference Include="../../src/Modules/DashboardCharts/DashboardCharts.csproj" />
+    <ProjectReference Include="../../src/Modules/Revenues/Revenues.csproj" />
+    <ProjectReference Include="../../src/Modules/Reports/Reports.csproj" />
+    <ProjectReference Include="../../src/Modules/Cars/Cars.csproj" />
+    <ProjectReference Include="../../src/Modules/Workers/Workers.csproj" />
   </ItemGroup>
 </Project>

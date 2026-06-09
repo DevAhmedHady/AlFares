@@ -22,8 +22,8 @@ RTL SPA). Read [`CLAUDE.md`](CLAUDE.md) for the architecture; this file is the o
 ```bash
 dotnet build Factory.slnx                         # backend build (0 warnings expected)
 dotnet test tests/BuildingBlocks.Tests/...         # backend tests (incl. boot e2e, self-skips w/o DB)
-dotnet ef migrations add InitialCreate -p src/Modules/<X> -s src/Api -c <X>DbContext -o Persistence/Migrations
-dotnet ef database update              -p src/Modules/<X> -s src/Api -c <X>DbContext
+dotnet ef migrations add <Name> -p src/Api -s src/Api -c MainDbContext -o Persistence/Migrations
+dotnet ef database update -p src/Api -s src/Api -c MainDbContext
 dotnet run --project src/Api                       # Scalar /scalar/v1 ; /health
 cd web && npm install && npm run build && npm test # frontend build + vitest
 ```
@@ -40,12 +40,13 @@ and `Seed__AdminPassword=<pwd>`. EF `database update` auto-creates the database.
 - [ ] Frontend: `ng build` clean; TS enums match backend; RTL Arabic preserved.
 
 ## Adding a module (skeleton)
-`Domain / Contracts / Features / Mapping / Persistence(own schema + IDesignTimeDbContextFactory) /
+`Domain / Contracts / Features / Mapping / Persistence(entity configurations in own schema) /
 Endpoints / <Name>Module`. Add: a `<Name>Grid` (`GridFieldMap` + projection), a `Get<Name>GridQuery`,
 `/grid` + `/export` endpoints, a `<Name>ChartDataSource : IChartDataSource`, an idempotent seeder +
-hosted service. Register in `<Name>Module.Register`: `AddModuleDbContext`, repository,
-`AddScoped<IChartDataSource, <Name>ChartDataSource>()`, `AddHostedService<<Name>SeedHostedService>()`.
-Then add the `ProjectReference` + `AddModules(...)` entry in `src/Api`, create the migration, and apply it.
+hosted service. Register repositories, `AddScoped<IChartDataSource, <Name>ChartDataSource>()`, and
+`AddHostedService<<Name>SeedHostedService>()` in `<Name>Module.Register`; persistence code uses the
+shared `IMainDbContext` abstraction. Add the module assembly and schema mapping to `MainDbContext`.
+Then add the `ProjectReference` + `AddModules(...)` entry in `src/Api`, create one central migration, and apply it.
 
 ## Execution backlog
 The ordered task list lives in

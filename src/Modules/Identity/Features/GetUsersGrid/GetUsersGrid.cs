@@ -31,16 +31,16 @@ public static class UserGrid
 /// <param name="Grid">Grid query (paging, sort, filter, search).</param>
 public sealed record GetUsersGridQuery(GridQuery Grid) : IQuery<PagedResult<UserResponse>>;
 
-/// <summary>Handles admin users grid queries over <see cref="IdentityDbContext.Users"/>.</summary>
-public sealed class GetUsersGridHandler(IdentityDbContext dbContext)
+/// <summary>Handles admin users grid queries.</summary>
+public sealed class GetUsersGridHandler(IMainDbContext dbContext)
     : IQueryHandler<GetUsersGridQuery, PagedResult<UserResponse>>
 {
-    private readonly IdentityDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    private readonly IMainDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 
     /// <inheritdoc />
     public async Task<Result<PagedResult<UserResponse>>> Handle(GetUsersGridQuery query, CancellationToken ct)
     {
-        var applied = dbContext.Users.AsNoTracking().ApplyGridQuery(query.Grid, UserGrid.Fields);
+        var applied = dbContext.Set<User>().AsNoTracking().ApplyGridQuery(query.Grid, UserGrid.Fields);
         if (applied.IsFailure) return applied.Error;
         return await applied.Value.ToPagedResultAsync(query.Grid, UserGrid.Projection, ct).ConfigureAwait(false);
     }

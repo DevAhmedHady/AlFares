@@ -18,6 +18,19 @@ public static class IdentitySeeder
         ("expenses.write", "Create or update expenses"),
         ("expenses.delete", "Delete expenses"),
         ("expenses.export", "Export expenses"),
+        ("revenues.read", "View revenues"),
+        ("revenues.write", "Create or update revenues"),
+        ("revenues.delete", "Delete revenues"),
+        ("revenues.export", "Export revenues"),
+        ("cars.read", "View cars"),
+        ("cars.write", "Create or update cars"),
+        ("cars.delete", "Delete cars"),
+        ("cars.export", "Export cars"),
+        ("workers.read", "View workers"),
+        ("workers.write", "Create or update workers"),
+        ("workers.delete", "Delete workers"),
+        ("workers.export", "Export workers"),
+        ("reports.read", "View reports"),
         ("todos.read", "View to-dos"),
         ("todos.write", "Create or update to-dos"),
         ("todos.delete", "Delete to-dos"),
@@ -44,36 +57,50 @@ public static class IdentitySeeder
 
     public const string OwnerRoleName = "Owner";
 
-    public static async Task SeedAsync(IdentityDbContext db, CancellationToken ct = default)
+    public static async Task SeedAsync(IMainDbContext db, CancellationToken ct = default)
     {
         // Permissions
-        var existingCodes = await db.Permissions.Select(p => p.Code).ToListAsync(ct);
+        var existingCodes = await db.Set<Permission>().Select(p => p.Code).ToListAsync(ct);
         foreach (var (code, description) in Permissions)
             if (!existingCodes.Contains(code))
-                db.Permissions.Add(new Permission(Guid.NewGuid(), code, description));
+                db.Set<Permission>().Add(new Permission(Guid.NewGuid(), code, description));
         await db.SaveChangesAsync(ct);
 
-        var permByCode = await db.Permissions.ToDictionaryAsync(p => p.Code, p => p.Id, ct);
+        var permByCode = await db.Set<Permission>().ToDictionaryAsync(p => p.Code, p => p.Id, ct);
 
         // Roles + role_permissions
         foreach (var (name, perms) in Roles)
         {
-            var role = await db.Roles.FirstOrDefaultAsync(r => r.Name == name, ct);
+            var role = await db.Set<Role>().FirstOrDefaultAsync(r => r.Name == name, ct);
             if (role is null)
             {
                 role = new Role(Guid.NewGuid(), name, isSystem: true);
-                db.Roles.Add(role);
+                db.Set<Role>().Add(role);
                 await db.SaveChangesAsync(ct);
             }
 
-            var existing = await db.RolePermissions
+            var existing = await db.Set<RolePermission>()
                 .Where(rp => rp.RoleId == role.Id)
                 .Select(rp => rp.PermissionId)
                 .ToListAsync(ct);
 
             foreach (var code in perms)
                 if (permByCode.TryGetValue(code, out var pid) && !existing.Contains(pid))
-                    db.RolePermissions.Add(new RolePermission(role.Id, pid));
+                    db.Set<RolePermission>().Add(new RolePermission(role.Id, pid));
+        }
+
+        await db.SaveChangesAsync(ct);
+
+        // Reconcile already-provisioned tenant roles with their global templates.
+        var rolePermissions = await db.Set<RolePermission>().ToListAsync(ct);
+        var tenantRoles = await db.Set<TenantRole>().Where(x => x.BaseRoleId.HasValue).ToListAsync(ct);
+        var existingTenantPermissions = await db.Set<TenantPermission>().ToListAsync(ct);
+        foreach (var tenantRole in tenantRoles)
+        {
+            var desired = rolePermissions.Where(x => x.RoleId == tenantRole.BaseRoleId).Select(x => x.PermissionId);
+            foreach (var permissionId in desired)
+                if (!existingTenantPermissions.Any(x => x.TenantRoleId == tenantRole.Id && x.PermissionId == permissionId))
+                    db.Set<TenantPermission>().Add(new TenantPermission(tenantRole.Id, permissionId));
         }
 
         await db.SaveChangesAsync(ct);

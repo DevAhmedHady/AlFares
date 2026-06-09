@@ -2,11 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Net.Sockets;
 using System.Text.Json;
-using Clients.Persistence;
-using DashboardCharts.Persistence;
-using Expenses.Persistence;
+using Api.Persistence;
 using FluentAssertions;
-using Identity.Persistence;
+using Identity.Domain;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +12,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Npgsql;
-using Todos.Persistence;
 
 namespace BuildingBlocks.Tests.Api;
 
@@ -39,9 +36,9 @@ public sealed class BootAndSeedTests
         if (!await DatabaseReachableAsync())
             Assert.Inconclusive($"PostgreSQL not reachable at '{ConnectionString}'; skipping boot e2e.");
 
-        // Apply every module's migration up-front (idempotent) so the host's seeders have schema.
+        // Apply the single application migration set before the host starts its seeders.
         Environment.SetEnvironmentVariable("ConnectionStrings__Default", ConnectionString);
-        await MigrateAllAsync();
+        await MigrateAsync();
 
         await using var factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
@@ -81,6 +78,35 @@ public sealed class BootAndSeedTests
         bad.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await bad.Content.ReadFromJsonAsync<JsonElement>())
             .GetProperty("code").GetString().Should().Be("grid.unknown_field");
+
+        // Every saved dashboard definition computes successfully against PostgreSQL.
+        var chartsResponse = await client.GetAsync("/api/dashboard/charts");
+        chartsResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var charts = await chartsResponse.Content.ReadFromJsonAsync<JsonElement>();
+        foreach (var chart in charts.EnumerateArray())
+        {
+            var chartId = chart.GetProperty("id").GetGuid();
+            (await client.GetAsync($"/api/dashboard/charts/{chartId}/data"))
+                .StatusCode.Should().Be(HttpStatusCode.OK, $"chart {chartId} should compute");
+        }
+
+        // Ledger sources share MainDbContext, so this guards against concurrent EF operations.
+        var carsResponse = await client.PostAsJsonAsync("/api/cars/grid", new { page = 1, pageSize = 5 });
+        carsResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var cars = (await carsResponse.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("items");
+        foreach (var car in cars.EnumerateArray())
+        {
+            var ownerType = car.GetProperty("type").GetInt32() == 0 ? 2 : 3;
+            var carId = car.GetProperty("id").GetGuid();
+            var ledgerResponse = await client.PostAsJsonAsync("/api/reports/owner-ledger", new
+            {
+                ownerType,
+                ownerId = carId,
+                from = (DateOnly?)null,
+                to = (DateOnly?)null
+            });
+            ledgerResponse.StatusCode.Should().Be(HttpStatusCode.OK, $"ledger for car {carId} should compute");
+        }
     }
 
     private static async Task<bool> DatabaseReachableAsync()
@@ -101,19 +127,16 @@ public sealed class BootAndSeedTests
         }
     }
 
-    private static async Task MigrateAllAsync()
+    private static async Task MigrateAsync()
     {
-        await using (var db = new IdentityDbContextFactory().CreateDbContext([])) await db.Database.MigrateAsync();
-        await using (var db = new ClientsDbContextFactory().CreateDbContext([])) await db.Database.MigrateAsync();
-        await using (var db = new ExpensesDbContextFactory().CreateDbContext([])) await db.Database.MigrateAsync();
-        await using (var db = new TodosDbContextFactory().CreateDbContext([])) await db.Database.MigrateAsync();
-        await using (var db = new DashboardChartsDbContextFactory().CreateDbContext([])) await db.Database.MigrateAsync();
+        await using var db = new MainDbContextFactory().CreateDbContext([]);
+        await MainDatabaseInitializer.MigrateAsync(db);
     }
 
     private static async Task<Guid> SeededTenantIdAsync()
     {
-        await using var db = new IdentityDbContextFactory().CreateDbContext([]);
-        var tenant = await db.Tenants.FirstAsync();
+        await using var db = new MainDbContextFactory().CreateDbContext([]);
+        var tenant = await db.Set<Tenant>().FirstAsync();
         return tenant.Id;
     }
 }

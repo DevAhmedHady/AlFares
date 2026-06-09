@@ -29,7 +29,7 @@ public sealed class AuthRbacTests
     public async Task SeededAdmin_CanLogin_AndReceivesOwnerAccess()
     {
         await using var db = await SeedAsync();
-        var tenantId = (await db.Tenants.SingleAsync()).Id;
+        var tenantId = (await db.Set<Tenant>().SingleAsync()).Id;
 
         var login = new LoginHandler(
             new UserRepository(db), new MembershipRepository(db), new RefreshTokenRepository(db),
@@ -40,7 +40,7 @@ public sealed class AuthRbacTests
         result.IsSuccess.Should().BeTrue();
         result.Value.AccessToken.Should().NotBeNullOrWhiteSpace();
 
-        var adminId = (await db.Users.SingleAsync(u => u.Email.Value == AdminEmail)).Id;
+        var adminId = (await db.Set<User>().SingleAsync(u => u.Email.Value == AdminEmail)).Id;
         var access = await new MembershipRepository(db).GetEffectiveAccessAsync(tenantId, adminId, default);
         access.Roles.Should().Contain("Owner");
         access.Permissions.Should().Contain("clients.write").And.Contain("identity.tenants.manage");
@@ -51,7 +51,7 @@ public sealed class AuthRbacTests
     public async Task Login_WithWrongPassword_Fails()
     {
         await using var db = await SeedAsync();
-        var tenantId = (await db.Tenants.SingleAsync()).Id;
+        var tenantId = (await db.Set<Tenant>().SingleAsync()).Id;
         var login = new LoginHandler(
             new UserRepository(db), new MembershipRepository(db), new RefreshTokenRepository(db),
             Hasher, Tokens());
@@ -66,10 +66,10 @@ public sealed class AuthRbacTests
     public async Task Member_HasReadOnlyAccess_NoWriteOrManage()
     {
         await using var db = await SeedAsync();
-        var tenantId = (await db.Tenants.SingleAsync()).Id;
+        var tenantId = (await db.Set<Tenant>().SingleAsync()).Id;
         await AddMemberAsync(db, tenantId, "member@alfaris.local");
 
-        var memberId = (await db.Users.SingleAsync(u => u.Email.Value == "member@alfaris.local")).Id;
+        var memberId = (await db.Set<User>().SingleAsync(u => u.Email.Value == "member@alfaris.local")).Id;
         var access = await new MembershipRepository(db).GetEffectiveAccessAsync(tenantId, memberId, default);
 
         access.Roles.Should().ContainSingle().Which.Should().Be("Member");
@@ -83,7 +83,7 @@ public sealed class AuthRbacTests
     public async Task UsersGrid_ReturnsPagedUsers()
     {
         await using var db = await SeedAsync();
-        var tenantId = (await db.Tenants.SingleAsync()).Id;
+        var tenantId = (await db.Set<Tenant>().SingleAsync()).Id;
         await AddMemberAsync(db, tenantId, "member@alfaris.local");
 
         var handler = new GetUsersGridHandler(db);
@@ -99,9 +99,7 @@ public sealed class AuthRbacTests
         filtered.Value.Items.Single().Email.Should().Be("member@alfaris.local");
     }
 
-    private static IdentityDbContext NewDb() => new(
-        new DbContextOptionsBuilder<IdentityDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+    private static global::Api.Persistence.MainDbContext NewDb() => MainDbTestFactory.Create();
 
     private static readonly IPasswordHasher<User> Hasher = new PasswordHasher<User>();
 
@@ -114,7 +112,7 @@ public sealed class AuthRbacTests
         RefreshDays = 7
     });
 
-    private static async Task<IdentityDbContext> SeedAsync()
+    private static async Task<global::Api.Persistence.MainDbContext> SeedAsync()
     {
         var db = NewDb();
         await IdentitySeeder.SeedAsync(db);
@@ -128,16 +126,16 @@ public sealed class AuthRbacTests
         return db;
     }
 
-    private static async Task AddMemberAsync(IdentityDbContext db, Guid tenantId, string email)
+    private static async Task AddMemberAsync(global::Api.Persistence.MainDbContext db, Guid tenantId, string email)
     {
         var user = User.Create(Email.Create(email).Value, "Member User").Value;
         user.SetPasswordHash(Hasher.HashPassword(user, "Member-Pass1!"));
-        db.Users.Add(user);
+        db.Set<User>().Add(user);
 
-        var memberRole = await db.TenantRoles.SingleAsync(r => r.TenantId == tenantId && r.Name == "Member");
+        var memberRole = await db.Set<TenantRole>().SingleAsync(r => r.TenantId == tenantId && r.Name == "Member");
         var membership = new TenantUser(tenantId, user.Id);
-        db.TenantUsers.Add(membership);
-        db.TenantUserRoles.Add(new TenantUserRole(membership.Id, memberRole.Id));
+        db.Set<TenantUser>().Add(membership);
+        db.Set<TenantUserRole>().Add(new TenantUserRole(membership.Id, memberRole.Id));
         await db.SaveChangesAsync();
     }
 }

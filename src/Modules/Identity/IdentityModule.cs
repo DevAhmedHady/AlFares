@@ -20,9 +20,6 @@ public sealed class IdentityModule : IModule
     {
         services.Configure<SeedOptions>(config.GetSection(SeedOptions.SectionName));
 
-        // Own DB if ConnectionStrings:Identity is set, otherwise shared DB under schema "identity".
-        services.AddModuleDbContext<IdentityDbContext>(config, Name, IdentityDbContext.Schema);
-
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IRoleTemplateRepository, RoleTemplateRepository>();
