@@ -16,6 +16,12 @@ public sealed class PdfGridExporter : IGridExporter
     /// <summary>Initializes a PDF exporter and registers the embedded Arabic font once.</summary>
     public PdfGridExporter() => EnsureFontRegistered();
 
+    /// <summary>
+    /// Registers the embedded Arabic font and QuestPDF license once, eagerly. Safe to call at
+    /// application startup so the first PDF export does not pay the registration cost.
+    /// </summary>
+    public static void RegisterFonts() => EnsureFontRegistered();
+
     /// <inheritdoc />
     public ExportFormat Format => ExportFormat.Pdf;
 
