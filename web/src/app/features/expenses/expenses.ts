@@ -1,8 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { TextareaModule } from 'primeng/textarea';
 import { GridComponent } from '../../shared/grid/grid';
-import { ModalComponent } from '../../shared/modal/modal';
 import { ColumnDef } from '../../shared/grid/grid-column';
 import { ExpensesService } from '../../core/api/resources';
 import { AuthStore } from '../../core/auth/auth.store';
@@ -13,7 +17,10 @@ import { formatDate, formatMoney } from '../../core/labels';
 @Component({
   selector: 'app-expenses',
   standalone: true,
-  imports: [CommonModule, FormsModule, GridComponent, ModalComponent],
+  imports: [
+    CommonModule, FormsModule, GridComponent, DialogModule, ButtonModule,
+    InputTextModule, InputNumberModule, TextareaModule,
+  ],
   templateUrl: './expenses.html',
 })
 export class ExpensesComponent {

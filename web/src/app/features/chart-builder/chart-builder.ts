@@ -1,7 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ApexChartComponent } from '../../shared/chart/apex-chart';
+import { SelectModule } from 'primeng/select';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
+import { ChartComponent } from '../../shared/chart/chart';
 import { DashboardService } from '../../core/api/dashboard.service';
 import {
   ChartAggregation, ChartDataSourceMetadata, ChartDefinition, ChartRequest, ChartSeries, ChartType,
@@ -23,7 +26,7 @@ const AGG_LABELS: Record<number, string> = {
 @Component({
   selector: 'app-chart-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule, ApexChartComponent],
+  imports: [CommonModule, FormsModule, SelectModule, InputTextModule, ButtonModule, ChartComponent],
   templateUrl: './chart-builder.html',
 })
 export class ChartBuilderComponent {
@@ -56,6 +59,8 @@ export class ChartBuilderComponent {
   readonly yOptions = computed(() => this.selectedSource()?.fields.filter((f) => f.canAggregate) ?? []);
   readonly palette = computed(() => PALETTES[this.paletteName()] ?? PALETTES['افتراضي']);
   readonly needsY = computed(() => this.aggregation() !== ChartAggregation.Count);
+
+  paletteOf(name: string): string[] { return PALETTES[name] ?? []; }
 
   constructor() {
     this.service.datasources().subscribe({

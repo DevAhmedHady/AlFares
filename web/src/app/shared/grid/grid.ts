@@ -1,8 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   Component, TemplateRef, computed, effect, inject, input, output, signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { InputTextModule } from 'primeng/inputtext';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { PaginatorModule, PaginatorState } from 'primeng/paginator';
+import { TooltipModule } from 'primeng/tooltip';
 import { AuthStore } from '../../core/auth/auth.store';
 import { downloadBlob } from '../../core/api/grid-client';
 import {
@@ -10,14 +20,17 @@ import {
 } from '../../core/grid.models';
 import { ColumnDef, GridSource } from './grid-column';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 type Row = any;
 
-/** Reusable RTL server-side grid: sort, global + per-column filter, column reorder/show-hide, export. */
+/** Reusable RTL server-side grid built on PrimeNG: sort, global + per-column filter,
+ *  column reorder/show-hide, paginator, Excel/PDF export of the full filtered set. */
 @Component({
   selector: 'app-grid',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule, FormsModule, TableModule, ButtonModule, SelectModule, MultiSelectModule,
+    InputTextModule, IconFieldModule, InputIconModule, PaginatorModule, TooltipModule,
+  ],
   templateUrl: './grid.html',
   styleUrl: './grid.scss',
 })
@@ -27,46 +40,50 @@ export class GridComponent {
   readonly title = input('');
   readonly columns = input<ColumnDef<any>[]>([]);
   readonly source = input.required<GridSource<any>>();
-  readonly pageSize = input(25);
+  readonly pageSizeInput = input(25, { alias: 'pageSize' });
   readonly exportName = input('export');
   readonly exportPermission = input<string | null>(null);
   readonly createPermission = input<string | null>(null);
   readonly rowActions = input<TemplateRef<unknown> | null>(null);
   readonly createClicked = output<void>();
 
-  readonly result = signal<PagedResult<Row> | null>(null);
+  readonly rows = signal<Row[]>([]);
+  readonly total = signal(0);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
   readonly search = signal('');
+  readonly pageSize = signal(25);
   private readonly sort = signal<GridSort | null>(null);
   private readonly columnFilters = signal<Record<string, string>>({});
   private readonly page = signal(1);
 
   readonly order = signal<string[]>([]);
-  readonly hidden = signal<Set<string>>(new Set());
-  readonly showColumnMenu = signal(false);
-  private dragKey: string | null = null;
+  readonly selectedKeys = signal<string[]>([]);
+
+  readonly Field = GridFieldType;
+  readonly first = computed(() => (this.page() - 1) * this.pageSize());
 
   readonly orderedColumns = computed<ColumnDef[]>(() => {
     const byKey = new Map(this.columns().map((c) => [c.key, c]));
-    return this.order()
-      .map((k) => byKey.get(k))
-      .filter((c): c is ColumnDef => !!c && !this.hidden().has(c.key));
+    const selected = new Set(this.selectedKeys());
+    return this.order().map((k) => byKey.get(k)).filter((c): c is ColumnDef => !!c && selected.has(c.key));
   });
 
+  readonly columnOptions = computed(() => this.columns().map((c) => ({ label: c.header, value: c.key })));
   readonly canExport = computed(() => this.store.has(this.exportPermission()));
   readonly canCreate = computed(() => this.store.has(this.createPermission()));
-  readonly Field = GridFieldType;
 
   constructor() {
     effect(() => {
       const cols = this.columns();
       if (cols.length && this.order().length === 0) {
         this.order.set(cols.map((c) => c.key));
+        this.selectedKeys.set(cols.map((c) => c.key));
       }
     });
-    // Reload whenever the composed query changes.
+    effect(() => { this.pageSize.set(this.pageSizeInput()); });
+    // Single reactive load whenever the composed query changes.
     effect(() => { this.query(); this.load(); });
   }
 
@@ -99,11 +116,8 @@ export class GridComponent {
     this.loading.set(true);
     this.error.set(null);
     this.source().grid(this.query()).subscribe({
-      next: (r) => { this.result.set(r); this.loading.set(false); },
-      error: (e) => {
-        this.error.set(e?.error?.description ?? 'تعذر تحميل البيانات');
-        this.loading.set(false);
-      },
+      next: (r: PagedResult<Row>) => { this.rows.set(r.items); this.total.set(r.totalCount); this.loading.set(false); },
+      error: (e) => { this.error.set(e?.error?.description ?? 'تعذر تحميل البيانات'); this.loading.set(false); },
     });
   }
 
@@ -121,8 +135,8 @@ export class GridComponent {
 
   sortIcon(col: ColumnDef): string {
     const s = this.sort();
-    if (!s || s.field !== col.key) return '';
-    return s.desc ? '▼' : '▲';
+    if (!s || s.field !== col.key) return 'pi-sort-alt';
+    return s.desc ? 'pi-sort-amount-down' : 'pi-sort-amount-up-alt';
   }
 
   setFilter(key: string, value: string): void {
@@ -143,42 +157,32 @@ export class GridComponent {
     return v === null || v === undefined ? '' : String(v);
   }
 
-  // paging
-  get totalPages(): number { return this.result()?.totalPages ?? 1; }
-  get currentPage(): number { return this.result()?.page ?? 1; }
-  prev(): void { if (this.currentPage > 1) this.page.set(this.currentPage - 1); }
-  next(): void { if (this.currentPage < this.totalPages) this.page.set(this.currentPage + 1); }
-
-  // column visibility
-  toggleColumn(key: string): void {
-    this.hidden.update((s) => {
-      const next = new Set(s);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  }
-  isHidden(key: string): boolean { return this.hidden().has(key); }
-
-  // drag reorder
-  onDragStart(key: string): void { this.dragKey = key; }
-  onDrop(targetKey: string): void {
-    if (!this.dragKey || this.dragKey === targetKey) return;
-    const order = [...this.order()];
-    const from = order.indexOf(this.dragKey);
-    const to = order.indexOf(targetKey);
-    order.splice(from, 1);
-    order.splice(to, 0, this.dragKey);
-    this.order.set(order);
-    this.dragKey = null;
+  onPage(e: PaginatorState): void {
+    this.pageSize.set(e.rows ?? this.pageSize());
+    this.page.set((e.page ?? 0) + 1);
   }
 
-  // export
+  onColumnsChange(keys: string[]): void {
+    // Preserve declared order; selection drives visibility.
+    this.selectedKeys.set(this.columns().map((c) => c.key).filter((k) => keys.includes(k)));
+  }
+
+  onColReorder(e: { dragIndex?: number; dropIndex?: number }): void {
+    const visible = this.orderedColumns().map((c) => c.key);
+    if (e.dragIndex === undefined || e.dropIndex === undefined) return;
+    const [moved] = visible.splice(e.dragIndex, 1);
+    visible.splice(e.dropIndex, 0, moved);
+    const hidden = this.order().filter((k) => !visible.includes(k));
+    this.order.set([...visible, ...hidden]);
+  }
+
   exportAs(format: ExportFormat): void {
     const src = this.source();
     if (!src.export) return;
     const ext = format === ExportFormat.Xlsx ? 'xlsx' : 'pdf';
     src.export(format, this.query()).subscribe((blob) => downloadBlob(blob, `${this.exportName()}.${ext}`));
   }
+
   readonly Xlsx = ExportFormat.Xlsx;
   readonly Pdf = ExportFormat.Pdf;
 }

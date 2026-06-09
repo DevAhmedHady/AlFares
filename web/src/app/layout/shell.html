@@ -1,14 +1,20 @@
 <div class="shell">
   <aside class="sidebar">
-    <div class="brand">الفارس</div>
+    <div class="brand"><i class="pi pi-bolt"></i> الفارس</div>
     <nav>
       @for (item of nav(); track item.path) {
-        <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+        <a [routerLink]="item.path" routerLinkActive="active">
+          <i [class]="item.icon"></i><span>{{ item.label }}</span>
+        </a>
       }
     </nav>
     <div class="sidebar-footer">
-      <span class="muted user">{{ email() }}</span>
-      <button class="ghost" (click)="logout()">تسجيل الخروج</button>
+      <div class="user">
+        <i class="pi pi-user"></i>
+        <span class="email">{{ email() }}</span>
+      </div>
+      <p-button label="تسجيل الخروج" icon="pi pi-sign-out" severity="secondary" [text]="true"
+                styleClass="logout-btn" (onClick)="logout()" />
     </div>
   </aside>
   <main class="content">

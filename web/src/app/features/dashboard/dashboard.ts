@@ -1,7 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { ApexChartComponent } from '../../shared/chart/apex-chart';
-import { ModalComponent } from '../../shared/modal/modal';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { DialogModule } from 'primeng/dialog';
+import { TagModule } from 'primeng/tag';
+import { ChartComponent } from '../../shared/chart/chart';
 import { ChartBuilderComponent } from '../chart-builder/chart-builder';
 import { DashboardService } from '../../core/api/dashboard.service';
 import { AuthStore } from '../../core/auth/auth.store';
@@ -11,7 +14,7 @@ import { chartTypeLabels } from '../../core/labels';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ApexChartComponent, ModalComponent, ChartBuilderComponent],
+  imports: [CommonModule, ButtonModule, CardModule, DialogModule, TagModule, ChartComponent, ChartBuilderComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

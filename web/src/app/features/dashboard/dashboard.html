@@ -1,39 +1,49 @@
-<div class="dash-head">
-  <h1>لوحة المعلومات</h1>
+<div class="page-head">
+  <div>
+    <h1>لوحة المعلومات</h1>
+    <div class="sub">نظرة عامة على بيانات المصنع</div>
+  </div>
   <span class="spacer"></span>
-  @if (canManage) { <button (click)="openCreate()">+ رسم جديد</button> }
+  @if (canManage) { <p-button label="رسم جديد" icon="pi pi-plus" (onClick)="openCreate()" /> }
 </div>
 
 @if (loading()) {
   <p class="muted">جارٍ التحميل…</p>
 } @else if (charts().length === 0) {
-  <div class="card"><p class="muted">لا توجد رسوم بعد.</p></div>
+  <p-card><p class="muted empty-state"><i class="pi pi-chart-bar"></i> لا توجد رسوم بعد.</p></p-card>
 } @else {
   <div class="chart-grid">
     @for (chart of charts(); track chart.id) {
-      <div class="card chart-card" draggable="true"
+      <div class="chart-card" draggable="true"
            (dragstart)="onDragStart(chart.id)" (dragover)="$event.preventDefault()" (drop)="onDrop(chart.id)">
-        <div class="chart-head">
-          <strong>{{ chart.title }}</strong>
-          <span class="muted type">{{ typeLabels[chart.type] }}</span>
-          <span class="spacer"></span>
-          @if (canManage) {
-            <button class="ghost" (click)="openEdit(chart)">تعديل</button>
-            <button class="ghost danger-text" (click)="remove(chart)">حذف</button>
+        <p-card>
+          <ng-template pTemplate="header">
+            <div class="chart-head">
+              <i class="pi pi-bars handle"></i>
+              <strong>{{ chart.title }}</strong>
+              <p-tag [value]="typeLabels[chart.type]" severity="info" [rounded]="true" />
+              <span class="spacer"></span>
+              @if (canManage) {
+                <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" (onClick)="openEdit(chart)" />
+                <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" (onClick)="remove(chart)" />
+              }
+            </div>
+          </ng-template>
+          @if (data()[chart.id]) {
+            <app-chart [type]="chart.type" [series]="data()[chart.id]" [colors]="colors(chart)" />
+          } @else {
+            <p class="muted">…</p>
           }
-        </div>
-        @if (data()[chart.id]) {
-          <app-apex-chart [type]="chart.type" [series]="data()[chart.id]" [colors]="colors(chart)" />
-        } @else {
-          <p class="muted">…</p>
-        }
+        </p-card>
       </div>
     }
   </div>
 }
 
-@if (builderOpen()) {
-  <app-modal (closed)="builderOpen.set(false)">
+<p-dialog [visible]="builderOpen()" (visibleChange)="builderOpen.set($event)" [modal]="true"
+          [style]="{ width: '560px' }" [draggable]="false" [dismissableMask]="true"
+          [header]="editing() ? 'تعديل رسم' : 'رسم جديد'">
+  @if (builderOpen()) {
     <app-chart-builder [existing]="editing()" (saved)="onSaved()" (cancelled)="builderOpen.set(false)" />
-  </app-modal>
-}
+  }
+</p-dialog>

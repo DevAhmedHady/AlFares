@@ -1,8 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { TextareaModule } from 'primeng/textarea';
 import { GridComponent } from '../../shared/grid/grid';
-import { ModalComponent } from '../../shared/modal/modal';
 import { ColumnDef } from '../../shared/grid/grid-column';
 import { TodosService } from '../../core/api/resources';
 import { AuthStore } from '../../core/auth/auth.store';
@@ -13,7 +17,10 @@ import { formatDate, optionsFrom, todoPriorityLabels, todoStatusLabels } from '.
 @Component({
   selector: 'app-todos',
   standalone: true,
-  imports: [CommonModule, FormsModule, GridComponent, ModalComponent],
+  imports: [
+    CommonModule, FormsModule, GridComponent, DialogModule, ButtonModule,
+    InputTextModule, SelectModule, TextareaModule,
+  ],
   templateUrl: './todos.html',
 })
 export class TodosComponent {

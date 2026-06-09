@@ -1,6 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { PasswordModule } from 'primeng/password';
+import { MessageModule } from 'primeng/message';
 import { AuthService } from '../../core/auth/auth.service';
 import { TenantInfo } from '../../core/api/tenant.service';
 
@@ -8,7 +12,7 @@ import { TenantInfo } from '../../core/api/tenant.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, MessageModule],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })

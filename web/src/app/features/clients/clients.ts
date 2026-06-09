@@ -1,8 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { SelectModule } from 'primeng/select';
+import { TextareaModule } from 'primeng/textarea';
 import { GridComponent } from '../../shared/grid/grid';
-import { ModalComponent } from '../../shared/modal/modal';
 import { ColumnDef } from '../../shared/grid/grid-column';
 import { ClientsService } from '../../core/api/resources';
 import { AuthStore } from '../../core/auth/auth.store';
@@ -15,7 +20,10 @@ import {
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [CommonModule, FormsModule, GridComponent, ModalComponent],
+  imports: [
+    CommonModule, FormsModule, GridComponent, DialogModule, ButtonModule,
+    InputTextModule, InputNumberModule, SelectModule, TextareaModule,
+  ],
   templateUrl: './clients.html',
 })
 export class ClientsComponent {

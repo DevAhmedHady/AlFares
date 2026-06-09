@@ -1,5 +1,9 @@
+<div class="page-head">
+  <div><h1>المصروفات</h1><div class="sub">تتبّع مصروفات المصنع</div></div>
+</div>
+
 <app-grid
-  title="المصروفات"
+  title="قائمة المصروفات"
   exportName="expenses"
   [columns]="columns"
   [source]="service"
@@ -9,33 +13,34 @@
   (createClicked)="openCreate()" />
 
 <ng-template #actions let-row>
-  @if (canWrite) { <button class="ghost" (click)="openEdit(row)">تعديل</button> }
-  @if (canDelete) { <button class="ghost danger-text" (click)="remove(row)">حذف</button> }
+  <div class="row-actions">
+    @if (canWrite) { <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" pTooltip="تعديل" (onClick)="openEdit(row)" /> }
+    @if (canDelete) { <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" pTooltip="حذف" (onClick)="remove(row)" /> }
+  </div>
 </ng-template>
 
-@if (showForm()) {
-  <app-modal (closed)="showForm.set(false)">
-    <h2>{{ editing() ? 'تعديل مصروف' : 'مصروف جديد' }}</h2>
-    <div class="row">
-      <div class="field spacer"><label>الفئة</label>
-        <input [ngModel]="form().category" (ngModelChange)="patch('category', $event)" /></div>
-      <div class="field spacer"><label>المبلغ</label>
-        <input type="number" [ngModel]="form().amount" (ngModelChange)="patch('amount', +$event)" /></div>
-    </div>
-    <div class="row">
-      <div class="field spacer"><label>التاريخ</label>
-        <input type="date" [ngModel]="form().date" (ngModelChange)="patch('date', $event)" /></div>
-      <div class="field spacer"><label>المستفيد</label>
-        <input [ngModel]="form().payee" (ngModelChange)="patch('payee', $event)" /></div>
-    </div>
-    <div class="field">
-      <label>ملاحظات</label>
-      <textarea rows="2" [ngModel]="form().notes" (ngModelChange)="patch('notes', $event)"></textarea>
-    </div>
-    <div class="row">
-      <span class="spacer"></span>
-      <button class="ghost" (click)="showForm.set(false)">إلغاء</button>
-      <button (click)="save()" [disabled]="saving() || !form().category">حفظ</button>
-    </div>
-  </app-modal>
-}
+<p-dialog [visible]="showForm()" (visibleChange)="showForm.set($event)" [modal]="true" [draggable]="false"
+          [dismissableMask]="true" [style]="{ width: '520px' }"
+          [header]="editing() ? 'تعديل مصروف' : 'مصروف جديد'">
+  <div class="row">
+    <div class="field spacer"><label>الفئة</label>
+      <input pInputText class="w-full" [ngModel]="form().category" (ngModelChange)="patch('category', $event)" /></div>
+    <div class="field spacer"><label>المبلغ</label>
+      <p-inputnumber class="w-full" mode="decimal" [minFractionDigits]="2"
+                     [ngModel]="form().amount" (ngModelChange)="patch('amount', $event || 0)" /></div>
+  </div>
+  <div class="row">
+    <div class="field spacer"><label>التاريخ</label>
+      <input pInputText type="date" class="w-full" [ngModel]="form().date" (ngModelChange)="patch('date', $event)" /></div>
+    <div class="field spacer"><label>المستفيد</label>
+      <input pInputText class="w-full" [ngModel]="form().payee" (ngModelChange)="patch('payee', $event)" /></div>
+  </div>
+  <div class="field">
+    <label>ملاحظات</label>
+    <textarea pTextarea class="w-full" rows="2" [ngModel]="form().notes" (ngModelChange)="patch('notes', $event)"></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="إلغاء" severity="secondary" [text]="true" (onClick)="showForm.set(false)" />
+    <p-button label="حفظ" icon="pi pi-check" (onClick)="save()" [disabled]="saving() || !form().category" />
+  </ng-template>
+</p-dialog>

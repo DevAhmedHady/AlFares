@@ -1,5 +1,9 @@
+<div class="page-head">
+  <div><h1>العملاء</h1><div class="sub">إدارة حسابات العملاء</div></div>
+</div>
+
 <app-grid
-  title="العملاء"
+  title="قائمة العملاء"
   exportName="clients"
   [columns]="columns"
   [source]="service"
@@ -9,44 +13,44 @@
   (createClicked)="openCreate()" />
 
 <ng-template #actions let-row>
-  @if (canWrite) { <button class="ghost" (click)="openEdit(row)">تعديل</button> }
-  @if (canWrite) { <button class="ghost" (click)="toggleStatus(row)">تبديل الحالة</button> }
-  @if (canDelete) { <button class="ghost danger-text" (click)="remove(row)">حذف</button> }
+  <div class="row-actions">
+    @if (canWrite) { <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" pTooltip="تعديل" (onClick)="openEdit(row)" /> }
+    @if (canWrite) { <p-button icon="pi pi-sync" severity="secondary" [text]="true" [rounded]="true" pTooltip="تبديل الحالة" (onClick)="toggleStatus(row)" /> }
+    @if (canDelete) { <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" pTooltip="حذف" (onClick)="remove(row)" /> }
+  </div>
 </ng-template>
 
-@if (showForm()) {
-  <app-modal (closed)="showForm.set(false)">
-    <h2>{{ editing() ? 'تعديل عميل' : 'عميل جديد' }}</h2>
-    <div class="field">
-      <label>اسم العميل</label>
-      <input [ngModel]="form().name" (ngModelChange)="patch('name', $event)" />
-    </div>
-    <div class="field">
-      <label>جهة الاتصال</label>
-      <input [ngModel]="form().contactName" (ngModelChange)="patch('contactName', $event)" />
-    </div>
-    <div class="row">
-      <div class="field spacer"><label>الهاتف</label>
-        <input [ngModel]="form().phone" (ngModelChange)="patch('phone', $event)" /></div>
-      <div class="field spacer"><label>البريد</label>
-        <input [ngModel]="form().email" (ngModelChange)="patch('email', $event)" /></div>
-    </div>
-    <div class="row">
-      <div class="field spacer"><label>الرصيد</label>
-        <input type="number" [ngModel]="form().accountBalance" (ngModelChange)="patch('accountBalance', +$event)" /></div>
-      <div class="field spacer"><label>النشاط</label>
-        <select [ngModel]="form().activityLevel" (ngModelChange)="patch('activityLevel', +$event)">
-          @for (opt of activityOptions; track opt[0]) { <option [value]="opt[0]">{{ opt[1] }}</option> }
-        </select></div>
-    </div>
-    <div class="field">
-      <label>ملاحظات</label>
-      <textarea rows="2" [ngModel]="form().notes" (ngModelChange)="patch('notes', $event)"></textarea>
-    </div>
-    <div class="row">
-      <span class="spacer"></span>
-      <button class="ghost" (click)="showForm.set(false)">إلغاء</button>
-      <button (click)="save()" [disabled]="saving() || !form().name">حفظ</button>
-    </div>
-  </app-modal>
-}
+<p-dialog [visible]="showForm()" (visibleChange)="showForm.set($event)" [modal]="true" [draggable]="false"
+          [dismissableMask]="true" [style]="{ width: '520px' }"
+          [header]="editing() ? 'تعديل عميل' : 'عميل جديد'">
+  <div class="field">
+    <label>اسم العميل</label>
+    <input pInputText class="w-full" [ngModel]="form().name" (ngModelChange)="patch('name', $event)" />
+  </div>
+  <div class="field">
+    <label>جهة الاتصال</label>
+    <input pInputText class="w-full" [ngModel]="form().contactName" (ngModelChange)="patch('contactName', $event)" />
+  </div>
+  <div class="row">
+    <div class="field spacer"><label>الهاتف</label>
+      <input pInputText class="w-full" [ngModel]="form().phone" (ngModelChange)="patch('phone', $event)" /></div>
+    <div class="field spacer"><label>البريد</label>
+      <input pInputText class="w-full" [ngModel]="form().email" (ngModelChange)="patch('email', $event)" /></div>
+  </div>
+  <div class="row">
+    <div class="field spacer"><label>الرصيد</label>
+      <p-inputnumber class="w-full" mode="decimal" [minFractionDigits]="2"
+                     [ngModel]="form().accountBalance" (ngModelChange)="patch('accountBalance', $event || 0)" /></div>
+    <div class="field spacer"><label>مستوى النشاط</label>
+      <p-select class="w-full" [options]="activityOptions" optionLabel="1" optionValue="0" appendTo="body"
+                [ngModel]="form().activityLevel" (ngModelChange)="patch('activityLevel', +$event)" /></div>
+  </div>
+  <div class="field">
+    <label>ملاحظات</label>
+    <textarea pTextarea class="w-full" rows="2" [ngModel]="form().notes" (ngModelChange)="patch('notes', $event)"></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="إلغاء" severity="secondary" [text]="true" (onClick)="showForm.set(false)" />
+    <p-button label="حفظ" icon="pi pi-check" (onClick)="save()" [disabled]="saving() || !form().name" />
+  </ng-template>
+</p-dialog>

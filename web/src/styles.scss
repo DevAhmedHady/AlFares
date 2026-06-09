@@ -1,16 +1,20 @@
-/* الفارس — global RTL Arabic-first theme. */
+/* الفارس — global RTL Arabic-first theme on PrimeNG (Aura). */
+@import 'primeicons/primeicons.css';
+
+/* Self-hosted Arabic font (no CDN dependency → no tofu offline). */
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/Cairo.ttf') format('truetype');
+}
+
 :root {
-  --bg: #f1f5f9;
-  --surface: #ffffff;
-  --border: #e2e8f0;
-  --text: #0f172a;
-  --muted: #64748b;
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --danger: #dc2626;
-  --success: #16a34a;
-  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --radius: 10px;
+  --app-bg: #f1f5f9;
+  --app-shell: #0b1220;
+  --app-radius: 14px;
+  --p-font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -20,54 +24,31 @@ html, body {
   padding: 0;
   height: 100%;
   font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--app-bg);
+  color: var(--p-text-color, #0f172a);
+  -webkit-font-smoothing: antialiased;
 }
 
-a { color: var(--primary); text-decoration: none; }
+/* Make PrimeNG components inherit the Arabic font everywhere. */
+.p-component, .p-component * { font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; }
 
-button {
-  font-family: inherit;
-  cursor: pointer;
-  border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  background: var(--primary);
-  color: #fff;
-  transition: background 0.15s ease;
-}
-button:hover { background: var(--primary-dark); }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
-button.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
-button.ghost:hover { background: var(--bg); }
-button.danger { background: var(--danger); }
-button.success { background: var(--success); }
+a { color: var(--p-primary-color); text-decoration: none; }
 
-input, select, textarea {
-  font-family: inherit;
-  font-size: 0.9rem;
-  padding: 0.45rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--text);
-  width: 100%;
-}
-label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 0.25rem; }
-
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1.25rem;
-}
-
-.field { margin-bottom: 0.9rem; }
-.row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.muted { color: var(--p-text-muted-color, #64748b); }
 .spacer { flex: 1; }
-.muted { color: var(--muted); }
-.error-text { color: var(--danger); font-size: 0.85rem; }
-.danger-text { color: var(--danger) !important; }
-h2 { font-size: 1.15rem; margin-top: 0; }
+.row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end; }
+.field { margin-bottom: 1rem; }
+.field label { display: block; font-size: 0.82rem; color: var(--p-text-muted-color, #64748b); margin-bottom: 0.35rem; font-weight: 600; }
+.w-full { width: 100%; }
+.row-actions { display: inline-flex; gap: 0.1rem; }
+:host ::ng-deep .p-inputnumber, :host ::ng-deep .p-select, :host ::ng-deep .p-datepicker { width: 100%; }
+
+/* Page heading shared across feature screens. */
+.page-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
+.page-head h1 { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
+.page-head .sub { color: var(--p-text-muted-color, #64748b); font-size: 0.9rem; }
+
+/* Scrollbars — subtle. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
