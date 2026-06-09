@@ -153,8 +153,8 @@
 
 ## Milestone M7 — Docs & Agent Files (Feature F10, P2)
 
-- [ ] **T100 — CLAUDE.md** (repo root): stack, module conventions (link `docs/adding-a-module.md`), how to add a grid + chart datasource, build/run/migrate commands, Angular dev commands, RTL/Arabic notes.
-- [ ] **T101 — AGENTS.md** (Codex agent file): operational guidance for Codex-CLI — build/test/migrate/run commands, conventions, the rule "never reference another module — use the `IChartDataSource` registry", per-module Definition of Done (migration applied, seeder idempotent, grid+export+chart wired, permissions enforced).
+- [x] **T100 — CLAUDE.md** (repo root): stack, module conventions (link `docs/adding-a-module.md`), how to add a grid + chart datasource, build/run/migrate commands, Angular dev commands, RTL/Arabic notes.
+- [x] **T101 — AGENTS.md** (Codex agent file): operational guidance for Codex-CLI — build/test/migrate/run commands, conventions, the rule "never reference another module — use the `IChartDataSource` registry", per-module Definition of Done (migration applied, seeder idempotent, grid+export+chart wired, permissions enforced).
 
 ---
 
