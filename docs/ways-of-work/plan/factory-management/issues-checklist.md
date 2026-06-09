@@ -54,7 +54,7 @@
   - *Accept:* restore succeeds; versions pinned.
 - [x] **T018 — Export contracts + Excel.** `ExportFormat` enum, `ExportColumn` record, `IGridExporter` interface; `ExcelGridExporter` (ClosedXML) — headers from `ExportColumn`, typed cells.
   - *Accept:* produces a valid `.xlsx` byte array from sample rows.
-- [ ] **T019 — PDF exporter (RTL).** `PdfGridExporter` (QuestPDF) — document `DirectionFromRightToLeft`, embed Arabic font (Cairo/Amiri under `BuildingBlocks/Assets/`), table of columns/rows, title.
+- [x] **T019 — PDF exporter (RTL).** `PdfGridExporter` (QuestPDF) — document `DirectionFromRightToLeft`, embed Arabic font (Cairo/Amiri under `BuildingBlocks/Assets/`), table of columns/rows, title.
   - *Accept:* Arabic header text renders RTL in the produced PDF.
 - [ ] **T020 — Export DI registration.** Register both exporters keyed by `ExportFormat`; a small factory/resolver `IGridExporterFactory.For(ExportFormat)`. Clamp exports to ~50k rows.
   - *Accept:* resolving by format returns the right exporter.
