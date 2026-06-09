@@ -1,0 +1,96 @@
+<p-table
+  [value]="rows()"
+  [columns]="orderedColumns()"
+  [loading]="loading()"
+  [reorderableColumns]="true"
+  (onColReorder)="onColReorder($event)"
+  dataKey="id"
+  styleClass="p-datatable-sm grid-table"
+  [scrollable]="true">
+
+  <ng-template pTemplate="caption">
+    <div class="grid-toolbar">
+      <div class="grid-title">
+        <h2>{{ title() }}</h2>
+        <span class="muted count">{{ total() }} سجل</span>
+      </div>
+      <span class="spacer"></span>
+
+      <p-iconfield iconPosition="right">
+        <p-inputicon styleClass="pi pi-search" />
+        <input pInputText type="text" placeholder="بحث..." [ngModel]="search()"
+               (ngModelChange)="onSearch($event)" />
+      </p-iconfield>
+
+      <p-multiselect
+        [options]="columnOptions()" [ngModel]="selectedKeys()" (ngModelChange)="onColumnsChange($event)"
+        optionLabel="label" optionValue="value" [showToggleAll]="true"
+        placeholder="الأعمدة" [maxSelectedLabels]="0" selectedItemsLabel="الأعمدة"
+        styleClass="cols-select" />
+
+      <p-button icon="pi pi-filter-slash" severity="secondary" [text]="true"
+                pTooltip="مسح الفلاتر" (onClick)="clearFilters()" />
+
+      @if (canExport() && source().export) {
+        <p-button label="Excel" icon="pi pi-file-excel" severity="success" [text]="true" (onClick)="exportAs(Xlsx)" />
+        <p-button label="PDF" icon="pi pi-file-pdf" severity="danger" [text]="true" (onClick)="exportAs(Pdf)" />
+      }
+      @if (canCreate() && createPermission()) {
+        <p-button label="جديد" icon="pi pi-plus" (onClick)="createClicked.emit()" />
+      }
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      @for (col of columns; track col.key) {
+        <th pReorderableColumn (click)="toggleSort(col)" [class.sortable]="col.sortable !== false">
+          <span class="th-label">{{ col.header }}</span>
+          @if (col.sortable !== false) { <i class="pi {{ sortIcon(col) }} th-sort"></i> }
+        </th>
+      }
+      @if (rowActions()) { <th class="actions-col">إجراءات</th> }
+    </tr>
+    <tr class="filter-row">
+      @for (col of columns; track col.key) {
+        <th>
+          @if (col.filterable !== false) {
+            @if (col.options) {
+              <p-select [options]="col.options" optionLabel="1" optionValue="0" [showClear]="true"
+                        placeholder="الكل" appendTo="body"
+                        (onChange)="setFilter(col.key, $event.value ?? '')" styleClass="filter-ctl" />
+            } @else {
+              <input pInputText type="text" placeholder="تصفية" class="filter-ctl"
+                     (input)="setFilter(col.key, $any($event.target).value)" />
+            }
+          }
+        </th>
+      }
+      @if (rowActions()) { <th></th> }
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-row let-columns="columns">
+    <tr>
+      @for (col of columns; track col.key) {
+        <td>{{ cellValue(row, col) }}</td>
+      }
+      @if (rowActions()) {
+        <td class="actions-col">
+          <ng-container [ngTemplateOutlet]="rowActions()!" [ngTemplateOutletContext]="{ $implicit: row }" />
+        </td>
+      }
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr><td [attr.colspan]="orderedColumns().length + (rowActions() ? 1 : 0)" class="empty">لا توجد بيانات</td></tr>
+  </ng-template>
+</p-table>
+
+@if (error()) { <p class="error-text">{{ error() }}</p> }
+
+<p-paginator
+  [first]="first()" [rows]="pageSize()" [totalRecords]="total()"
+  [rowsPerPageOptions]="[10, 25, 50, 100]" (onPageChange)="onPage($event)"
+  [showCurrentPageReport]="true" currentPageReportTemplate="عرض {first} - {last} من {totalRecords}" />

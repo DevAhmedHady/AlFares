@@ -1,0 +1,27 @@
+<div class="login-page">
+  <div class="login-aside">
+    <div class="brand-lg">الفارس</div>
+    <p class="tagline">نظام الإدارة العليا للمصنع</p>
+  </div>
+
+  <form class="login-card" (ngSubmit)="submit()">
+    <h1>تسجيل الدخول</h1>
+    <p class="muted subtitle">{{ tenant()?.name || '...' }}</p>
+
+    <div class="field">
+      <label>البريد الإلكتروني</label>
+      <input pInputText class="w-full" type="email" autocomplete="username"
+             [ngModel]="email()" (ngModelChange)="email.set($event)" name="email" required />
+    </div>
+    <div class="field">
+      <label>كلمة المرور</label>
+      <p-password class="w-full" [feedback]="false" [toggleMask]="true" inputStyleClass="w-full"
+                  [ngModel]="password()" (ngModelChange)="password.set($event)" name="password" />
+    </div>
+
+    @if (error()) { <p-message severity="error" [text]="error()!" styleClass="w-full" /> }
+
+    <p-button type="submit" styleClass="w-full submit-btn" [loading]="busy()" [disabled]="!tenant()"
+              [label]="busy() ? 'جارٍ الدخول…' : 'تسجيل الدخول'" />
+  </form>
+</div>

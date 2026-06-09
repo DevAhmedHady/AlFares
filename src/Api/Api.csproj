@@ -10,6 +10,14 @@
   <ItemGroup>
     <ProjectReference Include="../Shared/BuildingBlocks/BuildingBlocks.csproj" />
     <ProjectReference Include="../Modules/Identity/Identity.csproj" />
+    <ProjectReference Include="../Modules/Clients/Clients.csproj" />
+    <ProjectReference Include="../Modules/Expenses/Expenses.csproj" />
+    <ProjectReference Include="../Modules/Todos/Todos.csproj" />
+    <ProjectReference Include="../Modules/DashboardCharts/DashboardCharts.csproj" />
+    <ProjectReference Include="../Modules/Revenues/Revenues.csproj" />
+    <ProjectReference Include="../Modules/Reports/Reports.csproj" />
+    <ProjectReference Include="../Modules/Cars/Cars.csproj" />
+    <ProjectReference Include="../Modules/Workers/Workers.csproj" />
   </ItemGroup>
 
   <ItemGroup>

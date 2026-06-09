@@ -1,0 +1,36 @@
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.login-aside {
+  background: radial-gradient(1200px 600px at 20% 20%, #1e3a8a, #0b1220);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+.brand-lg { font-size: 4rem; font-weight: 700; letter-spacing: -1px; }
+.tagline { color: #cbd5e1; font-size: 1.1rem; margin: 0; }
+
+.login-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: min(380px, 86vw);
+  margin: 0 auto;
+  padding: 2rem;
+
+  h1 { margin: 0; font-size: 1.6rem; font-weight: 700; }
+  .subtitle { margin: 0.25rem 0 1.75rem; font-size: 1rem; }
+}
+:host ::ng-deep .submit-btn { margin-top: 0.5rem; justify-content: center; }
+:host ::ng-deep .p-password { width: 100%; }
+
+@media (max-width: 800px) {
+  .login-page { grid-template-columns: 1fr; }
+  .login-aside { display: none; }
+}

@@ -4,7 +4,11 @@ namespace Expenses.Domain;
 public static class ExpenseErrors
 {
     /** <summary>Category required.</summary> */
-    public static readonly Error CategoryRequired=Error.Validation("expenses.category_required","Category is required.");
+    public static readonly Error TypeRequired=Error.Validation("expenses.type_required","Expense type is required.");
+    /** <summary>Type name required.</summary> */
+    public static readonly Error TypeNameRequired=Error.Validation("expenses.type_name_required","Expense type name is required.");
+    /** <summary>Owner required.</summary> */
+    public static readonly Error OwnerRequired=Error.Validation("expenses.owner_required","Owner id is required.");
     /** <summary>Amount invalid.</summary> */
     public static readonly Error AmountInvalid=Error.Validation("expenses.amount_invalid","Amount must be positive.");
     /** <summary>Payee required.</summary> */

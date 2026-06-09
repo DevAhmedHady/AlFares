@@ -1,0 +1,23 @@
+<div class="shell"><p-toast position="top-left" />
+  <aside class="sidebar">
+    <div class="brand"><i class="pi pi-bolt"></i> الفارس</div>
+    <nav>
+      @for (item of nav(); track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active">
+          <i [class]="item.icon"></i><span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user">
+        <i class="pi pi-user"></i>
+        <span class="email">{{ email() }}</span>
+      </div>
+      <p-button label="تسجيل الخروج" icon="pi pi-sign-out" severity="secondary" [text]="true"
+                styleClass="logout-btn" (onClick)="logout()" />
+    </div>
+  </aside>
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

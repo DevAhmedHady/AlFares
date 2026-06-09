@@ -1,0 +1,36 @@
+:host {
+  display: block;
+  background: var(--p-content-background, #fff);
+  border: 1px solid var(--p-content-border-color, #e2e8f0);
+  border-radius: var(--app-radius);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+
+.grid-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.25rem 0.25rem 0.75rem;
+}
+.grid-title { display: flex; align-items: baseline; gap: 0.6rem; }
+.grid-title h2 { margin: 0; font-size: 1.15rem; font-weight: 700; }
+.grid-title .count { font-size: 0.8rem; }
+
+:host ::ng-deep .cols-select { min-width: 9rem; }
+:host ::ng-deep .filter-ctl { width: 100%; font-size: 0.8rem; }
+
+th.sortable { cursor: pointer; user-select: none; }
+.th-label { font-weight: 700; }
+.th-sort { font-size: 0.75rem; margin-inline-start: 0.35rem; color: var(--p-primary-color); opacity: 0.85; }
+
+.filter-row th { padding-block: 0.35rem; background: var(--p-content-background); }
+
+.actions-col { width: 1%; white-space: nowrap; }
+.empty { text-align: center; color: var(--p-text-muted-color, #64748b); padding: 2rem; }
+.error-text { color: var(--p-red-500, #dc2626); padding: 0.5rem 1rem; margin: 0; }
+
+:host ::ng-deep .grid-table .p-datatable-tbody > tr > td { padding: 0.55rem 0.75rem; }
+:host ::ng-deep .grid-table .p-datatable-thead > tr > th { padding: 0.6rem 0.75rem; white-space: nowrap; }
+:host ::ng-deep .p-paginator { border: none; justify-content: flex-end; padding: 0.6rem 0.75rem; }

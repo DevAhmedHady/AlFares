@@ -5,6 +5,7 @@ using BuildingBlocks.Grids;
 using BuildingBlocks.Http;
 using BuildingBlocks.Messaging;
 using Clients.Contracts;
+using Clients.Domain;
 using Clients.Features;
 using Clients.Persistence;
 using MapsterMapper;
@@ -41,9 +42,9 @@ public sealed class ClientsEndpoints : IEndpoint
         group.MapPost("/export", ExportAsync).RequirePermission(Export);
     }
 
-    private static async Task<IResult> ExportAsync(ClientExportRequest request, ClientsDbContext db, IGridExporterFactory exporters, CancellationToken ct)
+    private static async Task<IResult> ExportAsync(ClientExportRequest request, IMainDbContext db, IGridExporterFactory exporters, CancellationToken ct)
     {
-        var applied = db.Clients.AsNoTracking().ApplyGridQuery(request.Grid, ClientGrid.Fields);
+        var applied = db.Set<Client>().AsNoTracking().ApplyGridQuery(request.Grid, ClientGrid.Fields);
         if (applied.IsFailure) return applied.ToHttpResult();
         var rows = await applied.Value.Take(GridExportLimits.MaxRows).Select(ClientGrid.Projection).ToListAsync(ct).ConfigureAwait(false);
         var columns = ClientGrid.Fields.Fields.Select(x => new ExportColumn(ResponseKey(x.Key), x.DisplayName, x.Type)).ToArray();

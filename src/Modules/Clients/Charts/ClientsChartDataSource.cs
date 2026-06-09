@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Clients.Charts;
 
 /// <summary>Exposes allow-listed Clients data for dashboard charts.</summary>
-public sealed class ClientsChartDataSource(ClientsDbContext dbContext) : IChartDataSource
+public sealed class ClientsChartDataSource(IMainDbContext dbContext) : IChartDataSource
 {
-    private readonly ClientsDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    private readonly IMainDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     /// <inheritdoc />
     public string Key => "clients";
     /// <inheritdoc />
@@ -26,7 +26,7 @@ public sealed class ClientsChartDataSource(ClientsDbContext dbContext) : IChartD
     /// <inheritdoc />
     public async Task<ChartSeries> ComputeAsync(ChartComputeRequest request, CancellationToken cancellationToken)
     {
-        var filtered = dbContext.Clients.AsNoTracking().ApplyGridQuery(new GridQuery { Filters = request.Filters }, ClientGrid.Fields);
+        var filtered = dbContext.Set<Client>().AsNoTracking().ApplyGridQuery(new GridQuery { Filters = request.Filters }, ClientGrid.Fields);
         if (filtered.IsFailure) throw new ArgumentException(filtered.Error.Description, nameof(request));
         var points = request.XField switch
         {

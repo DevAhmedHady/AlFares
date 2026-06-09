@@ -12,6 +12,10 @@
     <Project Path="src/Modules/Expenses/Expenses.csproj" />
     <Project Path="src/Modules/Clients/Clients.csproj" />
     <Project Path="src/Modules/Identity/Identity.csproj" />
+    <Project Path="src/Modules/Revenues/Revenues.csproj" />
+    <Project Path="src/Modules/Reports/Reports.csproj" />
+    <Project Path="src/Modules/Cars/Cars.csproj" />
+    <Project Path="src/Modules/Workers/Workers.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/BuildingBlocks.Tests/BuildingBlocks.Tests.csproj" />

@@ -20,7 +20,6 @@ public sealed class ClientsModule : IModule
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(config);
-        services.AddModuleDbContext<ClientsDbContext>(config, Name, ClientsDbContext.Schema);
         services.AddScoped<IClientRepository, ClientRepository>();
         services.AddScoped<IChartDataSource, ClientsChartDataSource>();
         services.AddHostedService<ClientsSeedHostedService>();

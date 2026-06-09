@@ -1,0 +1,54 @@
+<div class="page-head">
+  <div><h1>المهام</h1><div class="sub">مهام محددة بزمن الاستحقاق</div></div>
+</div>
+
+<div class="card">
+  <h3>مهام اليوم</h3>
+  @for (task of todayTasks(); track task.id) {
+    <div>{{ task.title }} - {{ todoPriorityLabels[task.priority] }} @if (task.dueTime) { ({{ task.dueTime }}) }</div>
+  } @empty { <div class="sub">لا توجد مهام اليوم</div> }
+</div>
+
+<app-grid
+  title="قائمة المهام"
+  exportName="todos"
+  [columns]="columns"
+  [source]="service"
+  [rowActions]="actions"
+  [exportPermission]="'todos.export'"
+  [createPermission]="'todos.write'"
+  (createClicked)="openCreate()" />
+
+<ng-template #actions let-row>
+  <div class="row-actions">
+    @if (canWrite) { <p-button icon="pi pi-replay" severity="secondary" [text]="true" [rounded]="true" pTooltip="تغيير الحالة" (onClick)="cycleStatus(row)" /> }
+    @if (canWrite) { <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" pTooltip="تعديل" (onClick)="openEdit(row)" /> }
+    @if (canDelete) { <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" pTooltip="حذف" (onClick)="remove(row)" /> }
+  </div>
+  <div class="field"><label>وقت الاستحقاق</label>
+    <input pInputText type="time" class="w-full" [ngModel]="form().dueTime" (ngModelChange)="patch('dueTime', $event || null)" /></div>
+</ng-template>
+
+<p-dialog [visible]="showForm()" (visibleChange)="showForm.set($event)" [modal]="true" [draggable]="false"
+          [dismissableMask]="true" [style]="{ width: '520px' }"
+          [header]="editing() ? 'تعديل مهمة' : 'مهمة جديدة'">
+  <div class="field">
+    <label>العنوان</label>
+    <input pInputText class="w-full" [ngModel]="form().title" (ngModelChange)="patch('title', $event)" />
+  </div>
+  <div class="row">
+    <div class="field spacer"><label>تاريخ الاستحقاق</label>
+      <input pInputText type="date" class="w-full" [min]="today" [ngModel]="form().dueDate" (ngModelChange)="patch('dueDate', $event)" /></div>
+    <div class="field spacer"><label>الأولوية</label>
+      <p-select class="w-full" [options]="priorityOptions" optionLabel="1" optionValue="0" appendTo="body"
+                [ngModel]="form().priority" (ngModelChange)="patch('priority', +$event)" /></div>
+  </div>
+  <div class="field">
+    <label>ملاحظات</label>
+    <textarea pTextarea class="w-full" rows="2" [ngModel]="form().notes" (ngModelChange)="patch('notes', $event)"></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="إلغاء" severity="secondary" [text]="true" (onClick)="showForm.set(false)" />
+    <p-button label="حفظ" icon="pi pi-check" (onClick)="save()" [disabled]="saving() || !form().title" />
+  </ng-template>
+</p-dialog>

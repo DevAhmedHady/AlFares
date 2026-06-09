@@ -1,3 +1,4 @@
+using BuildingBlocks.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -8,7 +9,7 @@ public sealed class ClientsSeedHostedService(IServiceProvider services, ILogger<
     /// <inheritdoc />
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        try { using var scope = services.CreateScope(); await ClientsSeeder.SeedAsync(scope.ServiceProvider.GetRequiredService<ClientsDbContext>(), cancellationToken).ConfigureAwait(false); logger.LogInformation("Clients seed completed."); }
+        try { using var scope = services.CreateScope(); await ClientsSeeder.SeedAsync(scope.ServiceProvider.GetRequiredService<IMainDbContext>(), cancellationToken).ConfigureAwait(false); logger.LogInformation("Clients seed completed."); }
         catch (Exception exception) { logger.LogWarning(exception, "Clients seed skipped: database unavailable or not migrated."); }
     }
     /// <inheritdoc />

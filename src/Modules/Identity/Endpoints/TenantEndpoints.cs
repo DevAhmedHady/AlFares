@@ -2,6 +2,7 @@ using BuildingBlocks.Endpoints;
 using BuildingBlocks.Http;
 using BuildingBlocks.Messaging;
 using Identity.Contracts;
+using Identity.Features.GetDefaultTenant;
 using Identity.Features.ProvisionTenant;
 using MapsterMapper;
 using Microsoft.AspNetCore.Builder;
@@ -21,5 +22,9 @@ public sealed class TenantEndpoints : IEndpoint
         group.MapPost("/", async (ProvisionTenantRequest req, IMapper map, IDispatcher d, CancellationToken ct) =>
             (await d.Send<TenantResponse>(map.Map<ProvisionTenantCommand>(req), ct))
                 .ToHttpResult(r => Results.Created($"{IdentityRoutes.Tenants}/{r.Id}", r)));
+
+        // Anonymous: lets the single-tenant SPA auto-select الفارس on the login screen.
+        group.MapGet("/default", async (IDispatcher d, CancellationToken ct) =>
+            (await d.Send<TenantResponse>(new GetDefaultTenantQuery(), ct)).ToHttpResult());
     }
 }

@@ -1,0 +1,78 @@
+<div class="builder">
+  <div class="field">
+    <label>العنوان</label>
+    <input pInputText class="w-full" [ngModel]="title()" (ngModelChange)="title.set($event)" />
+  </div>
+
+  <div class="row">
+    <div class="field spacer">
+      <label>النوع</label>
+      <p-select class="w-full" [options]="typeOptions" optionLabel="1" optionValue="0"
+                [ngModel]="type()" (ngModelChange)="type.set(+$event); refresh()" appendTo="body" />
+    </div>
+    <div class="field spacer">
+      <label>مصدر البيانات</label>
+      <p-select class="w-full" [options]="datasources()" optionLabel="displayName" optionValue="key"
+                [ngModel]="datasourceKey()" (ngModelChange)="datasourceKey.set($event); onDatasourceChange()" appendTo="body" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field spacer">
+      <label>حقل التصنيف (X)</label>
+      <p-select class="w-full" [options]="xOptions()" optionLabel="displayName" optionValue="key"
+                [ngModel]="xField()" (ngModelChange)="xField.set($event); refresh()" appendTo="body" />
+    </div>
+    <div class="field spacer">
+      <label>التجميع</label>
+      <p-select class="w-full" [options]="aggOptions" optionLabel="1" optionValue="0"
+                [ngModel]="aggregation()" (ngModelChange)="aggregation.set(+$event); refresh()" appendTo="body" />
+    </div>
+  </div>
+
+  @if (needsY()) {
+    <div class="field">
+      <label>حقل القيمة (Y)</label>
+      <p-select class="w-full" [options]="yOptions()" optionLabel="displayName" optionValue="key"
+                [ngModel]="yField()" (ngModelChange)="yField.set($event); refresh()" appendTo="body" />
+    </div>
+  }
+
+  <div class="field">
+    <label>لوحة الألوان</label>
+    <div class="palette-row">
+      @for (name of paletteNames; track name) {
+        <button type="button" class="palette-chip" [class.active]="paletteName() === name"
+                (click)="paletteName.set(name); refresh()">
+          <span class="dots">@for (c of paletteOf(name); track c) { <span class="dot" [style.background]="c"></span> }</span>
+          {{ name }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (error()) { <p class="error-text">{{ error() }}</p> }
+
+  <div class="field preview">
+    <label>معاينة</label>
+    <app-chart [type]="type()" [series]="preview()" [colors]="palette()" height="240px" />
+  </div>
+
+  <div class="row actions">
+    <span class="spacer"></span>
+    <p-button label="إلغاء" severity="secondary" [text]="true" (onClick)="cancelled.emit()" />
+    <p-button label="حفظ" icon="pi pi-check" (onClick)="save()" [disabled]="saving() || !title() || !xField()" />
+  </div>
+</div>
+
+<style>
+  .builder { display: block; }
+  .palette-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .palette-chip { display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.6rem; border: 1px solid var(--p-content-border-color, #e2e8f0); background: #fff; border-radius: 999px; cursor: pointer; font-family: inherit; font-size: 0.82rem; }
+  .palette-chip.active { border-color: var(--p-primary-color); box-shadow: 0 0 0 2px color-mix(in srgb, var(--p-primary-color) 25%, transparent); }
+  .palette-chip .dots { display: inline-flex; gap: 2px; }
+  .palette-chip .dot { width: 12px; height: 12px; border-radius: 3px; }
+  .preview { margin-top: 0.5rem; }
+  .error-text { color: var(--p-red-500, #dc2626); }
+  .actions { margin-top: 0.5rem; }
+</style>

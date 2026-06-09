@@ -21,9 +21,9 @@ public sealed class DashboardTests
     public async Task PreviewSaveAndLoadData_UsesRegisteredDatasource()
     {
         await using var clientsDb = CreateClientsDb();
-        clientsDb.Clients.Add(CreateClient("Active one", ClientStatus.Active));
-        clientsDb.Clients.Add(CreateClient("Active two", ClientStatus.Active));
-        clientsDb.Clients.Add(CreateClient("Inactive", ClientStatus.Inactive));
+        clientsDb.Set<Client>().Add(CreateClient("Active one", ClientStatus.Active));
+        clientsDb.Set<Client>().Add(CreateClient("Active two", ClientStatus.Active));
+        clientsDb.Set<Client>().Add(CreateClient("Inactive", ClientStatus.Inactive));
         await clientsDb.SaveChangesAsync();
 
         await using var dashboardDb = CreateDashboardDb();
@@ -53,11 +53,9 @@ public sealed class DashboardTests
         missing.Error.Code.Should().Be("dashboard.datasource_not_found");
     }
 
-    private static ClientsDbContext CreateClientsDb() => new(
-        new DbContextOptionsBuilder<ClientsDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+    private static global::Api.Persistence.MainDbContext CreateClientsDb() => MainDbTestFactory.Create();
 
-    private static DashboardChartsDbContext CreateDashboardDb() => new(
-        new DbContextOptionsBuilder<DashboardChartsDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+    private static global::Api.Persistence.MainDbContext CreateDashboardDb() => MainDbTestFactory.Create();
 
     private static Client CreateClient(string name, ClientStatus status)
     {

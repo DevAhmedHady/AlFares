@@ -1,18 +1,46 @@
-﻿using System.Linq.Expressions; using BuildingBlocks.Grids; using BuildingBlocks.Messaging; using Expenses.Contracts; using Expenses.Domain; using Expenses.Persistence; using FluentValidation; using MapsterMapper; using Microsoft.EntityFrameworkCore; using SharedKernel;
+
+using System.Linq.Expressions; using BuildingBlocks.Grids; using BuildingBlocks.Ledger; using BuildingBlocks.Messaging; using Expenses.Contracts; using Expenses.Domain; using Expenses.Persistence; using FluentValidation; using Microsoft.EntityFrameworkCore; using SharedKernel;
 namespace Expenses.Features;
-/** <summary>Create command.</summary> */ public sealed record CreateExpenseCommand(string Category,decimal Amount,DateOnly Date,string Payee,string? Notes):ICommand<ExpenseResponse>;
-/** <summary>Update command.</summary> */ public sealed record UpdateExpenseCommand(Guid Id,string Category,decimal Amount,DateOnly Date,string Payee,string? Notes):ICommand<ExpenseResponse>;
-/** <summary>Delete command.</summary> */ public sealed record DeleteExpenseCommand(Guid Id):ICommand<bool>;
-/** <summary>Get query.</summary> */ public sealed record GetExpenseByIdQuery(Guid Id):IQuery<ExpenseResponse>;
-/** <summary>Grid query.</summary> */ public sealed record GetExpensesGridQuery(GridQuery Grid):IQuery<PagedResult<ExpenseResponse>>;
-/** <summary>Create validator.</summary> */ public sealed class CreateExpenseValidator:AbstractValidator<CreateExpenseCommand>{/** <summary>Rules.</summary> */ public CreateExpenseValidator(){RuleFor(x=>x.Category).NotEmpty();RuleFor(x=>x.Amount).GreaterThan(0);RuleFor(x=>x.Payee).NotEmpty();}}
-/** <summary>Expense grid.</summary> */ public static class ExpenseGrid
+/// <summary>Create command.</summary>
+public sealed record CreateExpenseCommand(Guid ExpenseTypeId,decimal Amount,DateOnly Date,string Payee,string? Notes,OwnerType OwnerType,Guid? OwnerId):ICommand<ExpenseResponse>;
+/// <summary>Update command.</summary>
+public sealed record UpdateExpenseCommand(Guid Id,Guid ExpenseTypeId,decimal Amount,DateOnly Date,string Payee,string? Notes,OwnerType OwnerType,Guid? OwnerId):ICommand<ExpenseResponse>;
+/// <summary>Delete command.</summary>
+public sealed record DeleteExpenseCommand(Guid Id):ICommand<bool>;
+/// <summary>Get query.</summary>
+public sealed record GetExpenseByIdQuery(Guid Id):IQuery<ExpenseResponse>;
+/// <summary>Grid query.</summary>
+public sealed record GetExpensesGridQuery(GridQuery Grid):IQuery<PagedResult<ExpenseResponse>>;
+/// <summary>Create validator.</summary>
+public sealed class CreateExpenseValidator:AbstractValidator<CreateExpenseCommand>{/** <summary>Rules.</summary> */ public CreateExpenseValidator(){RuleFor(x=>x.ExpenseTypeId).NotEmpty();RuleFor(x=>x.Amount).GreaterThan(0);RuleFor(x=>x.Payee).NotEmpty();}}
+/// <summary>Expense grid row.</summary>
+public sealed record ExpenseGridRow(Guid Id,Guid ExpenseTypeId,string ExpenseTypeName,decimal Amount,DateOnly Date,string Payee,string? Notes,OwnerType OwnerType,Guid? OwnerId,DateTime CreatedAtUtc,DateTime UpdatedAtUtc);
+/// <summary>Expense grid.</summary>
+public static class ExpenseGrid
 {
-    /** <summary>Fields.</summary> */ public static readonly GridFieldMap<Expense> Fields=new(new[]{(new GridField("category","Ø§Ù„ÙØ¦Ø©",GridFieldType.Text,true,Chartable:true),(Expression<Func<Expense,object?>>)(x=>x.Category)),(new GridField("amount","Ø§Ù„Ù…Ø¨Ù„Øº",GridFieldType.Number,false,Chartable:true),x=>x.Amount),(new GridField("date","Ø§Ù„ØªØ§Ø±ÙŠØ®",GridFieldType.Date,false,Chartable:true),x=>x.Date),(new GridField("payee","Ø§Ù„Ù…Ø³ØªÙÙŠØ¯",GridFieldType.Text,true),x=>x.Payee),(new GridField("createdAt","ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¥Ù†Ø´Ø§Ø¡",GridFieldType.Date,false),x=>x.CreatedAtUtc)});
-    /** <summary>Projection.</summary> */ public static readonly Expression<Func<Expense,ExpenseResponse>> Projection=x=>new(x.Id,x.Category,x.Amount,x.Date,x.Payee,x.Notes,x.CreatedAtUtc,x.UpdatedAtUtc);
+ public static readonly GridFieldMap<ExpenseGridRow> Fields = new(new[]
+ {
+   (new GridField("expenseTypeId","نوع المصروف",GridFieldType.Text,false),(Expression<Func<ExpenseGridRow,object?>>)(x=>x.ExpenseTypeId)),
+   (new GridField("expenseTypeName","نوع المصروف",GridFieldType.Text,true,Chartable:true),(Expression<Func<ExpenseGridRow,object?>>)(x=>x.ExpenseTypeName)),
+   (new GridField("amount","المبلغ",GridFieldType.Number,false,Chartable:true),(Expression<Func<ExpenseGridRow,object?>>)(x=>x.Amount)),
+   (new GridField("date","التاريخ",GridFieldType.Date,false,Chartable:true),(Expression<Func<ExpenseGridRow,object?>>)(x=>x.Date)),
+   (new GridField("payee","المستفيد",GridFieldType.Text,true),(Expression<Func<ExpenseGridRow,object?>>)(x=>x.Payee)),
+   (new GridField("ownerType","نوع المالك",GridFieldType.Enum,false),(Expression<Func<ExpenseGridRow,object?>>)(x=>x.OwnerType)),
+   (new GridField("ownerId","المالك",GridFieldType.Text,false),(Expression<Func<ExpenseGridRow,object?>>)(x=>x.OwnerId)),
+   (new GridField("createdAt","تاريخ الإنشاء",GridFieldType.Date,false),(Expression<Func<ExpenseGridRow,object?>>)(x=>x.CreatedAtUtc))
+ });
+ public static IQueryable<ExpenseGridRow> Query(IMainDbContext db)=>from e in db.Set<Expense>().AsNoTracking() join t in db.Set<ExpenseType>().AsNoTracking() on e.ExpenseTypeId equals t.Id select new ExpenseGridRow(e.Id,e.ExpenseTypeId,t.Name,e.Amount,e.Date,e.Payee,e.Notes,e.OwnerType,e.OwnerId,e.CreatedAtUtc,e.UpdatedAtUtc);
+ public static readonly Expression<Func<ExpenseGridRow,ExpenseResponse>> Projection=x=>new(x.Id,x.ExpenseTypeId,x.ExpenseTypeName,x.Amount,x.Date,x.Payee,x.Notes,x.OwnerType,x.OwnerId,x.CreatedAtUtc,x.UpdatedAtUtc);
 }
-/** <summary>Create handler.</summary> */ public sealed class CreateExpenseHandler(IExpenseRepository repo,IMapper mapper):ICommandHandler<CreateExpenseCommand,ExpenseResponse>{/** <inheritdoc/> */ public async Task<Result<ExpenseResponse>> Handle(CreateExpenseCommand c,CancellationToken ct){var e=Expense.Create(c.Category,c.Amount,c.Date,c.Payee,c.Notes);if(e.IsFailure)return e.Error;repo.Add(e.Value);await repo.SaveChangesAsync(ct);return mapper.Map<ExpenseResponse>(e.Value);}}
-/** <summary>Update handler.</summary> */ public sealed class UpdateExpenseHandler(IExpenseRepository repo,IMapper mapper):ICommandHandler<UpdateExpenseCommand,ExpenseResponse>{/** <inheritdoc/> */ public async Task<Result<ExpenseResponse>> Handle(UpdateExpenseCommand c,CancellationToken ct){var e=await repo.GetByIdAsync(c.Id,ct);if(e is null)return ExpenseErrors.NotFound(c.Id);var r=e.Update(c.Category,c.Amount,c.Date,c.Payee,c.Notes);if(r.IsFailure)return r.Error;await repo.SaveChangesAsync(ct);return mapper.Map<ExpenseResponse>(e);}}
-/** <summary>Delete handler.</summary> */ public sealed class DeleteExpenseHandler(IExpenseRepository repo):ICommandHandler<DeleteExpenseCommand,bool>{/** <inheritdoc/> */ public async Task<Result<bool>> Handle(DeleteExpenseCommand c,CancellationToken ct){var e=await repo.GetByIdAsync(c.Id,ct);if(e is null)return ExpenseErrors.NotFound(c.Id);repo.Remove(e);await repo.SaveChangesAsync(ct);return true;}}
-/** <summary>Get handler.</summary> */ public sealed class GetExpenseByIdHandler(IExpenseRepository repo,IMapper mapper):IQueryHandler<GetExpenseByIdQuery,ExpenseResponse>{/** <inheritdoc/> */ public async Task<Result<ExpenseResponse>> Handle(GetExpenseByIdQuery q,CancellationToken ct){var e=await repo.GetByIdAsync(q.Id,ct);return e is null?ExpenseErrors.NotFound(q.Id):mapper.Map<ExpenseResponse>(e);}}
-/** <summary>Grid handler.</summary> */ public sealed class GetExpensesGridHandler(ExpensesDbContext db):IQueryHandler<GetExpensesGridQuery,PagedResult<ExpenseResponse>>{/** <inheritdoc/> */ public async Task<Result<PagedResult<ExpenseResponse>>> Handle(GetExpensesGridQuery q,CancellationToken ct){var r=db.Expenses.AsNoTracking().ApplyGridQuery(q.Grid,ExpenseGrid.Fields);if(r.IsFailure)return r.Error;return await r.Value.ToPagedResultAsync(q.Grid,ExpenseGrid.Projection,ct);}}
+/// <summary>Create handler.</summary>
+public sealed class CreateExpenseHandler(IExpenseRepository repo,IMainDbContext db):ICommandHandler<CreateExpenseCommand,ExpenseResponse>{public async Task<Result<ExpenseResponse>> Handle(CreateExpenseCommand c,CancellationToken ct){var t=await db.Set<ExpenseType>().FindAsync([c.ExpenseTypeId],ct);if(t is null)return ExpenseErrors.TypeRequired;var e=Expense.Create(c.ExpenseTypeId,c.Amount,c.Date,c.Payee,c.Notes,c.OwnerType,c.OwnerId);if(e.IsFailure)return e.Error;repo.Add(e.Value);await repo.SaveChangesAsync(ct);return new ExpenseResponse(e.Value.Id,t.Id,t.Name,e.Value.Amount,e.Value.Date,e.Value.Payee,e.Value.Notes,e.Value.OwnerType,e.Value.OwnerId,e.Value.CreatedAtUtc,e.Value.UpdatedAtUtc);}}
+/// <summary>Update handler.</summary>
+public sealed class UpdateExpenseHandler(IExpenseRepository repo,IMainDbContext db):ICommandHandler<UpdateExpenseCommand,ExpenseResponse>{public async Task<Result<ExpenseResponse>> Handle(UpdateExpenseCommand c,CancellationToken ct){var e=await repo.GetByIdAsync(c.Id,ct);if(e is null)return ExpenseErrors.NotFound(c.Id);var t=await db.Set<ExpenseType>().FindAsync([c.ExpenseTypeId],ct);if(t is null)return ExpenseErrors.TypeRequired;var r=e.Update(c.ExpenseTypeId,c.Amount,c.Date,c.Payee,c.Notes,c.OwnerType,c.OwnerId);if(r.IsFailure)return r.Error;await repo.SaveChangesAsync(ct);return new ExpenseResponse(e.Id,t.Id,t.Name,e.Amount,e.Date,e.Payee,e.Notes,e.OwnerType,e.OwnerId,e.CreatedAtUtc,e.UpdatedAtUtc);}}
+/// <summary>Delete handler.</summary>
+public sealed class DeleteExpenseHandler(IExpenseRepository repo):ICommandHandler<DeleteExpenseCommand,bool>{public async Task<Result<bool>> Handle(DeleteExpenseCommand c,CancellationToken ct){var e=await repo.GetByIdAsync(c.Id,ct);if(e is null)return ExpenseErrors.NotFound(c.Id);repo.Remove(e);await repo.SaveChangesAsync(ct);return true;}}
+/// <summary>Get handler.</summary>
+public sealed class GetExpenseByIdHandler(IMainDbContext db):IQueryHandler<GetExpenseByIdQuery,ExpenseResponse>{public async Task<Result<ExpenseResponse>> Handle(GetExpenseByIdQuery q,CancellationToken ct){var x=await ExpenseGrid.Query(db).Where(x=>x.Id==q.Id).Select(ExpenseGrid.Projection).SingleOrDefaultAsync(ct);return x is null?ExpenseErrors.NotFound(q.Id):x;}}
+/// <summary>Grid handler.</summary>
+public sealed class GetExpensesGridHandler(IMainDbContext db):IQueryHandler<GetExpensesGridQuery,PagedResult<ExpenseResponse>>{public async Task<Result<PagedResult<ExpenseResponse>>> Handle(GetExpensesGridQuery q,CancellationToken ct){var r=ExpenseGrid.Query(db).ApplyGridQuery(q.Grid,ExpenseGrid.Fields);if(r.IsFailure)return r.Error;return await r.Value.ToPagedResultAsync(q.Grid,ExpenseGrid.Projection,ct);}}
+
+

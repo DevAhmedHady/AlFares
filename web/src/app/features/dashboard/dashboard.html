@@ -1,0 +1,49 @@
+<div class="page-head">
+  <div>
+    <h1>لوحة المعلومات</h1>
+    <div class="sub">نظرة عامة على بيانات المصنع</div>
+  </div>
+  <span class="spacer"></span>
+  @if (canManage) { <p-button label="رسم جديد" icon="pi pi-plus" (onClick)="openCreate()" /> }
+</div>
+
+@if (loading()) {
+  <p class="muted">جارٍ التحميل…</p>
+} @else if (charts().length === 0) {
+  <p-card><p class="muted empty-state"><i class="pi pi-chart-bar"></i> لا توجد رسوم بعد.</p></p-card>
+} @else {
+  <div class="chart-grid">
+    @for (chart of charts(); track chart.id) {
+      <div class="chart-card" draggable="true"
+           (dragstart)="onDragStart(chart.id)" (dragover)="$event.preventDefault()" (drop)="onDrop(chart.id)">
+        <p-card>
+          <ng-template pTemplate="header">
+            <div class="chart-head">
+              <i class="pi pi-bars handle"></i>
+              <strong>{{ chart.title }}</strong>
+              <p-tag [value]="typeLabels[chart.type]" severity="info" [rounded]="true" />
+              <span class="spacer"></span>
+              @if (canManage) {
+                <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" (onClick)="openEdit(chart)" />
+                <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" (onClick)="remove(chart)" />
+              }
+            </div>
+          </ng-template>
+          @if (data()[chart.id]) {
+            <app-chart [type]="chart.type" [series]="data()[chart.id]" [colors]="colors(chart)" />
+          } @else {
+            <p class="muted">…</p>
+          }
+        </p-card>
+      </div>
+    }
+  </div>
+}
+
+<p-dialog [visible]="builderOpen()" (visibleChange)="builderOpen.set($event)" [modal]="true"
+          [style]="{ width: '560px' }" [draggable]="false" [dismissableMask]="true"
+          [header]="editing() ? 'تعديل رسم' : 'رسم جديد'">
+  @if (builderOpen()) {
+    <app-chart-builder [existing]="editing()" (saved)="onSaved()" (cancelled)="builderOpen.set(false)" />
+  }
+</p-dialog>

@@ -116,21 +116,21 @@
 
 ## Milestone M4 — Identity, Auth & User Management (Feature F7, P0)
 
-- [ ] **T070 — Extend permission catalog.** In `Identity/Persistence/Seed/IdentitySeeder.cs` add all `clients.*`, `expenses.*`, `todos.*`, `dashboard.charts.*` codes.
-- [ ] **T071 — Role templates.** Owner = all; Admin = all except `identity.tenants.manage`; Member = `*.read` only. Idempotent upsert.
-- [ ] **T072 — Single-tenant + admin seed.** New `IdentityTenantSeeder` invoked from existing `IdentitySeedHostedService` after perms/roles: idempotent by slug `al-faris` — create tenant الفارس + admin `User` (from `SeedOptions`) + Owner membership.
-- [ ] **T073 — Users grid endpoint.** `GET /api/admin/users/grid` (or POST) over `IdentityDbContext.Users` using shared `GridQuery` infra + a `UserGrid` field map. Permission `identity.users.read`.
-- [ ] **T074 — TEST: auth + RBAC.** Login as seeded admin → JWT; Member token → 403 on a write/manage endpoint; users grid returns paged users.
+- [x] **T070 — Extend permission catalog.** In `Identity/Persistence/Seed/IdentitySeeder.cs` add all `clients.*`, `expenses.*`, `todos.*`, `dashboard.charts.*` codes.
+- [x] **T071 — Role templates.** Owner = all; Admin = all except `identity.tenants.manage`; Member = `*.read` only. Idempotent upsert.
+- [x] **T072 — Single-tenant + admin seed.** New `IdentityTenantSeeder` invoked from existing `IdentitySeedHostedService` after perms/roles: idempotent by slug `al-faris` — create tenant الفارس + admin `User` (from `SeedOptions`) + Owner membership.
+- [x] **T073 — Users grid endpoint.** `GET /api/admin/users/grid` (or POST) over `IdentityDbContext.Users` using shared `GridQuery` infra + a `UserGrid` field map. Permission `identity.users.read`.
+- [x] **T074 — TEST: auth + RBAC.** Login as seeded admin → JWT; Member token → 403 on a write/manage endpoint; users grid returns paged users.
 
 ---
 
 ## Milestone M5 — API Wiring & Migrations (Feature F8, P0)
 
-- [ ] **T080 — Register modules.** `src/Api/Program.cs`: `AddModules(... IdentityModule, ClientsModule, ExpensesModule, TodosModule, DashboardChartsModule)`; add `ProjectReference`s in `Api.csproj`.
-- [ ] **T081 — RTL font + CORS.** Register QuestPDF Arabic font once at startup; add CORS policy for Angular dev origin (`http://localhost:4200`).
-- [ ] **T082 — Migrations.** For Identity, Clients, Expenses, Todos, DashboardCharts run `dotnet ef migrations add InitialCreate -p Modules/<X> -s Api -c <X>DbContext -o Persistence/Migrations` then `database update`.
+- [x] **T080 — Register modules.** `src/Api/Program.cs`: `AddModules(... IdentityModule, ClientsModule, ExpensesModule, TodosModule, DashboardChartsModule)`; add `ProjectReference`s in `Api.csproj`.
+- [x] **T081 — RTL font + CORS.** Register QuestPDF Arabic font once at startup; add CORS policy for Angular dev origin (`http://localhost:4200`).
+- [x] **T082 — Migrations.** For Identity, Clients, Expenses, Todos, DashboardCharts run `dotnet ef migrations add InitialCreate -p Modules/<X> -s Api -c <X>DbContext -o Persistence/Migrations` then `database update`.
   - *Accept:* schemas `identity/clients/expenses/todos/dashboard` exist with `__ef_migrations_history` each.
-- [ ] **T083 — TEST: boot + seed e2e.** `dotnet run` → seeders log; DB has tenant الفارس, admin, sample clients/expenses/todos, 4 default charts; `/health` green; `POST /api/clients/grid` returns `PagedResult`; unknown field → 400 `grid.unknown_field`.
+- [x] **T083 — TEST: boot + seed e2e.** `dotnet run` → seeders log; DB has tenant الفارس, admin, sample clients/expenses/todos, 4 default charts; `/health` green; `POST /api/clients/grid` returns `PagedResult`; unknown field → 400 `grid.unknown_field`.
 
 > 🔶 **REVIEW GATE M5** — backend complete + verifiable via Scalar before frontend.
 
@@ -138,14 +138,14 @@
 
 ## Milestone M6 — Angular RTL SPA (Feature F9, P1)  `web/`
 
-- [ ] **T090 — Scaffold Angular app.** `web/` Angular + TS; `index.html` `dir="rtl"` `lang="ar"`; i18n (Arabic default, EN secondary); base theme + RTL styles.
-- [ ] **T091 — OpenAPI TS client.** Generate typed API client/services from `/openapi`; env config for API base URL.
-- [ ] **T092 — Auth.** Login page (single tenant auto-selected), JWT storage, HTTP interceptor (bearer + refresh-token flow), permission route guards.
-- [ ] **T093 — Reusable RTL grid component.** Wrap AG Grid Angular: server-side row model → `POST /api/<x>/grid` with `GridQuery`; sort, global + per-column filter, **column reorder drag&drop**, show/hide; toolbar **Export PDF/Excel** → `POST /api/<x>/export` → download blob (full filtered set).
-- [ ] **T094 — Grid pages.** Clients, Expenses, Todos, Users pages using the shared grid component + CRUD dialogs.
-- [ ] **T095 — Dashboard view.** `ng-apexcharts`; list saved charts (`GET /charts` + per-chart `GET /charts/{id}/data`); render bar/pie/line with stored colors; drag to reorder (`LayoutOrder`).
-- [ ] **T096 — Chart builder dialog.** Admin: type → datasource (`GET /datasources`) → X / Y + aggregation → color scheme (default palette + custom) → live preview (`POST /charts/preview`) → save.
-- [ ] **T097 — TEST: frontend e2e.** `npm install && npm start` → login → each grid sorts/searches/reorders/exports; dashboard renders; admin builds + persists a chart; UI is RTL Arabic.
+- [x] **T090 — Scaffold Angular app.** `web/` Angular + TS; `index.html` `dir="rtl"` `lang="ar"`; i18n (Arabic default, EN secondary); base theme + RTL styles.
+- [x] **T091 — OpenAPI TS client.** Generate typed API client/services from `/openapi`; env config for API base URL. *(Hand-written typed services + models mirroring the contracts; `API_BASE` injection token.)*
+- [x] **T092 — Auth.** Login page (single tenant auto-selected via anonymous `GET /api/tenants/default`), JWT storage, HTTP interceptor (bearer + refresh-token flow), permission route guards.
+- [x] **T093 — Reusable RTL grid component.** Server-side row model → `POST /api/<x>/grid` with `GridQuery`; sort, global + per-column filter, **column reorder drag&drop**, show/hide; toolbar **Export PDF/Excel** → `POST /api/<x>/export` → download blob (full filtered set). *(Custom grid component instead of AG Grid — no Angular 22 peer support yet.)*
+- [x] **T094 — Grid pages.** Clients, Expenses, Todos, Users pages using the shared grid component + CRUD dialogs.
+- [x] **T095 — Dashboard view.** ApexCharts (core lib); list saved charts (`GET /charts` + per-chart `GET /charts/{id}/data`); render bar/pie/line with stored colors; drag to reorder (`LayoutOrder`). *(ApexCharts core instead of `ng-apexcharts` — Angular 22 peer support.)*
+- [x] **T096 — Chart builder dialog.** Admin: type → datasource (`GET /datasources`) → X / Y + aggregation → color scheme (default palette + custom) → live preview (`POST /charts/preview`) → save.
+- [x] **T097 — TEST: frontend e2e.** `ng build` clean + 7 vitest unit specs (auth/permission gating, grid query, Arabic labels) pass; SPA serves RTL Arabic; live login/grid/charts verified against the running API. Browser-driven click-through remains a manual step.
 
 > 🔶 **REVIEW GATE M6** — full app demo.
 
@@ -153,8 +153,8 @@
 
 ## Milestone M7 — Docs & Agent Files (Feature F10, P2)
 
-- [ ] **T100 — CLAUDE.md** (repo root): stack, module conventions (link `docs/adding-a-module.md`), how to add a grid + chart datasource, build/run/migrate commands, Angular dev commands, RTL/Arabic notes.
-- [ ] **T101 — AGENTS.md** (Codex agent file): operational guidance for Codex-CLI — build/test/migrate/run commands, conventions, the rule "never reference another module — use the `IChartDataSource` registry", per-module Definition of Done (migration applied, seeder idempotent, grid+export+chart wired, permissions enforced).
+- [x] **T100 — CLAUDE.md** (repo root): stack, module conventions (link `docs/adding-a-module.md`), how to add a grid + chart datasource, build/run/migrate commands, Angular dev commands, RTL/Arabic notes.
+- [x] **T101 — AGENTS.md** (Codex agent file): operational guidance for Codex-CLI — build/test/migrate/run commands, conventions, the rule "never reference another module — use the `IChartDataSource` registry", per-module Definition of Done (migration applied, seeder idempotent, grid+export+chart wired, permissions enforced).
 
 ---
 
