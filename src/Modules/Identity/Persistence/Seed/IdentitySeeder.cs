@@ -10,24 +10,36 @@ public static class IdentitySeeder
     // Permission catalog (code, description). Extend as modules add capabilities.
     public static readonly (string Code, string Description)[] Permissions =
     [
-        ("catalog.books.read", "View books"),
-        ("catalog.books.write", "Create or update books"),
-        ("catalog.books.delete", "Delete books"),
-        ("ordering.orders.read", "View orders"),
-        ("ordering.orders.write", "Place orders"),
-        ("identity.tenants.manage", "Manage tenants"),
-        ("identity.users.manage", "Manage tenant members and roles")
+        ("clients.read", "View clients"),
+        ("clients.write", "Create or update clients"),
+        ("clients.delete", "Delete clients"),
+        ("clients.export", "Export clients"),
+        ("expenses.read", "View expenses"),
+        ("expenses.write", "Create or update expenses"),
+        ("expenses.delete", "Delete expenses"),
+        ("expenses.export", "Export expenses"),
+        ("todos.read", "View to-dos"),
+        ("todos.write", "Create or update to-dos"),
+        ("todos.delete", "Delete to-dos"),
+        ("todos.export", "Export to-dos"),
+        ("dashboard.charts.read", "View dashboard charts"),
+        ("dashboard.charts.manage", "Define and manage dashboard charts"),
+        ("identity.users.read", "View tenant members"),
+        ("identity.users.manage", "Manage tenant members and roles"),
+        ("identity.tenants.manage", "Manage tenants")
     ];
 
-    // System role templates and the permission codes they grant.
+    // All permission codes in catalog order — single source for the role templates below.
+    private static readonly string[] AllCodes = Permissions.Select(p => p.Code).ToArray();
+
+    // System role templates and the permission codes they grant (derived from the catalog,
+    // so adding a permission above keeps the templates correct with no duplication):
+    //   Owner  = everything · Admin = everything except tenant management · Member = read-only.
     public static readonly (string Name, string[] Permissions)[] Roles =
     [
-        ("Owner", ["catalog.books.read", "catalog.books.write", "catalog.books.delete",
-                   "ordering.orders.read", "ordering.orders.write",
-                   "identity.tenants.manage", "identity.users.manage"]),
-        ("Admin", ["catalog.books.read", "catalog.books.write", "catalog.books.delete",
-                   "ordering.orders.read", "ordering.orders.write", "identity.users.manage"]),
-        ("Member", ["catalog.books.read", "ordering.orders.read"])
+        ("Owner", AllCodes),
+        ("Admin", AllCodes.Where(c => c != "identity.tenants.manage").ToArray()),
+        ("Member", AllCodes.Where(c => c.EndsWith(".read", StringComparison.Ordinal)).ToArray())
     ];
 
     public const string OwnerRoleName = "Owner";
