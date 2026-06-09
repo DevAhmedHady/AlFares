@@ -70,7 +70,7 @@
 - [x] **T030 — Project + module shell.** Create `Clients.csproj` (copy old Catalog csproj; ref BuildingBlocks + EFCore.Design). `ClientsModule : IModule`.
 - [x] **T031 — Domain.** `Client` aggregate (Name, Contact{Name,Phone,Email}, AccountBalance, `ActivityLevel{Low,Medium,High}`, `Status{Active,Inactive}`, Notes, timestamps); value objects reused (`Email`, `Money`-style); `Client.Create/Update/SetStatus → Result<Client>`; `ClientErrors`; `IClientRepository`.
 - [x] **T032 — Persistence.** `ClientsDbContext` (`HasDefaultSchema("clients")`), `ClientConfiguration`, `ClientRepository`, `ClientsDbContextFactory : IDesignTimeDbContextFactory`.
-- [ ] **T033 — Contracts + Mapping.** Request/Response records; `ClientsMappingConfig : IRegister` (entity→response unwrapping VOs, request→command).
+- [x] **T033 — Contracts + Mapping.** Request/Response records; `ClientsMappingConfig : IRegister` (entity→response unwrapping VOs, request→command).
 - [ ] **T034 — CRUD features.** Create/Update/SetStatus/Delete/GetById commands+queries+handlers (+ FluentValidation validators). All return `Result<T>`.
 - [ ] **T035 — Grid query + field map.** `ClientGrid` static (GridFieldMap + projection, Arabic DisplayNames, Chartable flags on status/activityLevel/accountBalance/createdAt); `GetClientsGridQuery` + handler using `ApplyGridQuery`/`ToPagedResultAsync`.
 - [ ] **T036 — Endpoints.** `POST /api/clients` (write), `PUT /{id}` (write), `DELETE /{id}` (delete), `GET /{id}` (read), `POST /api/clients/grid` (read), `POST /api/clients/export` (export, strip paging → full filtered set via `IGridExporter`). Permissions `clients.read/write/delete/export`.
