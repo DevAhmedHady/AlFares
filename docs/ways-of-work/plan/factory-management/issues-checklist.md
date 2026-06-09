@@ -50,7 +50,7 @@
   - *Accept:* interface compiles; no dependency on any module.
 
 ### Enabler EN3 — Export — `src/Shared/BuildingBlocks/Export/`
-- [ ] **T017 — Export packages.** Add `ClosedXML` + `QuestPDF` to `Directory.Packages.props`; reference from `BuildingBlocks.csproj`.
+- [x] **T017 — Export packages.** Add `ClosedXML` + `QuestPDF` to `Directory.Packages.props`; reference from `BuildingBlocks.csproj`.
   - *Accept:* restore succeeds; versions pinned.
 - [ ] **T018 — Export contracts + Excel.** `ExportFormat` enum, `ExportColumn` record, `IGridExporter` interface; `ExcelGridExporter` (ClosedXML) — headers from `ExportColumn`, typed cells.
   - *Accept:* produces a valid `.xlsx` byte array from sample rows.
