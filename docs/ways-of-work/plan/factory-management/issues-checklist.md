@@ -58,7 +58,7 @@
   - *Accept:* Arabic header text renders RTL in the produced PDF.
 - [x] **T020 — Export DI registration.** Register both exporters keyed by `ExportFormat`; a small factory/resolver `IGridExporterFactory.For(ExportFormat)`. Clamp exports to ~50k rows.
   - *Accept:* resolving by format returns the right exporter.
-- [ ] **T021 — TEST: exporters.** Round-trip xlsx (open + read header/first row); PDF non-empty + contains Arabic glyphs.
+- [x] **T021 — TEST: exporters.** Round-trip xlsx (open + read header/first row); PDF non-empty + contains Arabic glyphs.
 
 > 🔶 **REVIEW GATE M1** — freeze `GridQuery`/`PagedResult`/`IChartDataSource`/`IGridExporter` contracts before building modules.
 
