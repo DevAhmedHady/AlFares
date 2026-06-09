@@ -16,5 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Shared/BuildingBlocks/BuildingBlocks.csproj" />
+    <ProjectReference Include="../../src/Modules/Clients/Clients.csproj" />
   </ItemGroup>
 </Project>
