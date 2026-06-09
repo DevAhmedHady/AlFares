@@ -67,7 +67,7 @@
 ## Milestone M2 — Business Modules (Features F3/F4/F5, P1) — parallelizable after M1
 
 ### Feature F3 — Clients  `src/Modules/Clients/` (schema `clients`)
-- [ ] **T030 — Project + module shell.** Create `Clients.csproj` (copy old Catalog csproj; ref BuildingBlocks + EFCore.Design). `ClientsModule : IModule`.
+- [x] **T030 — Project + module shell.** Create `Clients.csproj` (copy old Catalog csproj; ref BuildingBlocks + EFCore.Design). `ClientsModule : IModule`.
 - [ ] **T031 — Domain.** `Client` aggregate (Name, Contact{Name,Phone,Email}, AccountBalance, `ActivityLevel{Low,Medium,High}`, `Status{Active,Inactive}`, Notes, timestamps); value objects reused (`Email`, `Money`-style); `Client.Create/Update/SetStatus → Result<Client>`; `ClientErrors`; `IClientRepository`.
 - [ ] **T032 — Persistence.** `ClientsDbContext` (`HasDefaultSchema("clients")`), `ClientConfiguration`, `ClientRepository`, `ClientsDbContextFactory : IDesignTimeDbContextFactory`.
 - [ ] **T033 — Contracts + Mapping.** Request/Response records; `ClientsMappingConfig : IRegister` (entity→response unwrapping VOs, request→command).
