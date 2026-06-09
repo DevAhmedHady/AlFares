@@ -9,8 +9,6 @@
        Adding a module = add its ProjectReference here and one entry in AddModules(...). -->
   <ItemGroup>
     <ProjectReference Include="../Shared/BuildingBlocks/BuildingBlocks.csproj" />
-    <ProjectReference Include="../Modules/Catalog/Catalog.csproj" />
-    <ProjectReference Include="../Modules/Ordering/Ordering.csproj" />
     <ProjectReference Include="../Modules/Identity/Identity.csproj" />
   </ItemGroup>
 

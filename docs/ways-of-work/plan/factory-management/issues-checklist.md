@@ -22,7 +22,7 @@
 - [x] **T001 — Copy template → Factory solution.** Copy `knights-templates` to `C:\Users\AhmedHady\source\repos\Factory`. Rename `knights.slnx` → `Factory.slnx`. Update solution-name references.
   - *Files:* whole tree; `Factory.slnx`.
   - *Accept:* `dotnet build Factory.slnx` succeeds on the unmodified copy.
-- [ ] **T002 — Remove sample modules.** Delete `src/Modules/Catalog` and `src/Modules/Ordering`; remove their `ProjectReference` from `src/Api/Api.csproj` and their `typeof(...).Assembly` lines + `using` from `src/Api/Program.cs`.
+- [x] **T002 — Remove sample modules.** Delete `src/Modules/Catalog` and `src/Modules/Ordering`; remove their `ProjectReference` from `src/Api/Api.csproj` and their `typeof(...).Assembly` lines + `using` from `src/Api/Program.cs`.
   - *Accept:* `dotnet build` succeeds; no Catalog/Ordering symbols remain.
 - [ ] **T003 — App config for الفارس.** In `src/Api/appsettings.json`: `ConnectionStrings:Default` → `Database=alfaris`; `Jwt:Issuer`/`Audience` → `al-faris`; add `Seed` section: `AdminEmail=admin@alfaris.local`, `AdminPassword`, `TenantName=الفارس`, `TenantSlug=al-faris`. Add a strongly-typed `SeedOptions` bound via `IConfiguration`.
   - *Files:* `appsettings.json`, `appsettings.Development.json`, new `Api/Configuration/SeedOptions.cs`.

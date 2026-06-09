@@ -3,17 +3,13 @@ using Api.Exceptions;
 using BuildingBlocks;
 using BuildingBlocks.Authentication;
 using BuildingBlocks.Modules;
-using Catalog;
 using Identity;
-using Ordering;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddBuildingBlocks();
 builder.Services.AddJwtAuth(builder.Configuration);
 builder.Services.AddModules(builder.Configuration,
-    typeof(CatalogModule).Assembly,
-    typeof(OrderingModule).Assembly,
     typeof(IdentityModule).Assembly);
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
