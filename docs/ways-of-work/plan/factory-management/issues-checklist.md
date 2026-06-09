@@ -81,7 +81,7 @@
 > 🔶 **REVIEW GATE M2a** — Clients is the reference vertical slice. Review before cloning to Expenses/Todos.
 
 ### Feature F4 — Expenses  `src/Modules/Expenses/` (schema `expenses`)
-- [ ] **T040 — Module + Domain.** `Expense`(Category, Amount(Money), Date(DateOnly), Payee, Notes, timestamps); factory; repo; errors. (Mirror Clients structure.)
+- [x] **T040 — Module + Domain.** `Expense`(Category, Amount(Money), Date(DateOnly), Payee, Notes, timestamps); factory; repo; errors. (Mirror Clients structure.)
 - [ ] **T041 — Persistence + Contracts + Mapping.** `ExpensesDbContext` schema `expenses`; config; factory; DTOs; mapping.
 - [ ] **T042 — CRUD + Grid.** Create/Update/Delete/GetById; `ExpenseGrid` map; `GetExpensesGridQuery`.
 - [ ] **T043 — Endpoints + permissions.** `/api/expenses` CRUD + `/grid` + `/export`; `expenses.read/write/delete/export`.
