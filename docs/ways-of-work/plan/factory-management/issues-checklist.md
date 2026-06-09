@@ -46,7 +46,7 @@
 
 ### Enabler EN2 — Chart registry contracts — `src/Shared/BuildingBlocks/Charts/`
 - [x] **T015 — Chart contracts.** `ChartAggregation` enum; `ChartPoint`, `ChartSeries`, `ChartFieldDescriptor`, `ChartDataSourceMetadata`, `ChartComputeRequest` (reuse `GridFilter`/`GridFieldType`).
-- [ ] **T016 — `IChartDataSource`.** Interface: `Key`, `DisplayName`, `Describe()`, `ComputeAsync(ChartComputeRequest, CancellationToken)`. XML-doc the inversion contract (implemented by grid modules, consumed by Dashboard via DI).
+- [x] **T016 — `IChartDataSource`.** Interface: `Key`, `DisplayName`, `Describe()`, `ComputeAsync(ChartComputeRequest, CancellationToken)`. XML-doc the inversion contract (implemented by grid modules, consumed by Dashboard via DI).
   - *Accept:* interface compiles; no dependency on any module.
 
 ### Enabler EN3 — Export — `src/Shared/BuildingBlocks/Export/`
