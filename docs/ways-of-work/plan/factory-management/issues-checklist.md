@@ -75,7 +75,7 @@
 - [x] **T035 — Grid query + field map.** `ClientGrid` static (GridFieldMap + projection, Arabic DisplayNames, Chartable flags on status/activityLevel/accountBalance/createdAt); `GetClientsGridQuery` + handler using `ApplyGridQuery`/`ToPagedResultAsync`.
 - [x] **T036 — Endpoints.** `POST /api/clients` (write), `PUT /{id}` (write), `DELETE /{id}` (delete), `GET /{id}` (read), `POST /api/clients/grid` (read), `POST /api/clients/export` (export, strip paging → full filtered set via `IGridExporter`). Permissions `clients.read/write/delete/export`.
 - [x] **T037 — ClientsChartDataSource.** Implement `IChartDataSource` (Key `clients`): `Describe()` lists chartable fields; `ComputeAsync` groups by X, aggregates Y (Count/Sum/Avg switch over allow-listed selector). Register `AddScoped<IChartDataSource, ClientsChartDataSource>()`.
-- [ ] **T038 — Seeder.** `ClientsSeeder` + `ClientsSeedHostedService` (~15 rows across statuses/levels; idempotent if `Any()`).
+- [x] **T038 — Seeder.** `ClientsSeeder` + `ClientsSeedHostedService` (~15 rows across statuses/levels; idempotent if `Any()`).
 - [ ] **T039 — TEST: Clients vertical.** Integration: create→grid(filter+sort)→export(xlsx); chart compute x=status,Count returns correct buckets.
 
 > 🔶 **REVIEW GATE M2a** — Clients is the reference vertical slice. Review before cloning to Expenses/Todos.
