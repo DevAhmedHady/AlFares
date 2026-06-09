@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace BuildingBlocks.Grids;
@@ -8,6 +9,37 @@ namespace BuildingBlocks.Grids;
 /// <summary>Applies allow-listed grid operations to LINQ queries.</summary>
 public static class GridQueryExtensions
 {
+    /// <summary>Counts, projects, and materializes one bounded page asynchronously.</summary>
+    /// <typeparam name="T">Source entity type.</typeparam>
+    /// <typeparam name="TOut">Projected response type.</typeparam>
+    /// <param name="source">Filtered and sorted source query.</param>
+    /// <param name="query">Grid paging request.</param>
+    /// <param name="projection">Server-translatable projection.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Materialized page and total count.</returns>
+    public static async Task<PagedResult<TOut>> ToPagedResultAsync<T, TOut>(
+        this IQueryable<T> source,
+        GridQuery query,
+        Expression<Func<T, TOut>> projection,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(projection);
+
+        var page = Math.Max(1, query.Page);
+        var pageSize = Math.Clamp(query.PageSize, 1, 200);
+        var totalCount = await source.LongCountAsync(cancellationToken).ConfigureAwait(false);
+        var items = await source
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(projection)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new PagedResult<TOut>(items, page, pageSize, totalCount);
+    }
+
     /// <summary>Applies validated filters, global search, and ordered sorting.</summary>
     /// <typeparam name="T">Entity type.</typeparam>
     /// <param name="source">Source query.</param>

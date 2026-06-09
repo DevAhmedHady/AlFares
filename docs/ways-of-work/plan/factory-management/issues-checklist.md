@@ -39,7 +39,7 @@
   - *Accept:* a map can be built statically per entity; lookups by key O(1).
 - [x] **T012 — `ApplyGridQuery` engine.** `GridQueryExtensions.ApplyGridQuery<T>(IQueryable<T>, GridQuery, GridFieldMap<T>) → Result<IQueryable<T>>`: validate every Sort/Filter/Search field against the map (unknown → `Error.Validation("grid.unknown_field", key)`); fold Sort into `OrderBy/ThenBy`; AND per-column filters (build `BinaryExpression`/`string.Contains`/comparisons per op, parse value to CLR type from `GridFieldType`); OR global `Search` across `Searchable` text fields. **Hand-rolled expressions — do NOT add System.Linq.Dynamic.Core.**
   - *Accept:* unknown field returns failure (no exception); valid query returns filtered `IQueryable`.
-- [ ] **T013 — `ToPagedResultAsync`.** `ToPagedResultAsync<T,TOut>(IQueryable<T>, GridQuery, Expression<Func<T,TOut>> projection, CancellationToken) → Task<PagedResult<TOut>>`: COUNT then Skip/Take; clamp `PageSize` to [1..200].
+- [x] **T013 — `ToPagedResultAsync`.** `ToPagedResultAsync<T,TOut>(IQueryable<T>, GridQuery, Expression<Func<T,TOut>> projection, CancellationToken) → Task<PagedResult<TOut>>`: COUNT then Skip/Take; clamp `PageSize` to [1..200].
   - *Accept:* returns correct `TotalCount` + page slice.
 - [ ] **T014 — TEST: grid engine.** Unit tests over an in-memory/SQLite `IQueryable`: each `GridFilterOp`, multi-column sort precedence, global search OR, unknown-field rejection, page clamping.
   - *Accept:* all pass.
