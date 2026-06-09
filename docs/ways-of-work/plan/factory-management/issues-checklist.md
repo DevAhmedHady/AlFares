@@ -102,7 +102,7 @@
 
 ## Milestone M3 — Configurable Dashboard (Feature F6, P1)  `src/Modules/DashboardCharts/` (schema `dashboard`)
 
-- [ ] **T060 — Module + Domain.** `ChartDefinition` aggregate (Title-AR, `ChartType{Bar,Pie,Line}`, DatasourceKey, XField, YField?, Aggregation, ColorsJson(jsonb), FiltersJson?(jsonb), LayoutOrder, IsEnabled, timestamps; `Create/Update → Result<>`); repo; errors.
+- [x] **T060 — Module + Domain.** `ChartDefinition` aggregate (Title-AR, `ChartType{Bar,Pie,Line}`, DatasourceKey, XField, YField?, Aggregation, ColorsJson(jsonb), FiltersJson?(jsonb), LayoutOrder, IsEnabled, timestamps; `Create/Update → Result<>`); repo; errors.
 - [ ] **T061 — Persistence.** `DashboardChartsDbContext` schema `dashboard`; `chart_definitions` table with `colors_json`/`filters_json` as `jsonb`; factory.
 - [ ] **T062 — Registry consumer.** `ChartDataSourceRegistry(IEnumerable<IChartDataSource>)` — `All()` → metadata list, `Get(key)`; register scoped.
 - [ ] **T063 — Features.** CreateChart/UpdateChart/DeleteChart/GetCharts; GetDatasources (from registry); GetChartData (load def → `registry.Get(DatasourceKey)` → build `ChartComputeRequest` → `ComputeAsync`; missing key → `Error.NotFound`); PreviewChartData (unsaved def).
