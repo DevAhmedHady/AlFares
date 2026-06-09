@@ -81,22 +81,22 @@
 > 🔶 **REVIEW GATE M2a** — Clients is the reference vertical slice. Review before cloning to Expenses/Todos.
 
 ### Feature F4 — Expenses  `src/Modules/Expenses/` (schema `expenses`)
-- [ ] **T040 — Module + Domain.** `Expense`(Category, Amount(Money), Date(DateOnly), Payee, Notes, timestamps); factory; repo; errors. (Mirror Clients structure.)
-- [ ] **T041 — Persistence + Contracts + Mapping.** `ExpensesDbContext` schema `expenses`; config; factory; DTOs; mapping.
-- [ ] **T042 — CRUD + Grid.** Create/Update/Delete/GetById; `ExpenseGrid` map; `GetExpensesGridQuery`.
-- [ ] **T043 — Endpoints + permissions.** `/api/expenses` CRUD + `/grid` + `/export`; `expenses.read/write/delete/export`.
-- [ ] **T044 — ExpensesChartDataSource.** Implement `IChartDataSource` (Key `expenses`); support **month-bucketing** of `Date` for the Line chart; Sum on `amount`.
-- [ ] **T045 — Seeder.** ~30 rows over several months + categories (idempotent).
-- [ ] **T046 — TEST: Expenses vertical** (grid + export + chart month-bucket sum).
+- [x] **T040 — Module + Domain.** `Expense`(Category, Amount(Money), Date(DateOnly), Payee, Notes, timestamps); factory; repo; errors. (Mirror Clients structure.)
+- [x] **T041 — Persistence + Contracts + Mapping.** `ExpensesDbContext` schema `expenses`; config; factory; DTOs; mapping.
+- [x] **T042 — CRUD + Grid.** Create/Update/Delete/GetById; `ExpenseGrid` map; `GetExpensesGridQuery`.
+- [x] **T043 — Endpoints + permissions.** `/api/expenses` CRUD + `/grid` + `/export`; `expenses.read/write/delete/export`.
+- [x] **T044 — ExpensesChartDataSource.** Implement `IChartDataSource` (Key `expenses`); support **month-bucketing** of `Date` for the Line chart; Sum on `amount`.
+- [x] **T045 — Seeder.** ~30 rows over several months + categories (idempotent).
+- [x] **T046 — TEST: Expenses vertical** (grid + export + chart month-bucket sum).
 
 ### Feature F5 — Todos  `src/Modules/Todos/` (schema `todos`)
-- [ ] **T050 — Module + Domain.** `TodoItem`(Title, DueDate, `Status{Open,InProgress,Done}`, `Priority{Low,Normal,High,Urgent}`, Notes, timestamps); **factory enforces DueDate ≥ today** (time-restricted invariant); repo; errors.
-- [ ] **T051 — Persistence + Contracts + Mapping.** Schema `todos`; config; factory; DTOs; mapping.
-- [ ] **T052 — Features + Grid.** Create/Update/ChangeStatus/Delete/GetById; `TodoGrid` map; `GetTodosGridQuery`.
-- [ ] **T053 — Endpoints + permissions.** `/api/todos` CRUD + `/grid` + `/export`; `todos.read/write/delete/export`.
-- [ ] **T054 — TodosChartDataSource.** Key `todos`; x=priority/status Count.
-- [ ] **T055 — Seeder.** ~10 rows across priorities/statuses, future due dates (idempotent).
-- [ ] **T056 — TEST: Todos vertical** (DueDate invariant, grid, chart).
+- [x] **T050 — Module + Domain.** `TodoItem`(Title, DueDate, `Status{Open,InProgress,Done}`, `Priority{Low,Normal,High,Urgent}`, Notes, timestamps); **factory enforces DueDate ≥ today** (time-restricted invariant); repo; errors.
+- [x] **T051 — Persistence + Contracts + Mapping.** Schema `todos`; config; factory; DTOs; mapping.
+- [x] **T052 — Features + Grid.** Create/Update/ChangeStatus/Delete/GetById; `TodoGrid` map; `GetTodosGridQuery`.
+- [x] **T053 — Endpoints + permissions.** `/api/todos` CRUD + `/grid` + `/export`; `todos.read/write/delete/export`.
+- [x] **T054 — TodosChartDataSource.** Key `todos`; x=priority/status Count.
+- [x] **T055 — Seeder.** ~10 rows across priorities/statuses, future due dates (idempotent).
+- [x] **T056 — TEST: Todos vertical** (DueDate invariant, grid, chart).
 
 ---
 
