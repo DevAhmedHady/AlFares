@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TextareaModule } from 'primeng/textarea';
 import { GridComponent } from '../../shared/grid/grid';
 import { ColumnDef } from '../../shared/grid/grid-column';
@@ -12,14 +13,14 @@ import { TodosService } from '../../core/api/resources';
 import { AuthStore } from '../../core/auth/auth.store';
 import { emptyGridQuery, GridFieldType, GridFilterOp } from '../../core/grid.models';
 import { CreateTodoRequest, TodoPriority, TodoResponse, TodoStatus } from '../../core/models';
-import { formatDate, optionsFrom, todoPriorityLabels, todoStatusLabels } from '../../core/labels';
+import { formatDate, optionsFrom, todoPriorityLabels, todoStatusLabels, toDate, toIso } from '../../core/labels';
 
 @Component({
   selector: 'app-todos',
   standalone: true,
   imports: [
     CommonModule, FormsModule, GridComponent, DialogModule, ButtonModule,
-    InputTextModule, SelectModule, TextareaModule,
+    InputTextModule, SelectModule, DatePickerModule, TextareaModule,
   ],
   templateUrl: './todos.html',
 })
@@ -34,6 +35,9 @@ export class TodosComponent {
   readonly todoPriorityLabels = todoPriorityLabels;
   readonly statusOptions = optionsFrom(todoStatusLabels);
   readonly today = new Date().toISOString().slice(0, 10);
+  readonly todayDate = new Date();
+  readonly toIso = toIso;
+  readonly dueDateModel = computed(() => toDate(this.form().dueDate));
   readonly todayTasks = signal<TodoResponse[]>([]);
 
   readonly columns: ColumnDef<TodoResponse>[] = [

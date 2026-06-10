@@ -13,8 +13,23 @@ public sealed record GetExpenseByIdQuery(Guid Id):IQuery<ExpenseResponse>;
 public sealed record GetExpensesGridQuery(GridQuery Grid):IQuery<PagedResult<ExpenseResponse>>;
 /// <summary>Create validator.</summary>
 public sealed class CreateExpenseValidator:AbstractValidator<CreateExpenseCommand>{/** <summary>Rules.</summary> */ public CreateExpenseValidator(){RuleFor(x=>x.ExpenseTypeId).NotEmpty();RuleFor(x=>x.Amount).GreaterThan(0);RuleFor(x=>x.Payee).NotEmpty();}}
-/// <summary>Expense grid row.</summary>
-public sealed record ExpenseGridRow(Guid Id,Guid ExpenseTypeId,string ExpenseTypeName,decimal Amount,DateOnly Date,string Payee,string? Notes,OwnerType OwnerType,Guid? OwnerId,DateTime CreatedAtUtc,DateTime UpdatedAtUtc);
+/// <summary>Expense grid row. Init-only members (object-initializer projection) keep the join
+/// transparent to EF Core, so grid filtering/sorting still translates to SQL. A positional-constructor
+/// projection is opaque to a subsequent Where/OrderBy and throws "could not be translated".</summary>
+public sealed record ExpenseGridRow
+{
+    public Guid Id { get; init; }
+    public Guid ExpenseTypeId { get; init; }
+    public string ExpenseTypeName { get; init; } = string.Empty;
+    public decimal Amount { get; init; }
+    public DateOnly Date { get; init; }
+    public string Payee { get; init; } = string.Empty;
+    public string? Notes { get; init; }
+    public OwnerType OwnerType { get; init; }
+    public Guid? OwnerId { get; init; }
+    public DateTime CreatedAtUtc { get; init; }
+    public DateTime UpdatedAtUtc { get; init; }
+}
 /// <summary>Expense grid.</summary>
 public static class ExpenseGrid
 {
@@ -29,7 +44,7 @@ public static class ExpenseGrid
    (new GridField("ownerId","المالك",GridFieldType.Text,false),(Expression<Func<ExpenseGridRow,object?>>)(x=>x.OwnerId)),
    (new GridField("createdAt","تاريخ الإنشاء",GridFieldType.Date,false),(Expression<Func<ExpenseGridRow,object?>>)(x=>x.CreatedAtUtc))
  });
- public static IQueryable<ExpenseGridRow> Query(IMainDbContext db)=>from e in db.Set<Expense>().AsNoTracking() join t in db.Set<ExpenseType>().AsNoTracking() on e.ExpenseTypeId equals t.Id select new ExpenseGridRow(e.Id,e.ExpenseTypeId,t.Name,e.Amount,e.Date,e.Payee,e.Notes,e.OwnerType,e.OwnerId,e.CreatedAtUtc,e.UpdatedAtUtc);
+ public static IQueryable<ExpenseGridRow> Query(IMainDbContext db)=>from e in db.Set<Expense>().AsNoTracking() join t in db.Set<ExpenseType>().AsNoTracking() on e.ExpenseTypeId equals t.Id select new ExpenseGridRow{Id=e.Id,ExpenseTypeId=e.ExpenseTypeId,ExpenseTypeName=t.Name,Amount=e.Amount,Date=e.Date,Payee=e.Payee,Notes=e.Notes,OwnerType=e.OwnerType,OwnerId=e.OwnerId,CreatedAtUtc=e.CreatedAtUtc,UpdatedAtUtc=e.UpdatedAtUtc};
  public static readonly Expression<Func<ExpenseGridRow,ExpenseResponse>> Projection=x=>new(x.Id,x.ExpenseTypeId,x.ExpenseTypeName,x.Amount,x.Date,x.Payee,x.Notes,x.OwnerType,x.OwnerId,x.CreatedAtUtc,x.UpdatedAtUtc);
 }
 /// <summary>Create handler.</summary>

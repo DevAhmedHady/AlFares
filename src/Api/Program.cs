@@ -13,6 +13,7 @@ using Reports;
 using Cars;
 using Workers;
 using Api.Persistence;
+using Api.Json;
 using Microsoft.EntityFrameworkCore;
 using BuildingBlocks.Persistence;
 
@@ -21,6 +22,9 @@ const string SpaCorsPolicy = "spa";
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddBuildingBlocks();
+// Tolerate blank/empty date filters from the SPA (empty <input type="date">) instead of 500ing.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new NullableDateOnlyJsonConverter()));
 builder.Services.AddJwtAuth(builder.Configuration);
 var mainConnection = builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException("ConnectionStrings:Default is required.");
