@@ -1,18 +1,41 @@
-﻿using SharedKernel;
+using SharedKernel;
+
 namespace Expenses.Domain;
-/** <summary>Expense errors.</summary> */
+
+/// <summary>Expense errors.</summary>
 public static class ExpenseErrors
 {
-    /** <summary>Category required.</summary> */
-    public static readonly Error TypeRequired=Error.Validation("expenses.type_required","Expense type is required.");
-    /** <summary>Type name required.</summary> */
-    public static readonly Error TypeNameRequired=Error.Validation("expenses.type_name_required","Expense type name is required.");
-    /** <summary>Owner required.</summary> */
-    public static readonly Error OwnerRequired=Error.Validation("expenses.owner_required","Owner id is required.");
-    /** <summary>Amount invalid.</summary> */
-    public static readonly Error AmountInvalid=Error.Validation("expenses.amount_invalid","Amount must be positive.");
-    /** <summary>Payee required.</summary> */
-    public static readonly Error PayeeRequired=Error.Validation("expenses.payee_required","Payee is required.");
-    /** <summary>Not found.</summary> */
-    public static Error NotFound(Guid id)=>Error.NotFound("expenses.not_found",$"Expense '{id}' was not found.");
+    /// <summary>Category required.</summary>
+    public static readonly Error TypeRequired = Error.Validation(
+        "expenses.type_required",
+        "Expense type is required."
+    );
+
+    /// <summary>Type name required.</summary>
+    public static readonly Error TypeNameRequired = Error.Validation(
+        "expenses.type_name_required",
+        "Expense type name is required."
+    );
+
+    /// <summary>Owner required.</summary>
+    public static readonly Error OwnerRequired = Error.Validation(
+        "expenses.owner_required",
+        "Owner id is required."
+    );
+
+    /// <summary>Amount invalid.</summary>
+    public static readonly Error AmountInvalid = Error.Validation(
+        "expenses.amount_invalid",
+        "Amount must be positive."
+    );
+
+    /// <summary>Payee required.</summary>
+    public static readonly Error PayeeRequired = Error.Validation(
+        "expenses.payee_required",
+        "Payee is required."
+    );
+
+    /// <summary>Not found.</summary>
+    public static Error NotFound(Guid id) =>
+        Error.NotFound("expenses.not_found", $"Expense '{id}' was not found.");
 }

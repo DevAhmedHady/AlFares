@@ -32,16 +32,27 @@ public sealed class AuthRbacTests
         var tenantId = (await db.Set<Tenant>().SingleAsync()).Id;
 
         var login = new LoginHandler(
-            new UserRepository(db), new MembershipRepository(db), new RefreshTokenRepository(db),
-            Hasher, Tokens());
+            new UserRepository(db),
+            new MembershipRepository(db),
+            new RefreshTokenRepository(db),
+            Hasher,
+            Tokens()
+        );
 
-        var result = await login.Handle(new LoginCommand(AdminEmail, AdminPassword, tenantId), default);
+        var result = await login.Handle(
+            new LoginCommand(AdminEmail, AdminPassword, tenantId),
+            default
+        );
 
         result.IsSuccess.Should().BeTrue();
         result.Value.AccessToken.Should().NotBeNullOrWhiteSpace();
 
         var adminId = (await db.Set<User>().SingleAsync(u => u.Email.Value == AdminEmail)).Id;
-        var access = await new MembershipRepository(db).GetEffectiveAccessAsync(tenantId, adminId, default);
+        var access = await new MembershipRepository(db).GetEffectiveAccessAsync(
+            tenantId,
+            adminId,
+            default
+        );
         access.Roles.Should().Contain("Owner");
         access.Permissions.Should().Contain("clients.write").And.Contain("identity.tenants.manage");
     }
@@ -53,10 +64,17 @@ public sealed class AuthRbacTests
         await using var db = await SeedAsync();
         var tenantId = (await db.Set<Tenant>().SingleAsync()).Id;
         var login = new LoginHandler(
-            new UserRepository(db), new MembershipRepository(db), new RefreshTokenRepository(db),
-            Hasher, Tokens());
+            new UserRepository(db),
+            new MembershipRepository(db),
+            new RefreshTokenRepository(db),
+            Hasher,
+            Tokens()
+        );
 
-        var result = await login.Handle(new LoginCommand(AdminEmail, "wrong-password", tenantId), default);
+        var result = await login.Handle(
+            new LoginCommand(AdminEmail, "wrong-password", tenantId),
+            default
+        );
 
         result.IsFailure.Should().BeTrue();
     }
@@ -69,13 +87,25 @@ public sealed class AuthRbacTests
         var tenantId = (await db.Set<Tenant>().SingleAsync()).Id;
         await AddMemberAsync(db, tenantId, "member@alfaris.local");
 
-        var memberId = (await db.Set<User>().SingleAsync(u => u.Email.Value == "member@alfaris.local")).Id;
-        var access = await new MembershipRepository(db).GetEffectiveAccessAsync(tenantId, memberId, default);
+        var memberId = (
+            await db.Set<User>().SingleAsync(u => u.Email.Value == "member@alfaris.local")
+        ).Id;
+        var access = await new MembershipRepository(db).GetEffectiveAccessAsync(
+            tenantId,
+            memberId,
+            default
+        );
 
         access.Roles.Should().ContainSingle().Which.Should().Be("Member");
         access.Permissions.Should().Contain("clients.read");
-        access.Permissions.Should().NotContain(p => p.EndsWith(".write") || p.EndsWith(".delete")
-            || p.EndsWith(".manage") || p.EndsWith(".export"));
+        access
+            .Permissions.Should()
+            .NotContain(p =>
+                p.EndsWith(".write")
+                || p.EndsWith(".delete")
+                || p.EndsWith(".manage")
+                || p.EndsWith(".export")
+            );
     }
 
     /// <summary>The admin users grid returns a paged, searchable result over the seeded users.</summary>
@@ -94,7 +124,9 @@ public sealed class AuthRbacTests
         all.Value.Items.Should().Contain(u => u.Email == AdminEmail);
 
         var filtered = await handler.Handle(
-            new GetUsersGridQuery(new GridQuery { Search = "member" }), default);
+            new GetUsersGridQuery(new GridQuery { Search = "member" }),
+            default
+        );
         filtered.Value.TotalCount.Should().Be(1);
         filtered.Value.Items.Single().Email.Should().Be("member@alfaris.local");
     }
@@ -103,36 +135,48 @@ public sealed class AuthRbacTests
 
     private static readonly IPasswordHasher<User> Hasher = new PasswordHasher<User>();
 
-    private static ITokenService Tokens() => new JwtTokenService(new JwtOptions
-    {
-        Issuer = "al-faris",
-        Audience = "al-faris",
-        SigningKey = "test-signing-key-at-least-32-bytes-long!!",
-        AccessMinutes = 15,
-        RefreshDays = 7
-    });
+    private static ITokenService Tokens() =>
+        new JwtTokenService(
+            new JwtOptions
+            {
+                Issuer = "al-faris",
+                Audience = "al-faris",
+                SigningKey = "test-signing-key-at-least-32-bytes-long!!",
+                AccessMinutes = 15,
+                RefreshDays = 7,
+            }
+        );
 
     private static async Task<global::Api.Persistence.MainDbContext> SeedAsync()
     {
         var db = NewDb();
         await IdentitySeeder.SeedAsync(db);
-        await IdentityTenantSeeder.SeedAsync(db, Hasher, new SeedOptions
-        {
-            AdminEmail = AdminEmail,
-            AdminPassword = AdminPassword,
-            TenantName = "الفارس",
-            TenantSlug = "al-faris"
-        });
+        await IdentityTenantSeeder.SeedAsync(
+            db,
+            Hasher,
+            new SeedOptions
+            {
+                AdminEmail = AdminEmail,
+                AdminPassword = AdminPassword,
+                TenantName = "الفارس",
+                TenantSlug = "al-faris",
+            }
+        );
         return db;
     }
 
-    private static async Task AddMemberAsync(global::Api.Persistence.MainDbContext db, Guid tenantId, string email)
+    private static async Task AddMemberAsync(
+        global::Api.Persistence.MainDbContext db,
+        Guid tenantId,
+        string email
+    )
     {
         var user = User.Create(Email.Create(email).Value, "Member User").Value;
         user.SetPasswordHash(Hasher.HashPassword(user, "Member-Pass1!"));
         db.Set<User>().Add(user);
 
-        var memberRole = await db.Set<TenantRole>().SingleAsync(r => r.TenantId == tenantId && r.Name == "Member");
+        var memberRole = await db.Set<TenantRole>()
+            .SingleAsync(r => r.TenantId == tenantId && r.Name == "Member");
         var membership = new TenantUser(tenantId, user.Id);
         db.Set<TenantUser>().Add(membership);
         db.Set<TenantUserRole>().Add(new TenantUserRole(membership.Id, memberRole.Id));

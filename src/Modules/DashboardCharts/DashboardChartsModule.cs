@@ -1,4 +1,35 @@
+using BuildingBlocks.Endpoints;
+using BuildingBlocks.Modules;
+using BuildingBlocks.Persistence;
+using DashboardCharts.Domain;
+using DashboardCharts.Features;
+using DashboardCharts.Persistence;
+using DashboardCharts.Persistence.Seed;
+using DashboardCharts.Services;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
-using BuildingBlocks.Endpoints;using BuildingBlocks.Modules;using BuildingBlocks.Persistence;using DashboardCharts.Domain;using DashboardCharts.Features;using DashboardCharts.Persistence;using DashboardCharts.Persistence.Seed;using DashboardCharts.Services;using Microsoft.AspNetCore.Routing;using Microsoft.Extensions.Configuration;using Microsoft.Extensions.DependencyInjection;namespace DashboardCharts;/** <summary>Dashboard module.</summary> */ public sealed class DashboardChartsModule:IModule{/** <inheritdoc/> */ public string Name=>"DashboardCharts";/** <inheritdoc/> */ public void Register(IServiceCollection s,IConfiguration c){ArgumentNullException.ThrowIfNull(s);ArgumentNullException.ThrowIfNull(c);s.AddScoped<IChartDefinitionRepository,ChartDefinitionRepository>();s.AddScoped<ChartDataSourceRegistry>();s.AddScoped<DashboardService>();s.AddHostedService<DashboardChartsSeedHostedService>();}/** <inheritdoc/> */ public void MapEndpoints(IEndpointRouteBuilder e)=>e.MapEndpointsFromAssembly(typeof(DashboardChartsModule).Assembly);}
+namespace DashboardCharts;
 
+/// <summary>Dashboard module.</summary>
+public sealed class DashboardChartsModule : IModule
+{
+    /// <inheritdoc />
+    public string Name => "DashboardCharts";
 
+    /// <inheritdoc />
+    public void Register(IServiceCollection s, IConfiguration c)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        ArgumentNullException.ThrowIfNull(c);
+        s.AddScoped<IChartDefinitionRepository, ChartDefinitionRepository>();
+        s.AddScoped<ChartDataSourceRegistry>();
+        s.AddScoped<DashboardService>();
+        s.AddHostedService<DashboardChartsSeedHostedService>();
+    }
+
+    /// <inheritdoc />
+    public void MapEndpoints(IEndpointRouteBuilder e) =>
+        e.MapEndpointsFromAssembly(typeof(DashboardChartsModule).Assembly);
+}

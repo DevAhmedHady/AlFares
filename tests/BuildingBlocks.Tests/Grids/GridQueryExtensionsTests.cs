@@ -9,17 +9,22 @@ namespace BuildingBlocks.Tests.Grids;
 [TestClass]
 public sealed class GridQueryExtensionsTests
 {
-    private static readonly GridFieldMap<Row> FieldMap = new(new[]
-    {
-        (new GridField("name", "Name", GridFieldType.Text, true), (System.Linq.Expressions.Expression<Func<Row, object?>>)(x => x.Name)),
-        (new GridField("city", "City", GridFieldType.Text, true), x => x.City),
-        (new GridField("amount", "Amount", GridFieldType.Number, false), x => x.Amount),
-        (new GridField("date", "Date", GridFieldType.Date, false), x => x.Date),
-        (new GridField("active", "Active", GridFieldType.Boolean, false), x => x.Active),
-        (new GridField("status", "Status", GridFieldType.Enum, false), x => x.Status)
-        ,(new GridField("notes", "Notes", GridFieldType.Text, true), x => x.Notes)
-        ,(new GridField("score", "Score", GridFieldType.Number, false), x => x.Score)
-    });
+    private static readonly GridFieldMap<Row> FieldMap = new(
+        new[]
+        {
+            (
+                new GridField("name", "Name", GridFieldType.Text, true),
+                (System.Linq.Expressions.Expression<Func<Row, object?>>)(x => x.Name)
+            ),
+            (new GridField("city", "City", GridFieldType.Text, true), x => x.City),
+            (new GridField("amount", "Amount", GridFieldType.Number, false), x => x.Amount),
+            (new GridField("date", "Date", GridFieldType.Date, false), x => x.Date),
+            (new GridField("active", "Active", GridFieldType.Boolean, false), x => x.Active),
+            (new GridField("status", "Status", GridFieldType.Enum, false), x => x.Status),
+            (new GridField("notes", "Notes", GridFieldType.Text, true), x => x.Notes),
+            (new GridField("score", "Score", GridFieldType.Number, false), x => x.Score),
+        }
+    );
 
     /// <summary>Verifies each supported filter operation.</summary>
     [TestMethod]
@@ -32,10 +37,18 @@ public sealed class GridQueryExtensionsTests
     [DataRow(GridFilterOp.Between, "10", "20", 3)]
     [DataRow(GridFilterOp.In, "10,30", null, 2)]
     public void ApplyGridQuery_NumberOperations_ReturnExpectedRows(
-        GridFilterOp operation, string value, string? value2, int expected)
+        GridFilterOp operation,
+        string value,
+        string? value2,
+        int expected
+    )
     {
-        var result = Seed().AsQueryable().ApplyGridQuery(
-            new GridQuery { Filters = [new GridFilter("amount", operation, value, value2)] }, FieldMap);
+        var result = Seed()
+            .AsQueryable()
+            .ApplyGridQuery(
+                new GridQuery { Filters = [new GridFilter("amount", operation, value, value2)] },
+                FieldMap
+            );
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(expected);
@@ -45,10 +58,18 @@ public sealed class GridQueryExtensionsTests
     [TestMethod]
     [DataRow(GridFilterOp.Contains, "li", 3)]
     [DataRow(GridFilterOp.StartsWith, "A", 2)]
-    public void ApplyGridQuery_TextOperations_ReturnExpectedRows(GridFilterOp operation, string value, int expected)
+    public void ApplyGridQuery_TextOperations_ReturnExpectedRows(
+        GridFilterOp operation,
+        string value,
+        int expected
+    )
     {
-        var result = Seed().AsQueryable().ApplyGridQuery(
-            new GridQuery { Filters = [new GridFilter("name", operation, value)] }, FieldMap);
+        var result = Seed()
+            .AsQueryable()
+            .ApplyGridQuery(
+                new GridQuery { Filters = [new GridFilter("name", operation, value)] },
+                FieldMap
+            );
 
         result.Value.Should().HaveCount(expected);
     }
@@ -57,15 +78,20 @@ public sealed class GridQueryExtensionsTests
     [TestMethod]
     public void ApplyGridQuery_TypedValues_AreParsed()
     {
-        var result = Seed().AsQueryable().ApplyGridQuery(new GridQuery
-        {
-            Filters =
-            [
-                new GridFilter("active", GridFilterOp.Eq, "true"),
-                new GridFilter("date", GridFilterOp.Gte, "2026-01-02"),
-                new GridFilter("status", GridFilterOp.Eq, "Open")
-            ]
-        }, FieldMap);
+        var result = Seed()
+            .AsQueryable()
+            .ApplyGridQuery(
+                new GridQuery
+                {
+                    Filters =
+                    [
+                        new GridFilter("active", GridFilterOp.Eq, "true"),
+                        new GridFilter("date", GridFilterOp.Gte, "2026-01-02"),
+                        new GridFilter("status", GridFilterOp.Eq, "Open"),
+                    ],
+                },
+                FieldMap
+            );
 
         result.Value.Select(x => x.Name).Should().Equal("Charlie");
     }
@@ -74,10 +100,12 @@ public sealed class GridQueryExtensionsTests
     [TestMethod]
     public void ApplyGridQuery_MultipleSorts_PreservePrecedence()
     {
-        var result = Seed().AsQueryable().ApplyGridQuery(new GridQuery
-        {
-            Sort = [new GridSort("city"), new GridSort("amount", true)]
-        }, FieldMap);
+        var result = Seed()
+            .AsQueryable()
+            .ApplyGridQuery(
+                new GridQuery { Sort = [new GridSort("city"), new GridSort("amount", true)] },
+                FieldMap
+            );
 
         result.Value.Select(x => x.Name).Should().Equal("Charlie", "Alice", "Alina", "Bob");
     }
@@ -86,7 +114,9 @@ public sealed class GridQueryExtensionsTests
     [TestMethod]
     public void ApplyGridQuery_GlobalSearch_UsesOrAcrossSearchableFields()
     {
-        var result = Seed().AsQueryable().ApplyGridQuery(new GridQuery { Search = "Cairo" }, FieldMap);
+        var result = Seed()
+            .AsQueryable()
+            .ApplyGridQuery(new GridQuery { Search = "Cairo" }, FieldMap);
         result.Value.Select(x => x.Name).Should().BeEquivalentTo("Alice", "Alina");
     }
 
@@ -94,8 +124,9 @@ public sealed class GridQueryExtensionsTests
     [TestMethod]
     public void ApplyGridQuery_UnknownField_ReturnsValidationFailure()
     {
-        var result = Seed().AsQueryable().ApplyGridQuery(
-            new GridQuery { Sort = [new GridSort("secret")] }, FieldMap);
+        var result = Seed()
+            .AsQueryable()
+            .ApplyGridQuery(new GridQuery { Sort = [new GridSort("secret")] }, FieldMap);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("grid.unknown_field");
@@ -105,10 +136,18 @@ public sealed class GridQueryExtensionsTests
     [TestMethod]
     public void ApplyGridQuery_NullableSelectors_FilterSafely()
     {
-        var textResult = Seed().AsQueryable().ApplyGridQuery(
-            new GridQuery { Filters = [new GridFilter("notes", GridFilterOp.Contains, "vip")] }, FieldMap);
-        var numberResult = Seed().AsQueryable().ApplyGridQuery(
-            new GridQuery { Filters = [new GridFilter("score", GridFilterOp.Gte, "2")] }, FieldMap);
+        var textResult = Seed()
+            .AsQueryable()
+            .ApplyGridQuery(
+                new GridQuery { Filters = [new GridFilter("notes", GridFilterOp.Contains, "vip")] },
+                FieldMap
+            );
+        var numberResult = Seed()
+            .AsQueryable()
+            .ApplyGridQuery(
+                new GridQuery { Filters = [new GridFilter("score", GridFilterOp.Gte, "2")] },
+                FieldMap
+            );
 
         textResult.Value.Select(x => x.Name).Should().Equal("Alice");
         numberResult.Value.Select(x => x.Name).Should().Equal("Charlie");
@@ -119,11 +158,21 @@ public sealed class GridQueryExtensionsTests
     public async Task ToPagedResultAsync_OutOfRangePage_ClampsBounds()
     {
         await using var db = CreateDb();
-        db.Rows.AddRange(Enumerable.Range(1, 250).Select(i => new Row { Id = i, Name = $"N{i}", City = "X" }));
+        db.Rows.AddRange(
+            Enumerable
+                .Range(1, 250)
+                .Select(i => new Row
+                {
+                    Id = i,
+                    Name = $"N{i}",
+                    City = "X",
+                })
+        );
         await db.SaveChangesAsync();
 
-        var page = await db.Rows.OrderBy(x => x.Id).ToPagedResultAsync(
-            new GridQuery { Page = 0, PageSize = 500 }, x => x.Id);
+        var page = await db
+            .Rows.OrderBy(x => x.Id)
+            .ToPagedResultAsync(new GridQuery { Page = 0, PageSize = 500 }, x => x.Id);
 
         page.Page.Should().Be(1);
         page.PageSize.Should().Be(200);
@@ -134,17 +183,57 @@ public sealed class GridQueryExtensionsTests
     private static GridDbContext CreateDb()
     {
         var options = new DbContextOptionsBuilder<GridDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
         return new GridDbContext(options);
     }
 
     private static Row[] Seed() =>
-    [
-        new() { Id = 1, Name = "Alice", City = "Cairo", Amount = 20, Date = new DateOnly(2026, 1, 1), Active = true, Status = RowStatus.Open, Notes = "vip", Score = 1 },
-        new() { Id = 2, Name = "Bob", City = "Giza", Amount = 10, Date = new DateOnly(2026, 1, 2), Active = false, Status = RowStatus.Closed },
-        new() { Id = 3, Name = "Charlie", City = "Alex", Amount = 30, Date = new DateOnly(2026, 1, 3), Active = true, Status = RowStatus.Open, Score = 3 },
-        new() { Id = 4, Name = "Alina", City = "Cairo", Amount = 20, Date = new DateOnly(2026, 1, 4), Active = true, Status = RowStatus.Closed }
-    ];
+        [
+            new()
+            {
+                Id = 1,
+                Name = "Alice",
+                City = "Cairo",
+                Amount = 20,
+                Date = new DateOnly(2026, 1, 1),
+                Active = true,
+                Status = RowStatus.Open,
+                Notes = "vip",
+                Score = 1,
+            },
+            new()
+            {
+                Id = 2,
+                Name = "Bob",
+                City = "Giza",
+                Amount = 10,
+                Date = new DateOnly(2026, 1, 2),
+                Active = false,
+                Status = RowStatus.Closed,
+            },
+            new()
+            {
+                Id = 3,
+                Name = "Charlie",
+                City = "Alex",
+                Amount = 30,
+                Date = new DateOnly(2026, 1, 3),
+                Active = true,
+                Status = RowStatus.Open,
+                Score = 3,
+            },
+            new()
+            {
+                Id = 4,
+                Name = "Alina",
+                City = "Cairo",
+                Amount = 20,
+                Date = new DateOnly(2026, 1, 4),
+                Active = true,
+                Status = RowStatus.Closed,
+            },
+        ];
 
     private sealed class GridDbContext(DbContextOptions<GridDbContext> options) : DbContext(options)
     {
@@ -164,5 +253,9 @@ public sealed class GridQueryExtensionsTests
         public decimal? Score { get; init; }
     }
 
-    private enum RowStatus { Open, Closed }
+    private enum RowStatus
+    {
+        Open,
+        Closed,
+    }
 }

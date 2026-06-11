@@ -11,7 +11,8 @@ public sealed class Tenant : AggregateRoot
 
     private Tenant() { }
 
-    private Tenant(Guid id, string name, Slug slug, DateTime createdAtUtc) : base(id)
+    private Tenant(Guid id, string name, Slug slug, DateTime createdAtUtc)
+        : base(id)
     {
         Name = name;
         Slug = slug;

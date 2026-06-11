@@ -12,7 +12,8 @@ public sealed class TenantUser : Entity
 
     private TenantUser() { }
 
-    public TenantUser(Guid tenantId, Guid userId) : base(Guid.NewGuid())
+    public TenantUser(Guid tenantId, Guid userId)
+        : base(Guid.NewGuid())
     {
         TenantId = tenantId;
         UserId = userId;
@@ -31,7 +32,8 @@ public sealed class TenantRole : Entity
 
     private TenantRole() { }
 
-    public TenantRole(Guid tenantId, string name, Guid? baseRoleId, bool isSystem) : base(Guid.NewGuid())
+    public TenantRole(Guid tenantId, string name, Guid? baseRoleId, bool isSystem)
+        : base(Guid.NewGuid())
     {
         TenantId = tenantId;
         Name = name;

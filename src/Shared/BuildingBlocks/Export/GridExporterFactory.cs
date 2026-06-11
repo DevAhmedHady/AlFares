@@ -22,10 +22,12 @@ public interface IGridExporterFactory
 /// <param name="services">Application service provider.</param>
 public sealed class GridExporterFactory(IServiceProvider services) : IGridExporterFactory
 {
-    private readonly IServiceProvider services = services ?? throw new ArgumentNullException(nameof(services));
+    private readonly IServiceProvider services =
+        services ?? throw new ArgumentNullException(nameof(services));
 
     /// <inheritdoc />
-    public IGridExporter For(ExportFormat format) => services.GetRequiredKeyedService<IGridExporter>(format);
+    public IGridExporter For(ExportFormat format) =>
+        services.GetRequiredKeyedService<IGridExporter>(format);
 }
 
 /// <summary>Registers grid export services.</summary>

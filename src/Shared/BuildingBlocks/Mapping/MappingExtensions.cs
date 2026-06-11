@@ -9,7 +9,10 @@ public static class MappingExtensions
 {
     // Builds the global Mapster config from every IRegister profile in the given assemblies,
     // compiles it up-front (fail-fast on bad maps at startup), and registers IMapper.
-    public static IServiceCollection AddMappings(this IServiceCollection services, params Assembly[] assemblies)
+    public static IServiceCollection AddMappings(
+        this IServiceCollection services,
+        params Assembly[] assemblies
+    )
     {
         var config = TypeAdapterConfig.GlobalSettings;
         config.Scan(assemblies);

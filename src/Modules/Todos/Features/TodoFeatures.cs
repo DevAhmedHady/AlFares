@@ -1,19 +1,185 @@
+using System.Linq.Expressions;
+using BuildingBlocks.Grids;
+using BuildingBlocks.Messaging;
+using FluentValidation;
+using MapsterMapper;
+using Microsoft.EntityFrameworkCore;
+using SharedKernel;
+using Todos.Contracts;
+using Todos.Domain;
+using Todos.Persistence;
 
-using System.Linq.Expressions;using BuildingBlocks.Grids;using BuildingBlocks.Messaging;using FluentValidation;using MapsterMapper;using Microsoft.EntityFrameworkCore;using SharedKernel;using Todos.Contracts;using Todos.Domain;using Todos.Persistence;
 namespace Todos.Features;
-public sealed record CreateTodoCommand(string Title,DateOnly DueDate,TimeOnly? DueTime,TodoPriority Priority,string? Notes):ICommand<TodoResponse>;
-public sealed record UpdateTodoCommand(Guid Id,string Title,DateOnly DueDate,TimeOnly? DueTime,TodoPriority Priority,string? Notes):ICommand<TodoResponse>;
-public sealed record ChangeTodoStatusCommand(Guid Id,TodoStatus Status):ICommand<TodoResponse>;
-public sealed record DeleteTodoCommand(Guid Id):ICommand<bool>;
-public sealed record GetTodoByIdQuery(Guid Id):IQuery<TodoResponse>;
-public sealed record GetTodosGridQuery(GridQuery Grid):IQuery<PagedResult<TodoResponse>>;
-public sealed class CreateTodoValidator:AbstractValidator<CreateTodoCommand>{public CreateTodoValidator(){RuleFor(x=>x.Title).NotEmpty();}}
-public static class TodoGrid{public static readonly GridFieldMap<TodoItem>Fields=new(new[]{(new GridField("title","المهمة",GridFieldType.Text,true),(Expression<Func<TodoItem,object?>>)(x=>x.Title)),(new GridField("dueDate","تاريخ الاستحقاق",GridFieldType.Date,false,Chartable:true),(Expression<Func<TodoItem,object?>>)(x=>x.DueDate)),(new GridField("dueTime","وقت الاستحقاق",GridFieldType.Text,false),(Expression<Func<TodoItem,object?>>)(x=>x.DueTime)),(new GridField("status","الحالة",GridFieldType.Enum,false,Chartable:true),(Expression<Func<TodoItem,object?>>)(x=>x.Status)),(new GridField("priority","الأولوية",GridFieldType.Enum,false,Chartable:true),(Expression<Func<TodoItem,object?>>)(x=>x.Priority)),(new GridField("createdAt","تاريخ الإنشاء",GridFieldType.Date,false),(Expression<Func<TodoItem,object?>>)(x=>x.CreatedAtUtc))});public static readonly Expression<Func<TodoItem,TodoResponse>>Projection=x=>new(x.Id,x.Title,x.DueDate,x.DueTime,x.Status,x.Priority,x.Notes,x.CreatedAtUtc,x.UpdatedAtUtc);}
-public sealed class CreateTodoHandler(ITodoRepository r,IMapper m):ICommandHandler<CreateTodoCommand,TodoResponse>{public async Task<Result<TodoResponse>>Handle(CreateTodoCommand c,CancellationToken ct){var x=TodoItem.Create(c.Title,c.DueDate,c.DueTime,c.Priority,c.Notes);if(x.IsFailure)return x.Error;r.Add(x.Value);await r.SaveChangesAsync(ct);return m.Map<TodoResponse>(x.Value);}}
-public sealed class UpdateTodoHandler(ITodoRepository r,IMapper m):ICommandHandler<UpdateTodoCommand,TodoResponse>{public async Task<Result<TodoResponse>>Handle(UpdateTodoCommand c,CancellationToken ct){var x=await r.GetByIdAsync(c.Id,ct);if(x is null)return TodoErrors.NotFound(c.Id);var z=x.Update(c.Title,c.DueDate,c.DueTime,c.Priority,c.Notes,DateOnly.FromDateTime(DateTime.UtcNow));if(z.IsFailure)return z.Error;await r.SaveChangesAsync(ct);return m.Map<TodoResponse>(x);}}
-public sealed class ChangeTodoStatusHandler(ITodoRepository r,IMapper m):ICommandHandler<ChangeTodoStatusCommand,TodoResponse>{public async Task<Result<TodoResponse>>Handle(ChangeTodoStatusCommand c,CancellationToken ct){var x=await r.GetByIdAsync(c.Id,ct);if(x is null)return TodoErrors.NotFound(c.Id);x.ChangeStatus(c.Status);await r.SaveChangesAsync(ct);return m.Map<TodoResponse>(x);}}
-public sealed class DeleteTodoHandler(ITodoRepository r):ICommandHandler<DeleteTodoCommand,bool>{public async Task<Result<bool>>Handle(DeleteTodoCommand c,CancellationToken ct){var x=await r.GetByIdAsync(c.Id,ct);if(x is null)return TodoErrors.NotFound(c.Id);r.Remove(x);await r.SaveChangesAsync(ct);return true;}}
-public sealed class GetTodoByIdHandler(ITodoRepository r,IMapper m):IQueryHandler<GetTodoByIdQuery,TodoResponse>{public async Task<Result<TodoResponse>>Handle(GetTodoByIdQuery q,CancellationToken ct){var x=await r.GetByIdAsync(q.Id,ct);return x is null?TodoErrors.NotFound(q.Id):m.Map<TodoResponse>(x);}}
-public sealed class GetTodosGridHandler(IMainDbContext db):IQueryHandler<GetTodosGridQuery,PagedResult<TodoResponse>>{public async Task<Result<PagedResult<TodoResponse>>>Handle(GetTodosGridQuery q,CancellationToken ct){var x=db.Set<TodoItem>().AsNoTracking().ApplyGridQuery(q.Grid,TodoGrid.Fields);if(x.IsFailure)return x.Error;return await x.Value.ToPagedResultAsync(q.Grid,TodoGrid.Projection,ct);}}
 
+public sealed record CreateTodoCommand(
+    string Title,
+    DateOnly DueDate,
+    TimeOnly? DueTime,
+    TodoPriority Priority,
+    string? Notes
+) : ICommand<TodoResponse>;
 
+public sealed record UpdateTodoCommand(
+    Guid Id,
+    string Title,
+    DateOnly DueDate,
+    TimeOnly? DueTime,
+    TodoPriority Priority,
+    string? Notes
+) : ICommand<TodoResponse>;
+
+public sealed record ChangeTodoStatusCommand(Guid Id, TodoStatus Status) : ICommand<TodoResponse>;
+
+public sealed record DeleteTodoCommand(Guid Id) : ICommand<bool>;
+
+public sealed record GetTodoByIdQuery(Guid Id) : IQuery<TodoResponse>;
+
+public sealed record GetTodosGridQuery(GridQuery Grid) : IQuery<PagedResult<TodoResponse>>;
+
+public sealed class CreateTodoValidator : AbstractValidator<CreateTodoCommand>
+{
+    public CreateTodoValidator()
+    {
+        RuleFor(x => x.Title).NotEmpty();
+    }
+}
+
+public static class TodoGrid
+{
+    public static readonly GridFieldMap<TodoItem> Fields = new(
+        new[]
+        {
+            (
+                new GridField("title", "المهمة", GridFieldType.Text, true),
+                (Expression<Func<TodoItem, object?>>)(x => x.Title)
+            ),
+            (
+                new GridField(
+                    "dueDate",
+                    "تاريخ الاستحقاق",
+                    GridFieldType.Date,
+                    false,
+                    Chartable: true
+                ),
+                (Expression<Func<TodoItem, object?>>)(x => x.DueDate)
+            ),
+            (
+                new GridField("dueTime", "وقت الاستحقاق", GridFieldType.Text, false),
+                (Expression<Func<TodoItem, object?>>)(x => x.DueTime)
+            ),
+            (
+                new GridField("status", "الحالة", GridFieldType.Enum, false, Chartable: true),
+                (Expression<Func<TodoItem, object?>>)(x => x.Status)
+            ),
+            (
+                new GridField("priority", "الأولوية", GridFieldType.Enum, false, Chartable: true),
+                (Expression<Func<TodoItem, object?>>)(x => x.Priority)
+            ),
+            (
+                new GridField("createdAt", "تاريخ الإنشاء", GridFieldType.Date, false),
+                (Expression<Func<TodoItem, object?>>)(x => x.CreatedAtUtc)
+            ),
+        }
+    );
+    public static readonly Expression<Func<TodoItem, TodoResponse>> Projection = x =>
+        new(
+            x.Id,
+            x.Title,
+            x.DueDate,
+            x.DueTime,
+            x.Status,
+            x.Priority,
+            x.Notes,
+            x.CreatedAtUtc,
+            x.UpdatedAtUtc
+        );
+}
+
+public sealed class CreateTodoHandler(ITodoRepository r, IMapper m)
+    : ICommandHandler<CreateTodoCommand, TodoResponse>
+{
+    public async Task<Result<TodoResponse>> Handle(CreateTodoCommand c, CancellationToken ct)
+    {
+        var x = TodoItem.Create(c.Title, c.DueDate, c.DueTime, c.Priority, c.Notes);
+        if (x.IsFailure)
+            return x.Error;
+        r.Add(x.Value);
+        await r.SaveChangesAsync(ct);
+        return m.Map<TodoResponse>(x.Value);
+    }
+}
+
+public sealed class UpdateTodoHandler(ITodoRepository r, IMapper m)
+    : ICommandHandler<UpdateTodoCommand, TodoResponse>
+{
+    public async Task<Result<TodoResponse>> Handle(UpdateTodoCommand c, CancellationToken ct)
+    {
+        var x = await r.GetByIdAsync(c.Id, ct);
+        if (x is null)
+            return TodoErrors.NotFound(c.Id);
+        var z = x.Update(
+            c.Title,
+            c.DueDate,
+            c.DueTime,
+            c.Priority,
+            c.Notes,
+            DateOnly.FromDateTime(DateTime.UtcNow)
+        );
+        if (z.IsFailure)
+            return z.Error;
+        await r.SaveChangesAsync(ct);
+        return m.Map<TodoResponse>(x);
+    }
+}
+
+public sealed class ChangeTodoStatusHandler(ITodoRepository r, IMapper m)
+    : ICommandHandler<ChangeTodoStatusCommand, TodoResponse>
+{
+    public async Task<Result<TodoResponse>> Handle(ChangeTodoStatusCommand c, CancellationToken ct)
+    {
+        var x = await r.GetByIdAsync(c.Id, ct);
+        if (x is null)
+            return TodoErrors.NotFound(c.Id);
+        x.ChangeStatus(c.Status);
+        await r.SaveChangesAsync(ct);
+        return m.Map<TodoResponse>(x);
+    }
+}
+
+public sealed class DeleteTodoHandler(ITodoRepository r) : ICommandHandler<DeleteTodoCommand, bool>
+{
+    public async Task<Result<bool>> Handle(DeleteTodoCommand c, CancellationToken ct)
+    {
+        var x = await r.GetByIdAsync(c.Id, ct);
+        if (x is null)
+            return TodoErrors.NotFound(c.Id);
+        r.Remove(x);
+        await r.SaveChangesAsync(ct);
+        return true;
+    }
+}
+
+public sealed class GetTodoByIdHandler(ITodoRepository r, IMapper m)
+    : IQueryHandler<GetTodoByIdQuery, TodoResponse>
+{
+    public async Task<Result<TodoResponse>> Handle(GetTodoByIdQuery q, CancellationToken ct)
+    {
+        var x = await r.GetByIdAsync(q.Id, ct);
+        return x is null ? TodoErrors.NotFound(q.Id) : m.Map<TodoResponse>(x);
+    }
+}
+
+public sealed class GetTodosGridHandler(IMainDbContext db)
+    : IQueryHandler<GetTodosGridQuery, PagedResult<TodoResponse>>
+{
+    public async Task<Result<PagedResult<TodoResponse>>> Handle(
+        GetTodosGridQuery q,
+        CancellationToken ct
+    )
+    {
+        var x = db.Set<TodoItem>().AsNoTracking().ApplyGridQuery(q.Grid, TodoGrid.Fields);
+        if (x.IsFailure)
+            return x.Error;
+        return await x.Value.ToPagedResultAsync(q.Grid, TodoGrid.Projection, ct);
+    }
+}

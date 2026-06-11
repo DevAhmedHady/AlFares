@@ -7,13 +7,16 @@ namespace BuildingBlocks.Persistence;
 public interface IMainDbContext
 {
     /// <summary>Gets the set for an entity type owned by any module.</summary>
-    DbSet<TEntity> Set<TEntity>() where TEntity : class;
+    DbSet<TEntity> Set<TEntity>()
+        where TEntity : class;
 
     /// <summary>Adds an entity to the context.</summary>
-    EntityEntry<TEntity> Add<TEntity>(TEntity entity) where TEntity : class;
+    EntityEntry<TEntity> Add<TEntity>(TEntity entity)
+        where TEntity : class;
 
     /// <summary>Removes an entity from the context.</summary>
-    EntityEntry<TEntity> Remove<TEntity>(TEntity entity) where TEntity : class;
+    EntityEntry<TEntity> Remove<TEntity>(TEntity entity)
+        where TEntity : class;
 
     /// <summary>Persists all tracked changes in one transaction.</summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

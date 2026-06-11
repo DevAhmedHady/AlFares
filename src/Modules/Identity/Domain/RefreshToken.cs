@@ -15,7 +15,8 @@ public sealed class RefreshToken : Entity
 
     private RefreshToken() { }
 
-    public RefreshToken(Guid userId, Guid tenantId, string tokenHash, DateTime expiresAtUtc) : base(Guid.NewGuid())
+    public RefreshToken(Guid userId, Guid tenantId, string tokenHash, DateTime expiresAtUtc)
+        : base(Guid.NewGuid())
     {
         UserId = userId;
         TenantId = tenantId;

@@ -5,7 +5,8 @@ using SharedKernel;
 
 namespace Identity.Features.AssignTenantRole;
 
-public sealed record AssignTenantRoleCommand(Guid TenantId, Guid UserId, string RoleName) : ICommand<bool>;
+public sealed record AssignTenantRoleCommand(Guid TenantId, Guid UserId, string RoleName)
+    : ICommand<bool>;
 
 public sealed class AssignTenantRoleValidator : AbstractValidator<AssignTenantRoleCommand>
 {

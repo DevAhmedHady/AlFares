@@ -10,7 +10,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { GridComponent } from '../../shared/grid/grid';
 import { ColumnDef } from '../../shared/grid/grid-column';
 import { ClientsService, ReportsService } from '../../core/api/resources';
-import { map, switchMap } from 'rxjs';
+import { catchError, map, of, switchMap } from 'rxjs';
 import { AuthStore } from '../../core/auth/auth.store';
 import { GridFieldType } from '../../core/grid.models';
 import { ActivityLevel, ClientResponse, ClientStatus, CreateClientRequest, OwnerType } from '../../core/models';
@@ -59,6 +59,8 @@ export class ClientsComponent {
     grid: (query: import('../../core/grid.models').GridQuery) => this.service.grid(query).pipe(
       switchMap((page) => this.reports.balances(OwnerType.Client, page.items.map((x) => x.id)).pipe(
         map((balances) => ({ ...page, items: page.items.map((x) => ({ ...x, displayBalance: x.accountBalance + (balances[x.id]?.net ?? 0) })) })),
+        // Never let a reports outage blank the clients grid — fall back to the base balances.
+        catchError(() => of(page)),
       ))),
     export: (format: import('../../core/grid.models').ExportFormat, query: import('../../core/grid.models').GridQuery) => this.service.export(format, query),
   };

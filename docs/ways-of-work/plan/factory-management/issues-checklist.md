@@ -24,7 +24,7 @@
   - *Accept:* `dotnet build Factory.slnx` succeeds on the unmodified copy.
 - [x] **T002 — Remove sample modules.** Delete `src/Modules/Catalog` and `src/Modules/Ordering`; remove their `ProjectReference` from `src/Api/Api.csproj` and their `typeof(...).Assembly` lines + `using` from `src/Api/Program.cs`.
   - *Accept:* `dotnet build` succeeds; no Catalog/Ordering symbols remain.
-- [x] **T003 — App config for الفارس.** In `src/Api/appsettings.json`: `ConnectionStrings:Default` → `Database=alfaris`; `Jwt:Issuer`/`Audience` → `al-faris`; add `Seed` section: `AdminEmail=admin@alfaris.local`, `AdminPassword`, `TenantName=الفارس`, `TenantSlug=al-faris`. Add a strongly-typed `SeedOptions` bound via `IConfiguration`.
+- [ ] **T003 — App config for الفارس.** In `src/Api/appsettings.json`: `ConnectionStrings:Default` → `Database=alfaris`; `Jwt:Issuer`/`Audience` → `al-faris`; add `Seed` section: `AdminEmail=admin@alfaris.local`, `AdminPassword`, `TenantName=الفارس`, `TenantSlug=al-faris`. Add a strongly-typed `SeedOptions` bound via `IConfiguration`.
   - *Files:* `appsettings.json`, `appsettings.Development.json`, new `Api/Configuration/SeedOptions.cs`.
   - *Accept:* app boots reading `SeedOptions`; secrets not hard-coded.
 
@@ -120,7 +120,7 @@
 - [x] **T071 — Role templates.** Owner = all; Admin = all except `identity.tenants.manage`; Member = `*.read` only. Idempotent upsert.
 - [x] **T072 — Single-tenant + admin seed.** New `IdentityTenantSeeder` invoked from existing `IdentitySeedHostedService` after perms/roles: idempotent by slug `al-faris` — create tenant الفارس + admin `User` (from `SeedOptions`) + Owner membership.
 - [x] **T073 — Users grid endpoint.** `GET /api/admin/users/grid` (or POST) over `IdentityDbContext.Users` using shared `GridQuery` infra + a `UserGrid` field map. Permission `identity.users.read`.
-- [x] **T074 — TEST: auth + RBAC.** Login as seeded admin → JWT; Member token → 403 on a write/manage endpoint; users grid returns paged users.
+- [ ] **T074 — TEST: auth + RBAC.** Login as seeded admin → JWT; Member token → 403 on a write/manage endpoint; users grid returns paged users.
 
 ---
 
@@ -138,14 +138,14 @@
 
 ## Milestone M6 — Angular RTL SPA (Feature F9, P1)  `web/`
 
-- [x] **T090 — Scaffold Angular app.** `web/` Angular + TS; `index.html` `dir="rtl"` `lang="ar"`; i18n (Arabic default, EN secondary); base theme + RTL styles.
+- [ ] **T090 — Scaffold Angular app.** `web/` Angular + TS; `index.html` `dir="rtl"` `lang="ar"`; i18n (Arabic default, EN secondary); base theme + RTL styles.
 - [x] **T091 — OpenAPI TS client.** Generate typed API client/services from `/openapi`; env config for API base URL. *(Hand-written typed services + models mirroring the contracts; `API_BASE` injection token.)*
 - [x] **T092 — Auth.** Login page (single tenant auto-selected via anonymous `GET /api/tenants/default`), JWT storage, HTTP interceptor (bearer + refresh-token flow), permission route guards.
 - [x] **T093 — Reusable RTL grid component.** Server-side row model → `POST /api/<x>/grid` with `GridQuery`; sort, global + per-column filter, **column reorder drag&drop**, show/hide; toolbar **Export PDF/Excel** → `POST /api/<x>/export` → download blob (full filtered set). *(Custom grid component instead of AG Grid — no Angular 22 peer support yet.)*
-- [x] **T094 — Grid pages.** Clients, Expenses, Todos, Users pages using the shared grid component + CRUD dialogs.
+- [ ] **T094 — Grid pages.** Clients, Expenses, Todos, Users pages using the shared grid component + CRUD dialogs.
 - [x] **T095 — Dashboard view.** ApexCharts (core lib); list saved charts (`GET /charts` + per-chart `GET /charts/{id}/data`); render bar/pie/line with stored colors; drag to reorder (`LayoutOrder`). *(ApexCharts core instead of `ng-apexcharts` — Angular 22 peer support.)*
-- [x] **T096 — Chart builder dialog.** Admin: type → datasource (`GET /datasources`) → X / Y + aggregation → color scheme (default palette + custom) → live preview (`POST /charts/preview`) → save.
-- [x] **T097 — TEST: frontend e2e.** `ng build` clean + 7 vitest unit specs (auth/permission gating, grid query, Arabic labels) pass; SPA serves RTL Arabic; live login/grid/charts verified against the running API. Browser-driven click-through remains a manual step.
+- [ ] **T096 — Chart builder dialog.** Admin: type → datasource (`GET /datasources`) → X / Y + aggregation → color scheme (default palette + custom) → live preview (`POST /charts/preview`) → save.
+- [ ] **T097 — TEST: frontend e2e.** `ng build` clean + 7 vitest unit specs (auth/permission gating, grid query, Arabic labels) pass; SPA serves RTL Arabic; live login/grid/charts verified against the running API. Browser-driven click-through remains a manual step.
 
 > 🔶 **REVIEW GATE M6** — full app demo.
 

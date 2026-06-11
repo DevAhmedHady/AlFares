@@ -12,7 +12,8 @@ public sealed class User : AggregateRoot
 
     private User() { } // EF materialization
 
-    private User(Guid id, Email email, string displayName, DateTime createdAtUtc) : base(id)
+    private User(Guid id, Email email, string displayName, DateTime createdAtUtc)
+        : base(id)
     {
         Email = email;
         DisplayName = displayName;

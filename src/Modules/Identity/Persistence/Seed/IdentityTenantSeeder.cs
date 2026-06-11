@@ -22,7 +22,8 @@ public static class IdentityTenantSeeder
         IMainDbContext db,
         IPasswordHasher<User> hasher,
         SeedOptions options,
-        CancellationToken ct = default)
+        CancellationToken ct = default
+    )
     {
         ArgumentNullException.ThrowIfNull(db);
         ArgumentNullException.ThrowIfNull(hasher);
@@ -30,7 +31,9 @@ public static class IdentityTenantSeeder
 
         var slugResult = Slug.Create(options.TenantSlug);
         if (slugResult.IsFailure)
-            throw new InvalidOperationException($"Invalid Seed:TenantSlug '{options.TenantSlug}': {slugResult.Error.Code}.");
+            throw new InvalidOperationException(
+                $"Invalid Seed:TenantSlug '{options.TenantSlug}': {slugResult.Error.Code}."
+            );
         var slug = slugResult.Value;
 
         // Idempotency guard: the tenant already exists, nothing to do. Compare the whole value
@@ -40,12 +43,16 @@ public static class IdentityTenantSeeder
 
         var emailResult = Email.Create(options.AdminEmail);
         if (emailResult.IsFailure)
-            throw new InvalidOperationException($"Invalid Seed:AdminEmail '{options.AdminEmail}': {emailResult.Error.Code}.");
+            throw new InvalidOperationException(
+                $"Invalid Seed:AdminEmail '{options.AdminEmail}': {emailResult.Error.Code}."
+            );
         var email = emailResult.Value;
 
         var tenantResult = Tenant.Create(options.TenantName, slugResult.Value);
         if (tenantResult.IsFailure)
-            throw new InvalidOperationException($"Invalid Seed:TenantName: {tenantResult.Error.Code}.");
+            throw new InvalidOperationException(
+                $"Invalid Seed:TenantName: {tenantResult.Error.Code}."
+            );
         var tenant = tenantResult.Value;
         db.Set<Tenant>().Add(tenant);
 
@@ -55,7 +62,9 @@ public static class IdentityTenantSeeder
         {
             var userResult = User.Create(email, options.TenantName);
             if (userResult.IsFailure)
-                throw new InvalidOperationException($"Cannot create admin user: {userResult.Error.Code}.");
+                throw new InvalidOperationException(
+                    $"Cannot create admin user: {userResult.Error.Code}."
+                );
             admin = userResult.Value;
             admin.SetPasswordHash(hasher.HashPassword(admin, options.AdminPassword));
             db.Set<User>().Add(admin);
@@ -68,7 +77,10 @@ public static class IdentityTenantSeeder
             {
                 r.Id,
                 r.Name,
-                PermissionIds = db.Set<RolePermission>().Where(rp => rp.RoleId == r.Id).Select(rp => rp.PermissionId).ToList()
+                PermissionIds = db.Set<RolePermission>()
+                    .Where(rp => rp.RoleId == r.Id)
+                    .Select(rp => rp.PermissionId)
+                    .ToList(),
             })
             .ToListAsync(ct);
 
@@ -85,7 +97,9 @@ public static class IdentityTenantSeeder
         }
 
         if (ownerRole is null)
-            throw new InvalidOperationException("Owner role template missing; run IdentitySeeder first.");
+            throw new InvalidOperationException(
+                "Owner role template missing; run IdentitySeeder first."
+            );
 
         var membership = new TenantUser(tenant.Id, admin.Id);
         db.Set<TenantUser>().Add(membership);

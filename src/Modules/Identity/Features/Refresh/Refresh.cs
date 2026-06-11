@@ -12,7 +12,8 @@ public sealed class RefreshHandler(
     IUserRepository users,
     IMembershipRepository memberships,
     IRefreshTokenRepository refreshTokens,
-    ITokenService tokens) : ICommandHandler<RefreshCommand, AuthTokensResponse>
+    ITokenService tokens
+) : ICommandHandler<RefreshCommand, AuthTokensResponse>
 {
     public async Task<Result<AuthTokensResponse>> Handle(RefreshCommand c, CancellationToken ct)
     {
@@ -26,12 +27,19 @@ public sealed class RefreshHandler(
             return IdentityErrors.InvalidRefreshToken;
 
         var access = await memberships.GetEffectiveAccessAsync(existing.TenantId, user.Id, ct);
-        var accessToken = tokens.CreateAccessToken(user, existing.TenantId, access.Roles, access.Permissions);
+        var accessToken = tokens.CreateAccessToken(
+            user,
+            existing.TenantId,
+            access.Roles,
+            access.Permissions
+        );
 
         // Rotate: revoke the old token (pointing at its replacement) and issue a new one.
         var (refresh, newHash) = tokens.CreateRefreshToken();
         existing.Revoke(newHash);
-        refreshTokens.Add(new RefreshToken(user.Id, existing.TenantId, newHash, tokens.RefreshExpiryUtc()));
+        refreshTokens.Add(
+            new RefreshToken(user.Id, existing.TenantId, newHash, tokens.RefreshExpiryUtc())
+        );
         await refreshTokens.SaveChangesAsync(ct);
 
         return new AuthTokensResponse(accessToken, refresh, tokens.AccessExpiresInSeconds());

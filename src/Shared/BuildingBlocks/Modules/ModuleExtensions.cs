@@ -1,11 +1,11 @@
 using System.Reflection;
+using BuildingBlocks.Mapping;
+using BuildingBlocks.Messaging;
+using BuildingBlocks.Pipelines;
 using FluentValidation;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using BuildingBlocks.Mapping;
-using BuildingBlocks.Messaging;
-using BuildingBlocks.Pipelines;
 
 namespace BuildingBlocks.Modules;
 
@@ -15,11 +15,17 @@ public static class ModuleExtensions
     // cross-cutting concerns (handlers, validators, decorator pipeline, Mapster profiles) across
     // all of them. Adding a module = passing one more assembly here; nothing else in the host changes.
     public static IServiceCollection AddModules(
-        this IServiceCollection services, IConfiguration config, params Assembly[] moduleAssemblies)
+        this IServiceCollection services,
+        IConfiguration config,
+        params Assembly[] moduleAssemblies
+    )
     {
         var modules = moduleAssemblies
             .SelectMany(a => a.GetTypes())
-            .Where(t => t is { IsAbstract: false, IsInterface: false } && typeof(IModule).IsAssignableFrom(t))
+            .Where(t =>
+                t is { IsAbstract: false, IsInterface: false }
+                && typeof(IModule).IsAssignableFrom(t)
+            )
             .Select(t => (IModule)Activator.CreateInstance(t)!)
             .ToList();
 
@@ -27,11 +33,12 @@ public static class ModuleExtensions
             module.Register(services, config);
 
         // Register every concrete IHandler<,> across all module assemblies.
-        services.Scan(scan => scan
-            .FromAssemblies(moduleAssemblies)
-            .AddClasses(c => c.AssignableTo(typeof(IHandler<,>)), publicOnly: false)
-            .AsImplementedInterfaces()
-            .WithScopedLifetime());
+        services.Scan(scan =>
+            scan.FromAssemblies(moduleAssemblies)
+                .AddClasses(c => c.AssignableTo(typeof(IHandler<,>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+        );
 
         services.AddValidatorsFromAssemblies(moduleAssemblies);
 

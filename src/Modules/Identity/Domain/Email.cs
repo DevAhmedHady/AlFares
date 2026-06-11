@@ -24,7 +24,10 @@ public sealed partial class Email : ValueObject
     // Trusted reconstruction from persistence — bypasses validation.
     public static Email FromPersisted(string value) => new(value);
 
-    protected override IEnumerable<object?> GetEqualityComponents() { yield return Value; }
+    protected override IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return Value;
+    }
 
     public override string ToString() => Value;
 

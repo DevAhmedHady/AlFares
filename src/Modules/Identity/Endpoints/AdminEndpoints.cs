@@ -23,18 +23,44 @@ public sealed class AdminEndpoints : IEndpoint
     {
         var group = app.MapGroup(IdentityRoutes.Admin).WithTags(IdentityRoutes.AdminTag);
 
-        group.MapPost("/tenant-users", async (AddTenantUserRequest req, IMapper map, IDispatcher d, CancellationToken ct) =>
-                (await d.Send<bool>(map.Map<AddTenantUserCommand>(req), ct))
-                    .ToHttpResult(_ => Results.NoContent()))
+        group
+            .MapPost(
+                "/tenant-users",
+                async (
+                    AddTenantUserRequest req,
+                    IMapper map,
+                    IDispatcher d,
+                    CancellationToken ct
+                ) =>
+                    (await d.Send<bool>(map.Map<AddTenantUserCommand>(req), ct)).ToHttpResult(_ =>
+                        Results.NoContent()
+                    )
+            )
             .RequirePermission(ManageUsers);
 
-        group.MapPost("/tenant-user-roles", async (AssignTenantRoleRequest req, IMapper map, IDispatcher d, CancellationToken ct) =>
-                (await d.Send<bool>(map.Map<AssignTenantRoleCommand>(req), ct))
-                    .ToHttpResult(_ => Results.NoContent()))
+        group
+            .MapPost(
+                "/tenant-user-roles",
+                async (
+                    AssignTenantRoleRequest req,
+                    IMapper map,
+                    IDispatcher d,
+                    CancellationToken ct
+                ) =>
+                    (await d.Send<bool>(map.Map<AssignTenantRoleCommand>(req), ct)).ToHttpResult(
+                        _ => Results.NoContent()
+                    )
+            )
             .RequirePermission(ManageUsers);
 
-        group.MapPost("/users/grid", async (GridQuery req, IDispatcher d, CancellationToken ct) =>
-                (await d.Send<PagedResult<UserResponse>>(new GetUsersGridQuery(req), ct)).ToHttpResult())
+        group
+            .MapPost(
+                "/users/grid",
+                async (GridQuery req, IDispatcher d, CancellationToken ct) =>
+                    (
+                        await d.Send<PagedResult<UserResponse>>(new GetUsersGridQuery(req), ct)
+                    ).ToHttpResult()
+            )
             .RequirePermission(ReadUsers);
     }
 }

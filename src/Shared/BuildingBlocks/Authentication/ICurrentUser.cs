@@ -20,7 +20,9 @@ public sealed class CurrentUser(IHttpContextAccessor accessor) : ICurrentUser
     public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated ?? false;
 
     public Guid? UserId =>
-        Guid.TryParse(Principal?.FindFirstValue(JwtRegisteredClaimNames.Sub), out var id) ? id : null;
+        Guid.TryParse(Principal?.FindFirstValue(JwtRegisteredClaimNames.Sub), out var id)
+            ? id
+            : null;
 
     public Guid? TenantId =>
         Guid.TryParse(Principal?.FindFirstValue(IdentityClaims.TenantId), out var id) ? id : null;

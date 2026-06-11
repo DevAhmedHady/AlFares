@@ -6,4 +6,10 @@ namespace Identity.Contracts;
 /// <param name="DisplayName">Display name.</param>
 /// <param name="IsActive">Whether the account is active.</param>
 /// <param name="CreatedAtUtc">Account creation timestamp (UTC).</param>
-public sealed record UserResponse(Guid Id, string Email, string DisplayName, bool IsActive, DateTime CreatedAtUtc);
+public sealed record UserResponse(
+    Guid Id,
+    string Email,
+    string DisplayName,
+    bool IsActive,
+    DateTime CreatedAtUtc
+);

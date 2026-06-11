@@ -71,7 +71,13 @@ a { color: var(--p-primary-color); text-decoration: none; }
 .data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
 .data-table th { text-align: right; color: #475569; font-size: .8rem; background: #f8fafc; }
 .data-table th, .data-table td { padding: .75rem; border-bottom: 1px solid #e2e8f0; }
-.empty-panel { padding: 2.5rem 1rem; text-align: center; color: #64748b; }
+.data-table tbody tr { transition: background-color .15s ease; }
+.data-table tbody tr:hover { background: #f8fafc; }
+.data-table .num { text-align: left; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.amount-in { color: #15803d; font-weight: 600; }
+.amount-out { color: #b91c1c; font-weight: 600; }
+.empty-panel { padding: 2.5rem 1rem; text-align: center; color: #64748b; display: grid; gap: .5rem; place-items: center; }
+.empty-panel i { font-size: 1.6rem; color: #94a3b8; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: .5rem; }
 @media (max-width: 850px) { .feature-hero { align-items: flex-start; } .form-grid, .summary-grid, .report-filters { grid-template-columns: 1fr; } .form-grid .span-2 { grid-column: auto; } }
 

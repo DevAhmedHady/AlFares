@@ -38,7 +38,7 @@
   </div>
   <div class="row">
     <div class="field spacer"><label>تاريخ الاستحقاق</label>
-      <input pInputText type="date" class="w-full" [min]="today" [ngModel]="form().dueDate" (ngModelChange)="patch('dueDate', $event)" /></div>
+      <p-datepicker [ngModel]="dueDateModel()" (ngModelChange)="patch('dueDate', toIso($event))" [minDate]="todayDate" dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input" appendTo="body" styleClass="w-full" inputStyleClass="w-full" /></div>
     <div class="field spacer"><label>الأولوية</label>
       <p-select class="w-full" [options]="priorityOptions" optionLabel="1" optionValue="0" appendTo="body"
                 [ngModel]="form().priority" (ngModelChange)="patch('priority', +$event)" /></div>

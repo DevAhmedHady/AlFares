@@ -9,7 +9,11 @@ public sealed class ExcelGridExporter : IGridExporter
     public ExportFormat Format => ExportFormat.Xlsx;
 
     /// <inheritdoc />
-    public byte[] Export<T>(IReadOnlyList<T> rows, IReadOnlyList<ExportColumn> columns, string title)
+    public byte[] Export<T>(
+        IReadOnlyList<T> rows,
+        IReadOnlyList<ExportColumn> columns,
+        string title
+    )
     {
         ArgumentNullException.ThrowIfNull(rows);
         ArgumentNullException.ThrowIfNull(columns);
@@ -33,12 +37,16 @@ public sealed class ExcelGridExporter : IGridExporter
         {
             for (var columnIndex = 0; columnIndex < columns.Count; columnIndex++)
             {
-                var value = ExportValueAccessor.GetValue(exportRows[rowIndex], columns[columnIndex].Key);
+                var value = ExportValueAccessor.GetValue(
+                    exportRows[rowIndex],
+                    columns[columnIndex].Key
+                );
                 SetCellValue(worksheet.Cell(rowIndex + 3, columnIndex + 1), value);
             }
         }
 
-        if (columns.Count > 0) worksheet.Columns(1, columns.Count).AdjustToContents();
+        if (columns.Count > 0)
+            worksheet.Columns(1, columns.Count).AdjustToContents();
         using var stream = new MemoryStream();
         workbook.SaveAs(stream);
         return stream.ToArray();
@@ -61,7 +69,7 @@ public sealed class ExcelGridExporter : IGridExporter
             double number => number,
             decimal number => number,
             Enum enumeration => enumeration.ToString(),
-            _ => value.ToString()
+            _ => value.ToString(),
         };
     }
 }

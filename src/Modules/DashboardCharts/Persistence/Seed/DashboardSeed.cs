@@ -15,8 +15,14 @@ public static class DashboardPalette
     /// <summary>Default chart colors.</summary>
     public static readonly IReadOnlyList<string> Colors =
     [
-        "#2563EB", "#16A34A", "#DC2626", "#D97706",
-        "#7C3AED", "#0891B2", "#DB2777", "#65A30D"
+        "#2563EB",
+        "#16A34A",
+        "#DC2626",
+        "#D97706",
+        "#7C3AED",
+        "#0891B2",
+        "#DB2777",
+        "#65A30D",
     ];
 }
 
@@ -29,7 +35,8 @@ public static class DashboardChartsSeeder
         string DatasourceKey,
         string XField,
         string? YField,
-        ChartAggregation Aggregation);
+        ChartAggregation Aggregation
+    );
 
     /// <summary>Seeds defaults and repairs legacy encoded or obsolete definitions.</summary>
     public static async Task SeedAsync(IMainDbContext db, CancellationToken cancellationToken)
@@ -39,35 +46,86 @@ public static class DashboardChartsSeeder
         var colors = JsonSerializer.Serialize(DashboardPalette.Colors);
         ChartSeed[] seeds =
         [
-            new("العملاء حسب الحالة", ChartType.Pie, "clients", "status", null, ChartAggregation.Count),
-            new("المصروفات حسب الفئة", ChartType.Bar, "expenses", "expenseTypeName", "amount", ChartAggregation.Sum),
-            new("المهام حسب الأولوية", ChartType.Bar, "todos", "priority", null, ChartAggregation.Count),
-            new("المصروفات عبر الزمن", ChartType.Line, "expenses", "date", "amount", ChartAggregation.Sum)
+            new(
+                "العملاء حسب الحالة",
+                ChartType.Pie,
+                "clients",
+                "status",
+                null,
+                ChartAggregation.Count
+            ),
+            new(
+                "المصروفات حسب الفئة",
+                ChartType.Bar,
+                "expenses",
+                "expenseTypeName",
+                "amount",
+                ChartAggregation.Sum
+            ),
+            new(
+                "المهام حسب الأولوية",
+                ChartType.Bar,
+                "todos",
+                "priority",
+                null,
+                ChartAggregation.Count
+            ),
+            new(
+                "المصروفات عبر الزمن",
+                ChartType.Line,
+                "expenses",
+                "date",
+                "amount",
+                ChartAggregation.Sum
+            ),
         ];
 
-        var charts = await db.Set<ChartDefinition>().ToListAsync(cancellationToken).ConfigureAwait(false);
+        var charts = await db.Set<ChartDefinition>()
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
         for (var order = 0; order < seeds.Length; order++)
         {
             var seed = seeds[order];
             var matches = charts
-                .Where(chart => chart.Title == seed.Title || DecodeLegacyMojibake(chart.Title) == seed.Title)
+                .Where(chart =>
+                    chart.Title == seed.Title || DecodeLegacyMojibake(chart.Title) == seed.Title
+                )
                 .OrderBy(chart => chart.CreatedAtUtc)
                 .ToList();
 
             var chart = matches.FirstOrDefault();
             if (chart is null)
             {
-                chart = ChartDefinition.Create(
-                    seed.Title, seed.Type, seed.DatasourceKey, seed.XField, seed.YField,
-                    seed.Aggregation, colors, null, order).Value;
+                chart = ChartDefinition
+                    .Create(
+                        seed.Title,
+                        seed.Type,
+                        seed.DatasourceKey,
+                        seed.XField,
+                        seed.YField,
+                        seed.Aggregation,
+                        colors,
+                        null,
+                        order
+                    )
+                    .Value;
                 db.Set<ChartDefinition>().Add(chart);
                 charts.Add(chart);
             }
             else
             {
                 chart.Update(
-                    seed.Title, seed.Type, seed.DatasourceKey, seed.XField, seed.YField,
-                    seed.Aggregation, colors, null, order, true);
+                    seed.Title,
+                    seed.Type,
+                    seed.DatasourceKey,
+                    seed.XField,
+                    seed.YField,
+                    seed.Aggregation,
+                    colors,
+                    null,
+                    order,
+                    true
+                );
             }
 
             foreach (var duplicate in matches.Skip(1))
@@ -106,7 +164,8 @@ public static class DashboardChartsSeeder
 /// <summary>Runs dashboard chart reconciliation during startup.</summary>
 public sealed class DashboardChartsSeedHostedService(
     IServiceProvider services,
-    ILogger<DashboardChartsSeedHostedService> logger) : IHostedService
+    ILogger<DashboardChartsSeedHostedService> logger
+) : IHostedService
 {
     /// <inheritdoc />
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -115,7 +174,9 @@ public sealed class DashboardChartsSeedHostedService(
         {
             using var scope = services.CreateScope();
             await DashboardChartsSeeder.SeedAsync(
-                scope.ServiceProvider.GetRequiredService<IMainDbContext>(), cancellationToken);
+                scope.ServiceProvider.GetRequiredService<IMainDbContext>(),
+                cancellationToken
+            );
             logger.LogInformation("Dashboard charts seed reconciliation completed.");
         }
         catch (Exception exception)

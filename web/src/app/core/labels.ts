@@ -29,3 +29,17 @@ export function formatDate(iso?: string | null): string {
 export function formatMoney(value: number): string {
   return new Intl.NumberFormat('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
 }
+
+/** Bridges a 'YYYY-MM-DD' string (the wire/form format) to the Date that p-datepicker binds. */
+export function toDate(iso?: string | null): Date | null {
+  if (!iso) return null;
+  const d = new Date(`${iso}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Converts a p-datepicker Date back to the 'YYYY-MM-DD' string used everywhere else. */
+export function toIso(d?: Date | null): string {
+  if (!d) return '';
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}

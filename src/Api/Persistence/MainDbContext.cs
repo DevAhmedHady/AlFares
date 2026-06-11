@@ -13,7 +13,8 @@ namespace Api.Persistence;
 
 /// <summary>Single EF Core context for the complete application database.</summary>
 public sealed class MainDbContext(DbContextOptions<MainDbContext> options)
-    : DbContext(options), IMainDbContext
+    : DbContext(options),
+        IMainDbContext
 {
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -28,10 +29,18 @@ public sealed class MainDbContext(DbContextOptions<MainDbContext> options)
         ApplyModule(modelBuilder, typeof(WorkersModule).Assembly, "workers");
     }
 
-    private static void ApplyModule(ModelBuilder modelBuilder, System.Reflection.Assembly assembly, string schema)
+    private static void ApplyModule(
+        ModelBuilder modelBuilder,
+        System.Reflection.Assembly assembly,
+        string schema
+    )
     {
         modelBuilder.ApplyConfigurationsFromAssembly(assembly);
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(x => x.ClrType.Assembly == assembly))
+        foreach (
+            var entityType in modelBuilder
+                .Model.GetEntityTypes()
+                .Where(x => x.ClrType.Assembly == assembly)
+        )
             entityType.SetSchema(schema);
     }
 }
