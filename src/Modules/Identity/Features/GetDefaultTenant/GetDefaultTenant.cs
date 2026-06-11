@@ -17,12 +17,18 @@ public sealed record GetDefaultTenantQuery : IQuery<TenantResponse>;
 public sealed class GetDefaultTenantHandler(IMainDbContext dbContext)
     : IQueryHandler<GetDefaultTenantQuery, TenantResponse>
 {
-    private readonly IMainDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    private readonly IMainDbContext dbContext =
+        dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 
     /// <inheritdoc />
-    public async Task<Result<TenantResponse>> Handle(GetDefaultTenantQuery query, CancellationToken ct)
+    public async Task<Result<TenantResponse>> Handle(
+        GetDefaultTenantQuery query,
+        CancellationToken ct
+    )
     {
-        var tenant = await dbContext.Set<Tenant>().AsNoTracking()
+        var tenant = await dbContext
+            .Set<Tenant>()
+            .AsNoTracking()
             .Where(t => t.IsActive)
             .OrderBy(t => t.CreatedAtUtc)
             .Select(t => new TenantResponse(t.Id, t.Name, t.Slug.Value))
@@ -30,6 +36,8 @@ public sealed class GetDefaultTenantHandler(IMainDbContext dbContext)
 
         return tenant is not null
             ? Result.Success(tenant)
-            : Result.Failure<TenantResponse>(Error.NotFound("tenant.none", "No tenant has been provisioned."));
+            : Result.Failure<TenantResponse>(
+                Error.NotFound("tenant.none", "No tenant has been provisioned.")
+            );
     }
 }

@@ -21,7 +21,8 @@ public static class GridQueryExtensions
         this IQueryable<T> source,
         GridQuery query,
         Expression<Func<T, TOut>> projection,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(query);
@@ -49,7 +50,8 @@ public static class GridQueryExtensions
     public static Result<IQueryable<T>> ApplyGridQuery<T>(
         this IQueryable<T> source,
         GridQuery query,
-        GridFieldMap<T> fieldMap)
+        GridFieldMap<T> fieldMap
+    )
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(query);
@@ -59,26 +61,42 @@ public static class GridQueryExtensions
 
         foreach (var filter in query.Filters)
         {
-            if (!fieldMap.TryGet(filter.Field, out var field, out var selector) || !field!.Filterable)
+            if (
+                !fieldMap.TryGet(filter.Field, out var field, out var selector)
+                || !field!.Filterable
+            )
                 return UnknownField<T>(filter.Field);
 
             var member = ReplaceParameter(selector!, parameter);
             var predicate = BuildFilter(member, field, filter);
-            if (predicate.IsFailure) return Result.Failure<IQueryable<T>>(predicate.Error);
+            if (predicate.IsFailure)
+                return Result.Failure<IQueryable<T>>(predicate.Error);
             source = source.Where(Expression.Lambda<Func<T, bool>>(predicate.Value, parameter));
         }
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
             Expression? searchBody = null;
-            foreach (var field in fieldMap.Fields.Where(x => x.Searchable && x.Type == GridFieldType.Text))
+            foreach (
+                var field in fieldMap.Fields.Where(x =>
+                    x.Searchable && x.Type == GridFieldType.Text
+                )
+            )
             {
                 var member = ReplaceParameter(fieldMap.Selector(field.Key), parameter);
-                Expression contains = Expression.Call(member, nameof(string.Contains), Type.EmptyTypes,
-                    Expression.Constant(query.Search.Trim()));
+                Expression contains = Expression.Call(
+                    member,
+                    nameof(string.Contains),
+                    Type.EmptyTypes,
+                    Expression.Constant(query.Search.Trim())
+                );
                 contains = Expression.AndAlso(
-                    Expression.NotEqual(member, Expression.Constant(null, member.Type)), contains);
-                searchBody = searchBody is null ? contains : Expression.OrElse(searchBody, contains);
+                    Expression.NotEqual(member, Expression.Constant(null, member.Type)),
+                    contains
+                );
+                searchBody = searchBody is null
+                    ? contains
+                    : Expression.OrElse(searchBody, contains);
             }
 
             if (searchBody is not null)
@@ -94,10 +112,21 @@ public static class GridQueryExtensions
             var member = ReplaceParameter(selector!, parameter);
             var lambda = Expression.Lambda(member, parameter);
             var method = ordered
-                ? sort.Desc ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy)
-                : sort.Desc ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy);
-            source = source.Provider.CreateQuery<T>(Expression.Call(typeof(Queryable), method,
-                [typeof(T), member.Type], source.Expression, Expression.Quote(lambda)));
+                ? sort.Desc
+                    ? nameof(Queryable.ThenByDescending)
+                    : nameof(Queryable.ThenBy)
+                : sort.Desc
+                    ? nameof(Queryable.OrderByDescending)
+                    : nameof(Queryable.OrderBy);
+            source = source.Provider.CreateQuery<T>(
+                Expression.Call(
+                    typeof(Queryable),
+                    method,
+                    [typeof(T), member.Type],
+                    source.Expression,
+                    Expression.Quote(lambda)
+                )
+            );
             ordered = true;
         }
 
@@ -107,43 +136,83 @@ public static class GridQueryExtensions
     private static Result<IQueryable<T>> UnknownField<T>(string key) =>
         Result.Failure<IQueryable<T>>(Error.Validation("grid.unknown_field", key));
 
-    private static Expression ReplaceParameter<T>(Expression<Func<T, object?>> selector, ParameterExpression parameter)
+    private static Expression ReplaceParameter<T>(
+        Expression<Func<T, object?>> selector,
+        ParameterExpression parameter
+    )
     {
-        var body = new ParameterReplaceVisitor(selector.Parameters[0], parameter).Visit(selector.Body)!;
-        return body is UnaryExpression { NodeType: ExpressionType.Convert } convert ? convert.Operand : body;
+        var body = new ParameterReplaceVisitor(selector.Parameters[0], parameter).Visit(
+            selector.Body
+        )!;
+        return body is UnaryExpression { NodeType: ExpressionType.Convert } convert
+            ? convert.Operand
+            : body;
     }
 
-    private static Result<Expression> BuildFilter(Expression member, GridField field, GridFilter filter)
+    private static Result<Expression> BuildFilter(
+        Expression member,
+        GridField field,
+        GridFilter filter
+    )
     {
         try
         {
             var targetType = Nullable.GetUnderlyingType(member.Type) ?? member.Type;
             if (filter.Op is GridFilterOp.Contains or GridFilterOp.StartsWith)
             {
-                if (targetType != typeof(string)) return InvalidOperation(field.Key, filter.Op);
+                if (targetType != typeof(string))
+                    return InvalidOperation(field.Key, filter.Op);
                 var value = Expression.Constant(filter.Value ?? string.Empty);
-                var textOperation = Expression.Call(member,
-                    filter.Op == GridFilterOp.Contains ? nameof(string.Contains) : nameof(string.StartsWith),
-                    Type.EmptyTypes, value);
-                return Result.Success<Expression>(Expression.AndAlso(
-                    Expression.NotEqual(member, Expression.Constant(null, member.Type)), textOperation));
+                var textOperation = Expression.Call(
+                    member,
+                    filter.Op == GridFilterOp.Contains
+                        ? nameof(string.Contains)
+                        : nameof(string.StartsWith),
+                    Type.EmptyTypes,
+                    value
+                );
+                return Result.Success<Expression>(
+                    Expression.AndAlso(
+                        Expression.NotEqual(member, Expression.Constant(null, member.Type)),
+                        textOperation
+                    )
+                );
             }
 
             var nullableType = Nullable.GetUnderlyingType(member.Type);
-            var comparableMember = nullableType is null ? member : Expression.Property(member, nameof(Nullable<int>.Value));
-            var hasValue = nullableType is null ? null : Expression.Property(member, nameof(Nullable<int>.HasValue));
+            var comparableMember = nullableType is null
+                ? member
+                : Expression.Property(member, nameof(Nullable<int>.Value));
+            var hasValue = nullableType is null
+                ? null
+                : Expression.Property(member, nameof(Nullable<int>.HasValue));
 
             if (filter.Op == GridFilterOp.In)
             {
-                var values = (filter.Value ?? string.Empty).Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                    .Select(value => Parse(value, targetType)).ToArray();
+                var values = (filter.Value ?? string.Empty)
+                    .Split(
+                        ',',
+                        StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
+                    )
+                    .Select(value => Parse(value, targetType))
+                    .ToArray();
                 var array = Array.CreateInstance(targetType, values.Length);
-                for (var i = 0; i < values.Length; i++) array.SetValue(values[i], i);
-                var contains = typeof(Enumerable).GetMethods(BindingFlags.Public | BindingFlags.Static)
-                    .Single(x => x.Name == nameof(Enumerable.Contains) && x.GetParameters().Length == 2)
+                for (var i = 0; i < values.Length; i++)
+                    array.SetValue(values[i], i);
+                var contains = typeof(Enumerable)
+                    .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .Single(x =>
+                        x.Name == nameof(Enumerable.Contains) && x.GetParameters().Length == 2
+                    )
                     .MakeGenericMethod(targetType);
-                var inExpression = Expression.Call(contains, Expression.Constant(array), comparableMember);
-                return Result.Success<Expression>(hasValue is null ? inExpression : Expression.AndAlso(hasValue, inExpression));
+                var inExpression = Expression.Call(
+                    contains,
+                    Expression.Constant(array),
+                    comparableMember
+                );
+                return Result.Success<Expression>(
+                    hasValue is null ? inExpression : Expression.AndAlso(hasValue, inExpression)
+                );
             }
 
             var left = comparableMember;
@@ -153,40 +222,69 @@ public static class GridQueryExtensions
                 GridFilterOp.Eq => Result.Success<Expression>(Expression.Equal(left, right)),
                 GridFilterOp.Neq => Result.Success<Expression>(Expression.NotEqual(left, right)),
                 GridFilterOp.Gt => Result.Success<Expression>(Expression.GreaterThan(left, right)),
-                GridFilterOp.Gte => Result.Success<Expression>(Expression.GreaterThanOrEqual(left, right)),
+                GridFilterOp.Gte => Result.Success<Expression>(
+                    Expression.GreaterThanOrEqual(left, right)
+                ),
                 GridFilterOp.Lt => Result.Success<Expression>(Expression.LessThan(left, right)),
-                GridFilterOp.Lte => Result.Success<Expression>(Expression.LessThanOrEqual(left, right)),
-                GridFilterOp.Between => Result.Success<Expression>(Expression.AndAlso(
-                    Expression.GreaterThanOrEqual(left, right),
-                    Expression.LessThanOrEqual(left, Expression.Constant(Parse(filter.Value2, targetType), targetType)))),
-                _ => InvalidOperation(field.Key, filter.Op)
+                GridFilterOp.Lte => Result.Success<Expression>(
+                    Expression.LessThanOrEqual(left, right)
+                ),
+                GridFilterOp.Between => Result.Success<Expression>(
+                    Expression.AndAlso(
+                        Expression.GreaterThanOrEqual(left, right),
+                        Expression.LessThanOrEqual(
+                            left,
+                            Expression.Constant(Parse(filter.Value2, targetType), targetType)
+                        )
+                    )
+                ),
+                _ => InvalidOperation(field.Key, filter.Op),
             };
-            if (comparison.IsFailure || hasValue is null) return comparison;
+            if (comparison.IsFailure || hasValue is null)
+                return comparison;
             return Result.Success<Expression>(Expression.AndAlso(hasValue, comparison.Value));
         }
-        catch (Exception exception) when (exception is FormatException or InvalidCastException or ArgumentException)
+        catch (Exception exception)
+            when (exception is FormatException or InvalidCastException or ArgumentException)
         {
-            return Result.Failure<Expression>(Error.Validation("grid.invalid_value", $"{field.Key}:{filter.Value}"));
+            return Result.Failure<Expression>(
+                Error.Validation("grid.invalid_value", $"{field.Key}:{filter.Value}")
+            );
         }
     }
 
     private static Result<Expression> InvalidOperation(string field, GridFilterOp operation) =>
-        Result.Failure<Expression>(Error.Validation("grid.invalid_operation", $"{field}:{operation}"));
+        Result.Failure<Expression>(
+            Error.Validation("grid.invalid_operation", $"{field}:{operation}")
+        );
 
     private static object Parse(string? value, Type type)
     {
-        if (value is null) throw new FormatException("A filter value is required.");
-        if (type == typeof(string)) return value;
-        if (type == typeof(Guid)) return Guid.Parse(value);
-        if (type == typeof(DateOnly)) return DateOnly.Parse(value, CultureInfo.InvariantCulture);
-        if (type == typeof(DateTime)) return DateTime.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
-        if (type == typeof(bool)) return bool.Parse(value);
-        if (type.IsEnum) return Enum.Parse(type, value, true);
+        if (value is null)
+            throw new FormatException("A filter value is required.");
+        if (type == typeof(string))
+            return value;
+        if (type == typeof(Guid))
+            return Guid.Parse(value);
+        if (type == typeof(DateOnly))
+            return DateOnly.Parse(value, CultureInfo.InvariantCulture);
+        if (type == typeof(DateTime))
+            return DateTime.Parse(
+                value,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.RoundtripKind
+            );
+        if (type == typeof(bool))
+            return bool.Parse(value);
+        if (type.IsEnum)
+            return Enum.Parse(type, value, true);
         return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
     }
 
-    private sealed class ParameterReplaceVisitor(ParameterExpression from, ParameterExpression to) : ExpressionVisitor
+    private sealed class ParameterReplaceVisitor(ParameterExpression from, ParameterExpression to)
+        : ExpressionVisitor
     {
-        protected override Expression VisitParameter(ParameterExpression node) => node == from ? to : base.VisitParameter(node);
+        protected override Expression VisitParameter(ParameterExpression node) =>
+            node == from ? to : base.VisitParameter(node);
     }
 }

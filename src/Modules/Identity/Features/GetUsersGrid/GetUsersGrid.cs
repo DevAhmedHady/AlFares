@@ -13,18 +13,33 @@ namespace Identity.Features.GetUsersGrid;
 public static class UserGrid
 {
     /// <summary>Allow-listed grid fields.</summary>
-    public static readonly GridFieldMap<User> Fields = new(new[]
-    {
-        (new GridField("email", "البريد الإلكتروني", GridFieldType.Text, true),
-            (Expression<Func<User, object?>>)(x => x.Email.Value)),
-        (new GridField("displayName", "الاسم المعروض", GridFieldType.Text, true), x => x.DisplayName),
-        (new GridField("isActive", "نشط", GridFieldType.Boolean, false), x => x.IsActive),
-        (new GridField("createdAt", "تاريخ الإنشاء", GridFieldType.Date, false), x => x.CreatedAtUtc)
-    });
+    public static readonly GridFieldMap<User> Fields = new(
+        new[]
+        {
+            (
+                new GridField("email", "البريد الإلكتروني", GridFieldType.Text, true),
+                (Expression<Func<User, object?>>)(x => x.Email.Value)
+            ),
+            (
+                new GridField("displayName", "الاسم المعروض", GridFieldType.Text, true),
+                x => x.DisplayName
+            ),
+            (new GridField("isActive", "نشط", GridFieldType.Boolean, false), x => x.IsActive),
+            (
+                new GridField("createdAt", "تاريخ الإنشاء", GridFieldType.Date, false),
+                x => x.CreatedAtUtc
+            ),
+        }
+    );
 
     /// <summary>Server-side response projection.</summary>
-    public static readonly Expression<Func<User, UserResponse>> Projection =
-        x => new UserResponse(x.Id, x.Email.Value, x.DisplayName, x.IsActive, x.CreatedAtUtc);
+    public static readonly Expression<Func<User, UserResponse>> Projection = x => new UserResponse(
+        x.Id,
+        x.Email.Value,
+        x.DisplayName,
+        x.IsActive,
+        x.CreatedAtUtc
+    );
 }
 
 /// <summary>Gets a paged admin users grid.</summary>
@@ -35,13 +50,23 @@ public sealed record GetUsersGridQuery(GridQuery Grid) : IQuery<PagedResult<User
 public sealed class GetUsersGridHandler(IMainDbContext dbContext)
     : IQueryHandler<GetUsersGridQuery, PagedResult<UserResponse>>
 {
-    private readonly IMainDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    private readonly IMainDbContext dbContext =
+        dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 
     /// <inheritdoc />
-    public async Task<Result<PagedResult<UserResponse>>> Handle(GetUsersGridQuery query, CancellationToken ct)
+    public async Task<Result<PagedResult<UserResponse>>> Handle(
+        GetUsersGridQuery query,
+        CancellationToken ct
+    )
     {
-        var applied = dbContext.Set<User>().AsNoTracking().ApplyGridQuery(query.Grid, UserGrid.Fields);
-        if (applied.IsFailure) return applied.Error;
-        return await applied.Value.ToPagedResultAsync(query.Grid, UserGrid.Projection, ct).ConfigureAwait(false);
+        var applied = dbContext
+            .Set<User>()
+            .AsNoTracking()
+            .ApplyGridQuery(query.Grid, UserGrid.Fields);
+        if (applied.IsFailure)
+            return applied.Error;
+        return await applied
+            .Value.ToPagedResultAsync(query.Grid, UserGrid.Projection, ct)
+            .ConfigureAwait(false);
     }
 }

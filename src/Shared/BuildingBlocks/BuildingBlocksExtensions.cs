@@ -1,6 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
 using BuildingBlocks.Export;
 using BuildingBlocks.Messaging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BuildingBlocks;
 

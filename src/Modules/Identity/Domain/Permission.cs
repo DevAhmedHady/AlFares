@@ -10,7 +10,8 @@ public sealed class Permission : Entity
 
     private Permission() { }
 
-    public Permission(Guid id, string code, string description) : base(id)
+    public Permission(Guid id, string code, string description)
+        : base(id)
     {
         Code = code;
         Description = description;

@@ -22,10 +22,12 @@ public static class ExpensesSeeder
             ("وقود", ExpenseScope.Car),
             ("صيانة سيارة", ExpenseScope.Car),
             ("تأمين", ExpenseScope.Car),
-            ("رخصة", ExpenseScope.Car)
+            ("رخصة", ExpenseScope.Car),
         ];
 
-        var expenseTypes = await db.Set<ExpenseType>().ToListAsync(cancellationToken).ConfigureAwait(false);
+        var expenseTypes = await db.Set<ExpenseType>()
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
         var expenses = await db.Set<Expense>().ToListAsync(cancellationToken).ConfigureAwait(false);
         var mergedTypeIds = new Dictionary<Guid, Guid>();
         var duplicateTypes = new List<ExpenseType>();
@@ -33,9 +35,11 @@ public static class ExpensesSeeder
         foreach (var seed in seeds)
         {
             var matches = expenseTypes
-                .Where(type => type.Name == seed.Name ||
-                               type.Name == ToTrimmedLegacyMojibake(seed.Name) ||
-                               DecodeLegacyMojibake(type.Name) == seed.Name)
+                .Where(type =>
+                    type.Name == seed.Name
+                    || type.Name == ToTrimmedLegacyMojibake(seed.Name)
+                    || DecodeLegacyMojibake(type.Name) == seed.Name
+                )
                 .OrderByDescending(type => type.Name == seed.Name)
                 .ToList();
 
@@ -65,8 +69,14 @@ public static class ExpensesSeeder
                 continue;
 
             var update = expense.Update(
-                primaryTypeId, expense.Amount, expense.Date, expense.Payee, expense.Notes,
-                expense.OwnerType, expense.OwnerId);
+                primaryTypeId,
+                expense.Amount,
+                expense.Date,
+                expense.Payee,
+                expense.Notes,
+                expense.OwnerType,
+                expense.OwnerId
+            );
             if (update.IsFailure)
                 throw new InvalidOperationException(update.Error.Description);
         }
@@ -83,12 +93,21 @@ public static class ExpensesSeeder
         var generalTypes = expenseTypes.Where(type => type.Scope == ExpenseScope.General).ToArray();
         for (var index = 0; index < 30; index++)
         {
-            db.Set<Expense>().Add(Expense.Create(
-                generalTypes[index % generalTypes.Length].Id,
-                500 + (index * 125),
-                DateOnly.FromDateTime(DateTime.UtcNow.Date).AddMonths(-(index % 6)).AddDays(-(index % 20)),
-                $"مستفيد {index + 1}",
-                $"مصروف تجريبي {index + 1}").Value);
+            db.Set<Expense>()
+                .Add(
+                    Expense
+                        .Create(
+                            generalTypes[index % generalTypes.Length].Id,
+                            500 + (index * 125),
+                            DateOnly
+                                .FromDateTime(DateTime.UtcNow.Date)
+                                .AddMonths(-(index % 6))
+                                .AddDays(-(index % 20)),
+                            $"مستفيد {index + 1}",
+                            $"مصروف تجريبي {index + 1}"
+                        )
+                        .Value
+                );
         }
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -100,15 +119,22 @@ public static class ExpensesSeeder
         {
             var payee = $"مستفيد {index}";
             var notes = $"مصروف تجريبي {index}";
-            foreach (var expense in expenses.Where(expense =>
-                         DecodeLegacyMojibake(expense.Payee) == payee ||
-                         DecodeLegacyMojibake(expense.Notes) == notes))
+            foreach (
+                var expense in expenses.Where(expense =>
+                    DecodeLegacyMojibake(expense.Payee) == payee
+                    || DecodeLegacyMojibake(expense.Notes) == notes
+                )
+            )
             {
                 expense.Update(
-                    expense.ExpenseTypeId, expense.Amount, expense.Date,
+                    expense.ExpenseTypeId,
+                    expense.Amount,
+                    expense.Date,
                     DecodeLegacyMojibake(expense.Payee) == payee ? payee : expense.Payee,
                     DecodeLegacyMojibake(expense.Notes) == notes ? notes : expense.Notes,
-                    expense.OwnerType, expense.OwnerId);
+                    expense.OwnerType,
+                    expense.OwnerId
+                );
             }
         }
     }

@@ -1,1 +1,23 @@
-using SharedKernel; namespace Todos.Domain; /** <summary>Todo errors.</summary> */ public static class TodoErrors{/** <summary>Title.</summary> */ public static readonly Error TitleRequired=Error.Validation("todos.title_required","Title is required.");/** <summary>Past due.</summary> */ public static readonly Error DueDatePast=Error.Validation("todos.due_date_past","Due date cannot be in the past.");/** <summary>Not found.</summary> */ public static Error NotFound(Guid id)=>Error.NotFound("todos.not_found",$"Todo '{id}' was not found.");}
+using SharedKernel;
+
+namespace Todos.Domain;
+
+/// <summary>Todo errors.</summary>
+public static class TodoErrors
+{
+    /// <summary>Title.</summary>
+    public static readonly Error TitleRequired = Error.Validation(
+        "todos.title_required",
+        "Title is required."
+    );
+
+    /// <summary>Past due.</summary>
+    public static readonly Error DueDatePast = Error.Validation(
+        "todos.due_date_past",
+        "Due date cannot be in the past."
+    );
+
+    /// <summary>Not found.</summary>
+    public static Error NotFound(Guid id) =>
+        Error.NotFound("todos.not_found", $"Todo '{id}' was not found.");
+}

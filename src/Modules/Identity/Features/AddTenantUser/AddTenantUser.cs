@@ -19,7 +19,8 @@ public sealed class AddTenantUserValidator : AbstractValidator<AddTenantUserComm
 public sealed class AddTenantUserHandler(
     ITenantRepository tenants,
     IUserRepository users,
-    IMembershipRepository memberships) : ICommandHandler<AddTenantUserCommand, bool>
+    IMembershipRepository memberships
+) : ICommandHandler<AddTenantUserCommand, bool>
 {
     public async Task<Result<bool>> Handle(AddTenantUserCommand c, CancellationToken ct)
     {

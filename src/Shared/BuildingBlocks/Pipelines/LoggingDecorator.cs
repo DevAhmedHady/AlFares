@@ -1,12 +1,13 @@
-using Microsoft.Extensions.Logging;
 using BuildingBlocks.Messaging;
+using Microsoft.Extensions.Logging;
 using SharedKernel;
 
 namespace BuildingBlocks.Pipelines;
 
 public sealed class LoggingDecorator<TRequest, TResponse>(
     IHandler<TRequest, TResponse> inner,
-    ILogger<LoggingDecorator<TRequest, TResponse>> logger) : IHandler<TRequest, TResponse>
+    ILogger<LoggingDecorator<TRequest, TResponse>> logger
+) : IHandler<TRequest, TResponse>
 {
     public async Task<Result<TResponse>> Handle(TRequest request, CancellationToken ct)
     {

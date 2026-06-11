@@ -1,6 +1,6 @@
+using Identity.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Identity.Domain;
 
 namespace Identity.Persistence.Configurations;
 
@@ -12,7 +12,9 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         b.HasKey(x => x.Id);
         b.Property(x => x.Email)
             .HasConversion(e => e.Value, v => Email.FromPersisted(v))
-            .HasColumnName("email").HasMaxLength(256).IsRequired();
+            .HasColumnName("email")
+            .HasMaxLength(256)
+            .IsRequired();
         b.HasIndex(x => x.Email).IsUnique();
         b.Property(x => x.PasswordHash).HasColumnName("password_hash").IsRequired();
         b.Property(x => x.DisplayName).HasColumnName("display_name").HasMaxLength(150).IsRequired();
@@ -68,7 +70,9 @@ public sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         b.Property(x => x.Name).HasColumnName("name").HasMaxLength(150).IsRequired();
         b.Property(x => x.Slug)
             .HasConversion(s => s.Value, v => Slug.FromPersisted(v))
-            .HasColumnName("slug").HasMaxLength(Slug.MaxLength).IsRequired();
+            .HasColumnName("slug")
+            .HasMaxLength(Slug.MaxLength)
+            .IsRequired();
         b.HasIndex(x => x.Slug).IsUnique();
         b.Property(x => x.IsActive).HasColumnName("is_active");
         b.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");

@@ -1,5 +1,5 @@
-using Identity.Domain;
 using BuildingBlocks.Persistence;
+using Identity.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,7 +12,8 @@ namespace Identity.Persistence.Seed;
 // initial migration. Later app starts skip seeding entirely.
 public sealed class IdentitySeedHostedService(
     IServiceProvider services,
-    ILogger<IdentitySeedHostedService> logger) : IHostedService
+    ILogger<IdentitySeedHostedService> logger
+) : IHostedService
 {
     public async Task StartAsync(CancellationToken ct)
     {

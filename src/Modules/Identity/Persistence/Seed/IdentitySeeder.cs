@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using Identity.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Persistence.Seed;
 
@@ -39,7 +39,7 @@ public static class IdentitySeeder
         ("dashboard.charts.manage", "Define and manage dashboard charts"),
         ("identity.users.read", "View tenant members"),
         ("identity.users.manage", "Manage tenant members and roles"),
-        ("identity.tenants.manage", "Manage tenants")
+        ("identity.tenants.manage", "Manage tenants"),
     ];
 
     // All permission codes in catalog order — single source for the role templates below.
@@ -52,7 +52,7 @@ public static class IdentitySeeder
     [
         ("Owner", AllCodes),
         ("Admin", AllCodes.Where(c => c != "identity.tenants.manage").ToArray()),
-        ("Member", AllCodes.Where(c => c.EndsWith(".read", StringComparison.Ordinal)).ToArray())
+        ("Member", AllCodes.Where(c => c.EndsWith(".read", StringComparison.Ordinal)).ToArray()),
     ];
 
     public const string OwnerRoleName = "Owner";
@@ -93,14 +93,23 @@ public static class IdentitySeeder
 
         // Reconcile already-provisioned tenant roles with their global templates.
         var rolePermissions = await db.Set<RolePermission>().ToListAsync(ct);
-        var tenantRoles = await db.Set<TenantRole>().Where(x => x.BaseRoleId.HasValue).ToListAsync(ct);
+        var tenantRoles = await db.Set<TenantRole>()
+            .Where(x => x.BaseRoleId.HasValue)
+            .ToListAsync(ct);
         var existingTenantPermissions = await db.Set<TenantPermission>().ToListAsync(ct);
         foreach (var tenantRole in tenantRoles)
         {
-            var desired = rolePermissions.Where(x => x.RoleId == tenantRole.BaseRoleId).Select(x => x.PermissionId);
+            var desired = rolePermissions
+                .Where(x => x.RoleId == tenantRole.BaseRoleId)
+                .Select(x => x.PermissionId);
             foreach (var permissionId in desired)
-                if (!existingTenantPermissions.Any(x => x.TenantRoleId == tenantRole.Id && x.PermissionId == permissionId))
-                    db.Set<TenantPermission>().Add(new TenantPermission(tenantRole.Id, permissionId));
+                if (
+                    !existingTenantPermissions.Any(x =>
+                        x.TenantRoleId == tenantRole.Id && x.PermissionId == permissionId
+                    )
+                )
+                    db.Set<TenantPermission>()
+                        .Add(new TenantPermission(tenantRole.Id, permissionId));
         }
 
         await db.SaveChangesAsync(ct);

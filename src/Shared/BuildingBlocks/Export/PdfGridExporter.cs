@@ -26,71 +26,111 @@ public sealed class PdfGridExporter : IGridExporter
     public ExportFormat Format => ExportFormat.Pdf;
 
     /// <inheritdoc />
-    public byte[] Export<T>(IReadOnlyList<T> rows, IReadOnlyList<ExportColumn> columns, string title)
+    public byte[] Export<T>(
+        IReadOnlyList<T> rows,
+        IReadOnlyList<ExportColumn> columns,
+        string title
+    )
     {
         ArgumentNullException.ThrowIfNull(rows);
         ArgumentNullException.ThrowIfNull(columns);
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
 
         var exportRows = rows.Take(GridExportLimits.MaxRows).ToArray();
-        return Document.Create(document => document.Page(page =>
-        {
-            page.Size(PageSizes.A4.Landscape());
-            page.Margin(24);
-            page.DefaultTextStyle(style => style.FontFamily(FontName).FontSize(10));
-            page.Content().ContentFromRightToLeft().Column(content =>
-            {
-                content.Spacing(12);
-                content.Item().Text(title).FontSize(18).Bold().DirectionFromRightToLeft();
-                content.Item().Table(table =>
+        return Document
+            .Create(document =>
+                document.Page(page =>
                 {
-                    table.ColumnsDefinition(definition =>
-                    {
-                        foreach (var _ in columns) definition.RelativeColumn();
-                    });
+                    page.Size(PageSizes.A4.Landscape());
+                    page.Margin(24);
+                    page.DefaultTextStyle(style => style.FontFamily(FontName).FontSize(10));
+                    page.Content()
+                        .ContentFromRightToLeft()
+                        .Column(content =>
+                        {
+                            content.Spacing(12);
+                            content
+                                .Item()
+                                .Text(title)
+                                .FontSize(18)
+                                .Bold()
+                                .DirectionFromRightToLeft();
+                            content
+                                .Item()
+                                .Table(table =>
+                                {
+                                    table.ColumnsDefinition(definition =>
+                                    {
+                                        foreach (var _ in columns)
+                                            definition.RelativeColumn();
+                                    });
 
-                    table.Header(header =>
-                    {
-                        foreach (var column in columns)
-                            header.Cell().Element(HeaderCell).Text(column.Header).Bold().DirectionFromRightToLeft();
-                    });
+                                    table.Header(header =>
+                                    {
+                                        foreach (var column in columns)
+                                            header
+                                                .Cell()
+                                                .Element(HeaderCell)
+                                                .Text(column.Header)
+                                                .Bold()
+                                                .DirectionFromRightToLeft();
+                                    });
 
-                    foreach (var row in exportRows)
-                    foreach (var column in columns)
-                    {
-                        var value = FormatValue(ExportValueAccessor.GetValue(row, column.Key));
-                        table.Cell().Element(DataCell).Text(value).DirectionFromRightToLeft();
-                    }
-                });
-            });
-        })).GeneratePdf();
+                                    foreach (var row in exportRows)
+                                    foreach (var column in columns)
+                                    {
+                                        var value = FormatValue(
+                                            ExportValueAccessor.GetValue(row, column.Key)
+                                        );
+                                        table
+                                            .Cell()
+                                            .Element(DataCell)
+                                            .Text(value)
+                                            .DirectionFromRightToLeft();
+                                    }
+                                });
+                        });
+                })
+            )
+            .GeneratePdf();
     }
 
     private static IContainer HeaderCell(IContainer container) =>
-        container.BorderBottom(1).BorderColor(Colors.Grey.Medium).Background(Colors.Grey.Lighten3).Padding(5);
+        container
+            .BorderBottom(1)
+            .BorderColor(Colors.Grey.Medium)
+            .Background(Colors.Grey.Lighten3)
+            .Padding(5);
 
     private static IContainer DataCell(IContainer container) =>
         container.BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5);
 
-    private static string FormatValue(object? value) => value switch
-    {
-        null => string.Empty,
-        DateOnly date => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-        DateTime dateTime => dateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
-        IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
-        _ => value.ToString() ?? string.Empty
-    };
+    private static string FormatValue(object? value) =>
+        value switch
+        {
+            null => string.Empty,
+            DateOnly date => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            DateTime dateTime => dateTime.ToString(
+                "yyyy-MM-dd HH:mm",
+                CultureInfo.InvariantCulture
+            ),
+            IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
+            _ => value.ToString() ?? string.Empty,
+        };
 
     private static void EnsureFontRegistered()
     {
-        if (fontRegistered) return;
+        if (fontRegistered)
+            return;
         lock (RegistrationLock)
         {
-            if (fontRegistered) return;
+            if (fontRegistered)
+                return;
             QuestPDF.Settings.License = LicenseType.Community;
-            using var stream = typeof(PdfGridExporter).Assembly
-                .GetManifestResourceStream("BuildingBlocks.Assets.Cairo.ttf")
-                ?? throw new InvalidOperationException("Embedded Arabic font was not found.");
+            using var stream =
+                typeof(PdfGridExporter).Assembly.GetManifestResourceStream(
+                    "BuildingBlocks.Assets.Cairo.ttf"
+                ) ?? throw new InvalidOperationException("Embedded Arabic font was not found.");
             FontManager.RegisterFontWithCustomName(FontName, stream);
             fontRegistered = true;
         }

@@ -7,7 +7,8 @@ namespace Expenses.Persistence.Seed;
 /// <summary>Seeds expense reference data when the application starts.</summary>
 public sealed class ExpensesSeedHostedService(
     IServiceProvider services,
-    ILogger<ExpensesSeedHostedService> logger) : IHostedService
+    ILogger<ExpensesSeedHostedService> logger
+) : IHostedService
 {
     /// <inheritdoc />
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -17,7 +18,8 @@ public sealed class ExpensesSeedHostedService(
             using var scope = services.CreateScope();
             await ExpensesSeeder.SeedAsync(
                 scope.ServiceProvider.GetRequiredService<IMainDbContext>(),
-                cancellationToken);
+                cancellationToken
+            );
             logger.LogInformation("Expenses seed completed.");
         }
         catch (Exception exception)

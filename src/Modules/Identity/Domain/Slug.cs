@@ -25,7 +25,10 @@ public sealed partial class Slug : ValueObject
 
     public static Slug FromPersisted(string value) => new(value);
 
-    protected override IEnumerable<object?> GetEqualityComponents() { yield return Value; }
+    protected override IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return Value;
+    }
 
     public override string ToString() => Value;
 

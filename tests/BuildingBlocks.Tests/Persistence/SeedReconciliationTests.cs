@@ -19,9 +19,19 @@ public sealed class SeedReconciliationTests
     public async Task DashboardSeeder_RepairsLegacyChart()
     {
         await using var db = MainDbTestFactory.Create();
-        var chart = ChartDefinition.Create(
-            Mojibake("المصروفات حسب الفئة"), ChartType.Bar, "expenses", "category", "amount",
-            ChartAggregation.Sum, "[]", null, 1).Value;
+        var chart = ChartDefinition
+            .Create(
+                Mojibake("المصروفات حسب الفئة"),
+                ChartType.Bar,
+                "expenses",
+                "category",
+                "amount",
+                ChartAggregation.Sum,
+                "[]",
+                null,
+                1
+            )
+            .Value;
         db.Set<ChartDefinition>().Add(chart);
         await db.SaveChangesAsync();
 
@@ -31,7 +41,8 @@ public sealed class SeedReconciliationTests
         repaired.Title.Should().Be("المصروفات حسب الفئة");
         repaired.XField.Should().Be("expenseTypeName");
         (await db.Set<ChartDefinition>().CountAsync(x => x.Title == "المصروفات حسب الفئة"))
-            .Should().Be(1);
+            .Should()
+            .Be(1);
     }
 
     /// <summary>Merges duplicate types and repairs seeded expense Arabic text.</summary>
@@ -41,9 +52,15 @@ public sealed class SeedReconciliationTests
         await using var db = MainDbTestFactory.Create();
         var canonical = ExpenseType.Create("مواد خام", ExpenseScope.General).Value;
         var legacy = ExpenseType.Create(Mojibake("مواد خام"), ExpenseScope.General).Value;
-        var expense = Expense.Create(
-            legacy.Id, 100, new DateOnly(2026, 1, 1),
-            Mojibake("مستفيد 1"), Mojibake("مصروف تجريبي 1")).Value;
+        var expense = Expense
+            .Create(
+                legacy.Id,
+                100,
+                new DateOnly(2026, 1, 1),
+                Mojibake("مستفيد 1"),
+                Mojibake("مصروف تجريبي 1")
+            )
+            .Value;
         db.Set<ExpenseType>().AddRange(canonical, legacy);
         db.Set<Expense>().Add(expense);
         await db.SaveChangesAsync();

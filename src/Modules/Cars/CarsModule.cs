@@ -1,24 +1,277 @@
-
+using BuildingBlocks.Authentication;
+using BuildingBlocks.Endpoints;
+using BuildingBlocks.Export;
+using BuildingBlocks.Grids;
+using BuildingBlocks.Http;
+using BuildingBlocks.Modules;
+using BuildingBlocks.Persistence;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using BuildingBlocks.Authentication;using BuildingBlocks.Endpoints;using BuildingBlocks.Export;using BuildingBlocks.Grids;using BuildingBlocks.Http;using BuildingBlocks.Modules;using BuildingBlocks.Persistence;using Microsoft.AspNetCore.Builder;using Microsoft.AspNetCore.Http;using Microsoft.AspNetCore.Routing;using Microsoft.EntityFrameworkCore;using Microsoft.EntityFrameworkCore.Design;using Microsoft.EntityFrameworkCore.Metadata.Builders;using Microsoft.Extensions.Configuration;using Microsoft.Extensions.DependencyInjection;using SharedKernel;
+using SharedKernel;
+
 namespace Cars;
+
 /// <summary>Car ownership type.</summary>
-public enum CarType{Owned=0,Rented=1}
+public enum CarType
+{
+    Owned = 0,
+    Rented = 1,
+}
+
 /// <summary>Car aggregate.</summary>
-public sealed class Car:AggregateRoot{public string Name{get;private set;}=string.Empty;public string? PlateNumber{get;private set;}public string? DriverName{get;private set;}public CarType Type{get;private set;}public DateTime CreatedAtUtc{get;private set;}public DateTime UpdatedAtUtc{get;private set;}private Car(){}private Car(string name,string? plate,string? driver,CarType type):base(Guid.NewGuid()){Name=name;PlateNumber=Norm(plate);DriverName=Norm(driver);Type=type;CreatedAtUtc=UpdatedAtUtc=DateTime.UtcNow;}public static Result<Car>Create(string? name,string? plate,string? driver,CarType type)=>string.IsNullOrWhiteSpace(name)?Error.Validation("cars.name_required","Name is required."):new Car(name.Trim(),plate,driver,type);public Result<Car>Update(string? name,string? plate,string? driver,CarType type){if(string.IsNullOrWhiteSpace(name))return Error.Validation("cars.name_required","Name is required.");Name=name.Trim();PlateNumber=Norm(plate);DriverName=Norm(driver);Type=type;UpdatedAtUtc=DateTime.UtcNow;return this;}private static string?Norm(string? x)=>string.IsNullOrWhiteSpace(x)?null:x.Trim();}
+public sealed class Car : AggregateRoot
+{
+    public string Name { get; private set; } = string.Empty;
+    public string? PlateNumber { get; private set; }
+    public string? DriverName { get; private set; }
+    public CarType Type { get; private set; }
+    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc { get; private set; }
+
+    private Car() { }
+
+    private Car(string name, string? plate, string? driver, CarType type)
+        : base(Guid.NewGuid())
+    {
+        Name = name;
+        PlateNumber = Norm(plate);
+        DriverName = Norm(driver);
+        Type = type;
+        CreatedAtUtc = UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public static Result<Car> Create(string? name, string? plate, string? driver, CarType type) =>
+        string.IsNullOrWhiteSpace(name)
+            ? Error.Validation("cars.name_required", "Name is required.")
+            : new Car(name.Trim(), plate, driver, type);
+
+    public Result<Car> Update(string? name, string? plate, string? driver, CarType type)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return Error.Validation("cars.name_required", "Name is required.");
+        Name = name.Trim();
+        PlateNumber = Norm(plate);
+        DriverName = Norm(driver);
+        Type = type;
+        UpdatedAtUtc = DateTime.UtcNow;
+        return this;
+    }
+
+    private static string? Norm(string? x) => string.IsNullOrWhiteSpace(x) ? null : x.Trim();
+}
+
 /// <summary>Car mapping.</summary>
-public sealed class CarConfiguration:IEntityTypeConfiguration<Car>{public void Configure(EntityTypeBuilder<Car>b){b.ToTable("cars");b.HasKey(x=>x.Id);b.Property(x=>x.Name).HasMaxLength(150).IsRequired();b.Property(x=>x.PlateNumber).HasMaxLength(50);b.Property(x=>x.DriverName).HasMaxLength(150);b.Property(x=>x.Type).HasConversion<int>();b.HasIndex(x=>x.Name);}}
+public sealed class CarConfiguration : IEntityTypeConfiguration<Car>
+{
+    public void Configure(EntityTypeBuilder<Car> b)
+    {
+        b.ToTable("cars");
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Name).HasMaxLength(150).IsRequired();
+        b.Property(x => x.PlateNumber).HasMaxLength(50);
+        b.Property(x => x.DriverName).HasMaxLength(150);
+        b.Property(x => x.Type).HasConversion<int>();
+        b.HasIndex(x => x.Name);
+    }
+}
+
 /// <summary>Car response.</summary>
-public sealed record CarResponse(Guid Id,string Name,string? PlateNumber,string? DriverName,CarType Type,DateTime CreatedAtUtc,DateTime UpdatedAtUtc);
+public sealed record CarResponse(
+    Guid Id,
+    string Name,
+    string? PlateNumber,
+    string? DriverName,
+    CarType Type,
+    DateTime CreatedAtUtc,
+    DateTime UpdatedAtUtc
+);
+
 /// <summary>Car request.</summary>
-public sealed record CarRequest(string Name,string? PlateNumber,string? DriverName,CarType Type);
+public sealed record CarRequest(string Name, string? PlateNumber, string? DriverName, CarType Type);
+
 /// <summary>Car export.</summary>
-public sealed record CarExport(GridQuery Grid,ExportFormat Format);
+public sealed record CarExport(GridQuery Grid, ExportFormat Format);
+
 /// <summary>Cars module.</summary>
-public sealed class CarsModule:IModule{public string Name=>"Cars";public void Register(IServiceCollection s,IConfiguration c){s.AddHostedService<CarsSeedService>();}public void MapEndpoints(IEndpointRouteBuilder e)=>e.MapEndpointsFromAssembly(typeof(CarsModule).Assembly);}
+public sealed class CarsModule : IModule
+{
+    public string Name => "Cars";
+
+    public void Register(IServiceCollection s, IConfiguration c)
+    {
+        s.AddHostedService<CarsSeedService>();
+    }
+
+    public void MapEndpoints(IEndpointRouteBuilder e) =>
+        e.MapEndpointsFromAssembly(typeof(CarsModule).Assembly);
+}
+
 /// <summary>Car endpoints.</summary>
-public sealed class CarsEndpoints:IEndpoint{private static readonly GridFieldMap<Car>Map=new(new[]{(new GridField("name","السيارة",GridFieldType.Text,true),(System.Linq.Expressions.Expression<Func<Car,object?>>)(x=>x.Name)),(new GridField("plateNumber","اللوحة",GridFieldType.Text,true),(System.Linq.Expressions.Expression<Func<Car,object?>>)(x=>x.PlateNumber)),(new GridField("driverName","السائق",GridFieldType.Text,true),(System.Linq.Expressions.Expression<Func<Car,object?>>)(x=>x.DriverName)),(new GridField("type","النوع",GridFieldType.Enum,false),(System.Linq.Expressions.Expression<Func<Car,object?>>)(x=>x.Type))});private static readonly System.Linq.Expressions.Expression<Func<Car,CarResponse>>Project=x=>new(x.Id,x.Name,x.PlateNumber,x.DriverName,x.Type,x.CreatedAtUtc,x.UpdatedAtUtc);public void MapEndpoint(IEndpointRouteBuilder app){var g=app.MapGroup("/api/cars").WithTags("Cars");g.MapPost("",Create).RequirePermission("cars.write");g.MapPut("/{id:guid}",Update).RequirePermission("cars.write");g.MapDelete("/{id:guid}",Delete).RequirePermission("cars.delete");g.MapGet("/{id:guid}",Get).RequirePermission("cars.read");g.MapPost("/grid",Grid).RequirePermission("cars.read");g.MapPost("/export",Export).RequirePermission("cars.export");}private static async Task<IResult>Create(CarRequest r,IMainDbContext db,CancellationToken ct){var x=Car.Create(r.Name,r.PlateNumber,r.DriverName,r.Type);if(x.IsFailure)return Results.BadRequest(x.Error);db.Add(x.Value);await db.SaveChangesAsync(ct);return Results.Created($"/api/cars/{x.Value.Id}",new CarResponse(x.Value.Id,x.Value.Name,x.Value.PlateNumber,x.Value.DriverName,x.Value.Type,x.Value.CreatedAtUtc,x.Value.UpdatedAtUtc));}private static async Task<IResult>Update(Guid id,CarRequest r,IMainDbContext db,CancellationToken ct){var x=await db.Set<Car>().FindAsync([id],ct);if(x is null)return Results.NotFound();var z=x.Update(r.Name,r.PlateNumber,r.DriverName,r.Type);if(z.IsFailure)return Results.BadRequest(z.Error);await db.SaveChangesAsync(ct);return Results.Ok(new CarResponse(x.Id,x.Name,x.PlateNumber,x.DriverName,x.Type,x.CreatedAtUtc,x.UpdatedAtUtc));}private static async Task<IResult>Delete(Guid id,IMainDbContext db,CancellationToken ct){var x=await db.Set<Car>().FindAsync([id],ct);if(x is null)return Results.NotFound();db.Remove(x);await db.SaveChangesAsync(ct);return Results.NoContent();}private static async Task<IResult>Get(Guid id,IMainDbContext db,CancellationToken ct){var x=await db.Set<Car>().AsNoTracking().Where(x=>x.Id==id).Select(Project).SingleOrDefaultAsync(ct);return x is null?Results.NotFound():Results.Ok(x);}private static async Task<IResult>Grid(GridQuery r,IMainDbContext db,CancellationToken ct){var q=db.Set<Car>().AsNoTracking().ApplyGridQuery(r,Map);if(q.IsFailure)return q.ToHttpResult();return Results.Ok(await q.Value.ToPagedResultAsync(r,Project,ct));}private static async Task<IResult>Export(CarExport r,IMainDbContext db,IGridExporterFactory f,CancellationToken ct){var q=db.Set<Car>().AsNoTracking().ApplyGridQuery(r.Grid,Map);if(q.IsFailure)return q.ToHttpResult();var rows=await q.Value.Take(GridExportLimits.MaxRows).Select(Project).ToListAsync(ct);var cols=new[]{new ExportColumn("Name","السيارة",GridFieldType.Text),new ExportColumn("PlateNumber","اللوحة",GridFieldType.Text),new ExportColumn("DriverName","السائق",GridFieldType.Text),new ExportColumn("Type","النوع",GridFieldType.Enum)};var bytes=f.For(r.Format).Export(rows,cols,"السيارات");return Results.File(bytes,r.Format==ExportFormat.Xlsx?"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":"application/pdf",$"cars.{(r.Format==ExportFormat.Xlsx?"xlsx":"pdf")}");}}
+public sealed class CarsEndpoints : IEndpoint
+{
+    private static readonly GridFieldMap<Car> Map = new(
+        new[]
+        {
+            (
+                new GridField("name", "السيارة", GridFieldType.Text, true),
+                (System.Linq.Expressions.Expression<Func<Car, object?>>)(x => x.Name)
+            ),
+            (
+                new GridField("plateNumber", "اللوحة", GridFieldType.Text, true),
+                (System.Linq.Expressions.Expression<Func<Car, object?>>)(x => x.PlateNumber)
+            ),
+            (
+                new GridField("driverName", "السائق", GridFieldType.Text, true),
+                (System.Linq.Expressions.Expression<Func<Car, object?>>)(x => x.DriverName)
+            ),
+            (
+                new GridField("type", "النوع", GridFieldType.Enum, false),
+                (System.Linq.Expressions.Expression<Func<Car, object?>>)(x => x.Type)
+            ),
+        }
+    );
+    private static readonly System.Linq.Expressions.Expression<Func<Car, CarResponse>> Project =
+        x => new(x.Id, x.Name, x.PlateNumber, x.DriverName, x.Type, x.CreatedAtUtc, x.UpdatedAtUtc);
+
+    public void MapEndpoint(IEndpointRouteBuilder app)
+    {
+        var g = app.MapGroup("/api/cars").WithTags("Cars");
+        g.MapPost("", Create).RequirePermission("cars.write");
+        g.MapPut("/{id:guid}", Update).RequirePermission("cars.write");
+        g.MapDelete("/{id:guid}", Delete).RequirePermission("cars.delete");
+        g.MapGet("/{id:guid}", Get).RequirePermission("cars.read");
+        g.MapPost("/grid", Grid).RequirePermission("cars.read");
+        g.MapPost("/export", Export).RequirePermission("cars.export");
+    }
+
+    private static async Task<IResult> Create(CarRequest r, IMainDbContext db, CancellationToken ct)
+    {
+        var x = Car.Create(r.Name, r.PlateNumber, r.DriverName, r.Type);
+        if (x.IsFailure)
+            return Results.BadRequest(x.Error);
+        db.Add(x.Value);
+        await db.SaveChangesAsync(ct);
+        return Results.Created(
+            $"/api/cars/{x.Value.Id}",
+            new CarResponse(
+                x.Value.Id,
+                x.Value.Name,
+                x.Value.PlateNumber,
+                x.Value.DriverName,
+                x.Value.Type,
+                x.Value.CreatedAtUtc,
+                x.Value.UpdatedAtUtc
+            )
+        );
+    }
+
+    private static async Task<IResult> Update(
+        Guid id,
+        CarRequest r,
+        IMainDbContext db,
+        CancellationToken ct
+    )
+    {
+        var x = await db.Set<Car>().FindAsync([id], ct);
+        if (x is null)
+            return Results.NotFound();
+        var z = x.Update(r.Name, r.PlateNumber, r.DriverName, r.Type);
+        if (z.IsFailure)
+            return Results.BadRequest(z.Error);
+        await db.SaveChangesAsync(ct);
+        return Results.Ok(
+            new CarResponse(
+                x.Id,
+                x.Name,
+                x.PlateNumber,
+                x.DriverName,
+                x.Type,
+                x.CreatedAtUtc,
+                x.UpdatedAtUtc
+            )
+        );
+    }
+
+    private static async Task<IResult> Delete(Guid id, IMainDbContext db, CancellationToken ct)
+    {
+        var x = await db.Set<Car>().FindAsync([id], ct);
+        if (x is null)
+            return Results.NotFound();
+        db.Remove(x);
+        await db.SaveChangesAsync(ct);
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> Get(Guid id, IMainDbContext db, CancellationToken ct)
+    {
+        var x = await db.Set<Car>()
+            .AsNoTracking()
+            .Where(x => x.Id == id)
+            .Select(Project)
+            .SingleOrDefaultAsync(ct);
+        return x is null ? Results.NotFound() : Results.Ok(x);
+    }
+
+    private static async Task<IResult> Grid(GridQuery r, IMainDbContext db, CancellationToken ct)
+    {
+        var q = db.Set<Car>().AsNoTracking().ApplyGridQuery(r, Map);
+        if (q.IsFailure)
+            return q.ToHttpResult();
+        return Results.Ok(await q.Value.ToPagedResultAsync(r, Project, ct));
+    }
+
+    private static async Task<IResult> Export(
+        CarExport r,
+        IMainDbContext db,
+        IGridExporterFactory f,
+        CancellationToken ct
+    )
+    {
+        var q = db.Set<Car>().AsNoTracking().ApplyGridQuery(r.Grid, Map);
+        if (q.IsFailure)
+            return q.ToHttpResult();
+        var rows = await q.Value.Take(GridExportLimits.MaxRows).Select(Project).ToListAsync(ct);
+        var cols = new[]
+        {
+            new ExportColumn("Name", "السيارة", GridFieldType.Text),
+            new ExportColumn("PlateNumber", "اللوحة", GridFieldType.Text),
+            new ExportColumn("DriverName", "السائق", GridFieldType.Text),
+            new ExportColumn("Type", "النوع", GridFieldType.Enum),
+        };
+        var bytes = f.For(r.Format).Export(rows, cols, "السيارات");
+        return Results.File(
+            bytes,
+            r.Format == ExportFormat.Xlsx
+                ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                : "application/pdf",
+            $"cars.{(r.Format == ExportFormat.Xlsx ? "xlsx" : "pdf")}"
+        );
+    }
+}
+
 /// <summary>Seeds cars.</summary>
-public sealed class CarsSeedService(IServiceProvider services):IHostedService{public async Task StartAsync(CancellationToken ct){using var scope=services.CreateScope();var db=scope.ServiceProvider.GetRequiredService<IMainDbContext>();if(await db.Set<Car>().AnyAsync(ct))return;db.Set<Car>().AddRange(Car.Create("سيارة المصنع 1","أ ب ج 123","أحمد",CarType.Owned).Value,Car.Create("سيارة نقل مؤجرة",null,"محمود",CarType.Rented).Value);await db.SaveChangesAsync(ct);}public Task StopAsync(CancellationToken ct)=>Task.CompletedTask;}
+public sealed class CarsSeedService(IServiceProvider services) : IHostedService
+{
+    public async Task StartAsync(CancellationToken ct)
+    {
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<IMainDbContext>();
+        if (await db.Set<Car>().AnyAsync(ct))
+            return;
+        db.Set<Car>()
+            .AddRange(
+                Car.Create("سيارة المصنع 1", "أ ب ج 123", "أحمد", CarType.Owned).Value,
+                Car.Create("سيارة نقل مؤجرة", null, "محمود", CarType.Rented).Value
+            );
+        await db.SaveChangesAsync(ct);
+    }
 
-
+    public Task StopAsync(CancellationToken ct) => Task.CompletedTask;
+}

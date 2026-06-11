@@ -34,50 +34,86 @@ public sealed class BootAndSeedTests
     public async Task App_Boots_Seeds_AndServesGridContract()
     {
         if (!await DatabaseReachableAsync())
-            Assert.Inconclusive($"PostgreSQL not reachable at '{ConnectionString}'; skipping boot e2e.");
+            Assert.Inconclusive(
+                $"PostgreSQL not reachable at '{ConnectionString}'; skipping boot e2e."
+            );
 
         // Apply the single application migration set before the host starts its seeders.
         Environment.SetEnvironmentVariable("ConnectionStrings__Default", ConnectionString);
         await MigrateAsync();
 
-        await using var factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
-            {
-                builder.UseEnvironment(Environments.Production); // skip launchSettings URLs/env
-                builder.UseSetting("ConnectionStrings:Default", ConnectionString);
-                builder.UseSetting("Seed:AdminPassword", AdminPassword);
-            });
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment(Environments.Production); // skip launchSettings URLs/env
+            builder.UseSetting("ConnectionStrings:Default", ConnectionString);
+            builder.UseSetting("Seed:AdminPassword", AdminPassword);
+        });
 
         using var client = factory.CreateClient(); // starts host → runs idempotent seeders
 
         // Health is green.
-        (await client.GetAsync("/health")).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.GetAsync("/health"))
+            .StatusCode.Should()
+            .Be(HttpStatusCode.OK);
 
         // Seeded admin can authenticate against the seeded tenant.
         var tenantId = await SeededTenantIdAsync();
-        var loginResponse = await client.PostAsJsonAsync("/api/auth/login",
-            new { email = AdminEmail, password = AdminPassword, tenantId });
+        var loginResponse = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new
+            {
+                email = AdminEmail,
+                password = AdminPassword,
+                tenantId,
+            }
+        );
         loginResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var token = (await loginResponse.Content.ReadFromJsonAsync<JsonElement>())
-            .GetProperty("accessToken").GetString();
+            .GetProperty("accessToken")
+            .GetString();
         token.Should().NotBeNullOrWhiteSpace();
 
         client.DefaultRequestHeaders.Authorization = new("Bearer", token);
 
         // The shared grid contract returns a PagedResult over the seeded clients.
-        var grid = await client.PostAsJsonAsync("/api/clients/grid",
-            new { page = 1, pageSize = 5, sort = new[] { new { field = "name", desc = false } } });
+        var grid = await client.PostAsJsonAsync(
+            "/api/clients/grid",
+            new
+            {
+                page = 1,
+                pageSize = 5,
+                sort = new[] { new { field = "name", desc = false } },
+            }
+        );
         grid.StatusCode.Should().Be(HttpStatusCode.OK);
         var paged = await grid.Content.ReadFromJsonAsync<JsonElement>();
         paged.GetProperty("totalCount").GetInt64().Should().BeGreaterThan(0);
         paged.GetProperty("items").GetArrayLength().Should().BeGreaterThan(0);
 
         // Unknown field is rejected with a validation error, not an exception.
-        var bad = await client.PostAsJsonAsync("/api/clients/grid",
-            new { page = 1, pageSize = 5, filters = new[] { new { field = "bogus", op = 0, value = "x" } } });
+        var bad = await client.PostAsJsonAsync(
+            "/api/clients/grid",
+            new
+            {
+                page = 1,
+                pageSize = 5,
+                filters = new[]
+                {
+                    new
+                    {
+                        field = "bogus",
+                        op = 0,
+                        value = "x",
+                    },
+                },
+            }
+        );
         bad.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await bad.Content.ReadFromJsonAsync<JsonElement>())
-            .GetProperty("code").GetString().Should().Be("grid.unknown_field");
+            .GetProperty("code")
+            .GetString()
+            .Should()
+            .Be("grid.unknown_field");
 
         // Every saved dashboard definition computes successfully against PostgreSQL.
         var chartsResponse = await client.GetAsync("/api/dashboard/charts");
@@ -87,25 +123,36 @@ public sealed class BootAndSeedTests
         {
             var chartId = chart.GetProperty("id").GetGuid();
             (await client.GetAsync($"/api/dashboard/charts/{chartId}/data"))
-                .StatusCode.Should().Be(HttpStatusCode.OK, $"chart {chartId} should compute");
+                .StatusCode.Should()
+                .Be(HttpStatusCode.OK, $"chart {chartId} should compute");
         }
 
         // Ledger sources share MainDbContext, so this guards against concurrent EF operations.
-        var carsResponse = await client.PostAsJsonAsync("/api/cars/grid", new { page = 1, pageSize = 5 });
+        var carsResponse = await client.PostAsJsonAsync(
+            "/api/cars/grid",
+            new { page = 1, pageSize = 5 }
+        );
         carsResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var cars = (await carsResponse.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("items");
+        var cars = (await carsResponse.Content.ReadFromJsonAsync<JsonElement>()).GetProperty(
+            "items"
+        );
         foreach (var car in cars.EnumerateArray())
         {
             var ownerType = car.GetProperty("type").GetInt32() == 0 ? 2 : 3;
             var carId = car.GetProperty("id").GetGuid();
-            var ledgerResponse = await client.PostAsJsonAsync("/api/reports/owner-ledger", new
-            {
-                ownerType,
-                ownerId = carId,
-                from = (DateOnly?)null,
-                to = (DateOnly?)null
-            });
-            ledgerResponse.StatusCode.Should().Be(HttpStatusCode.OK, $"ledger for car {carId} should compute");
+            var ledgerResponse = await client.PostAsJsonAsync(
+                "/api/reports/owner-ledger",
+                new
+                {
+                    ownerType,
+                    ownerId = carId,
+                    from = (DateOnly?)null,
+                    to = (DateOnly?)null,
+                }
+            );
+            ledgerResponse
+                .StatusCode.Should()
+                .Be(HttpStatusCode.OK, $"ledger for car {carId} should compute");
         }
     }
 

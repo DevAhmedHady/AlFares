@@ -30,8 +30,17 @@ public sealed class DashboardTests
         var repository = new ChartDefinitionRepository(dashboardDb);
         var registry = new ChartDataSourceRegistry([new ClientsChartDataSource(clientsDb)]);
         var service = new DashboardService(repository, registry);
-        var request = new ChartRequest("Client status", ChartType.Pie, "clients", "status", null,
-            ChartAggregation.Count, "[]", null, 0);
+        var request = new ChartRequest(
+            "Client status",
+            ChartType.Pie,
+            "clients",
+            "status",
+            null,
+            ChartAggregation.Count,
+            "[]",
+            null,
+            0
+        );
 
         var preview = await service.PreviewAsync(request, default);
         preview.IsSuccess.Should().BeTrue();
@@ -47,20 +56,32 @@ public sealed class DashboardTests
         savedData.IsSuccess.Should().BeTrue();
         savedData.Value.Points.Should().BeEquivalentTo(preview.Value.Points);
 
-        var serviceWithoutDatasource = new DashboardService(repository, new ChartDataSourceRegistry([]));
+        var serviceWithoutDatasource = new DashboardService(
+            repository,
+            new ChartDataSourceRegistry([])
+        );
         var missing = await serviceWithoutDatasource.DataAsync(created.Value.Id, default);
         missing.IsFailure.Should().BeTrue();
         missing.Error.Code.Should().Be("dashboard.datasource_not_found");
     }
 
-    private static global::Api.Persistence.MainDbContext CreateClientsDb() => MainDbTestFactory.Create();
+    private static global::Api.Persistence.MainDbContext CreateClientsDb() =>
+        MainDbTestFactory.Create();
 
-    private static global::Api.Persistence.MainDbContext CreateDashboardDb() => MainDbTestFactory.Create();
+    private static global::Api.Persistence.MainDbContext CreateDashboardDb() =>
+        MainDbTestFactory.Create();
 
     private static Client CreateClient(string name, ClientStatus status)
     {
-        var client = Client.Create(name, Contact.Create("Contact", "0100", null).Value, 10,
-            ActivityLevel.Medium, null).Value;
+        var client = Client
+            .Create(
+                name,
+                Contact.Create("Contact", "0100", null).Value,
+                10,
+                ActivityLevel.Medium,
+                null
+            )
+            .Value;
         client.SetStatus(status);
         return client;
     }

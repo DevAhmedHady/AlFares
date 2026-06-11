@@ -26,7 +26,8 @@ public sealed class ProvisionTenantHandler(
     IUserRepository users,
     IRoleTemplateRepository roleTemplates,
     IMembershipRepository memberships,
-    IMapper mapper) : ICommandHandler<ProvisionTenantCommand, TenantResponse>
+    IMapper mapper
+) : ICommandHandler<ProvisionTenantCommand, TenantResponse>
 {
     public async Task<Result<TenantResponse>> Handle(ProvisionTenantCommand c, CancellationToken ct)
     {
@@ -53,7 +54,12 @@ public sealed class ProvisionTenantHandler(
         TenantRole? ownerRole = null;
         foreach (var template in templates)
         {
-            var tenantRole = new TenantRole(tenant.Id, template.Name, template.RoleId, isSystem: true);
+            var tenantRole = new TenantRole(
+                tenant.Id,
+                template.Name,
+                template.RoleId,
+                isSystem: true
+            );
             memberships.AddTenantRole(tenantRole);
             foreach (var permissionId in template.PermissionIds)
                 memberships.AddTenantPermission(new TenantPermission(tenantRole.Id, permissionId));

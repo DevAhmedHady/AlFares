@@ -12,14 +12,19 @@ public sealed class JwtTokenService(JwtOptions options) : ITokenService
 {
     private readonly JsonWebTokenHandler _handler = new();
 
-    public string CreateAccessToken(User user, Guid tenantId, IReadOnlyList<string> roles, IReadOnlyList<string> permissions)
+    public string CreateAccessToken(
+        User user,
+        Guid tenantId,
+        IReadOnlyList<string> roles,
+        IReadOnlyList<string> permissions
+    )
     {
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email.Value),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(IdentityClaims.TenantId, tenantId.ToString())
+            new(IdentityClaims.TenantId, tenantId.ToString()),
         };
         claims.AddRange(roles.Select(r => new Claim(IdentityClaims.Role, r)));
         claims.AddRange(permissions.Select(p => new Claim(IdentityClaims.Permission, p)));
@@ -31,7 +36,7 @@ public sealed class JwtTokenService(JwtOptions options) : ITokenService
             Audience = options.Audience,
             Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddMinutes(options.AccessMinutes),
-            SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
+            SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256),
         };
 
         return _handler.CreateToken(descriptor);

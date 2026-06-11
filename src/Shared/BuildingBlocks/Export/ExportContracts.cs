@@ -7,8 +7,9 @@ public enum ExportFormat
 {
     /// <summary>Microsoft Excel workbook.</summary>
     Xlsx,
+
     /// <summary>Portable Document Format.</summary>
-    Pdf
+    Pdf,
 }
 
 /// <summary>Defines one exported grid column.</summary>

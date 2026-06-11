@@ -7,14 +7,18 @@ public enum ChartAggregation
 {
     /// <summary>Counts rows.</summary>
     Count,
+
     /// <summary>Sums numeric values.</summary>
     Sum,
+
     /// <summary>Averages numeric values.</summary>
     Avg,
+
     /// <summary>Returns minimum value.</summary>
     Min,
+
     /// <summary>Returns maximum value.</summary>
-    Max
+    Max,
 }
 
 /// <summary>Represents one labeled chart value.</summary>
@@ -38,7 +42,8 @@ public sealed record ChartFieldDescriptor(
     string DisplayName,
     GridFieldType Type,
     bool CanGroupBy,
-    bool CanAggregate);
+    bool CanAggregate
+);
 
 /// <summary>Describes a registered chart datasource.</summary>
 /// <param name="Key">Stable datasource key.</param>
@@ -47,7 +52,8 @@ public sealed record ChartFieldDescriptor(
 public sealed record ChartDataSourceMetadata(
     string Key,
     string DisplayName,
-    IReadOnlyList<ChartFieldDescriptor> Fields);
+    IReadOnlyList<ChartFieldDescriptor> Fields
+);
 
 /// <summary>Defines a validated chart computation request.</summary>
 /// <param name="XField">Grouping field key.</param>
@@ -58,4 +64,5 @@ public sealed record ChartComputeRequest(
     string XField,
     string? YField,
     ChartAggregation Aggregation,
-    IReadOnlyList<GridFilter> Filters);
+    IReadOnlyList<GridFilter> Filters
+);

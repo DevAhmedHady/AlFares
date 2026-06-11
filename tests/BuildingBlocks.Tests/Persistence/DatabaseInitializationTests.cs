@@ -23,8 +23,14 @@ public sealed class DatabaseInitializationTests
         using MainDbContext db = MainDbTestFactory.Create();
         Type[] entities =
         [
-            typeof(User), typeof(Client), typeof(Expense), typeof(TodoItem),
-            typeof(ChartDefinition), typeof(Revenue), typeof(Car), typeof(Worker)
+            typeof(User),
+            typeof(Client),
+            typeof(Expense),
+            typeof(TodoItem),
+            typeof(ChartDefinition),
+            typeof(Revenue),
+            typeof(Car),
+            typeof(Worker),
         ];
 
         entities.All(type => db.Model.FindEntityType(type) != null).Should().BeTrue();

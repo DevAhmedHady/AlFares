@@ -1,4 +1,34 @@
+using BuildingBlocks.Charts;
+using BuildingBlocks.Endpoints;
+using BuildingBlocks.Modules;
+using BuildingBlocks.Persistence;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Todos.Charts;
+using Todos.Domain;
+using Todos.Persistence;
+using Todos.Persistence.Seed;
 
-using BuildingBlocks.Charts;using BuildingBlocks.Endpoints;using BuildingBlocks.Modules;using BuildingBlocks.Persistence;using Microsoft.AspNetCore.Routing;using Microsoft.Extensions.Configuration;using Microsoft.Extensions.DependencyInjection;using Todos.Charts;using Todos.Domain;using Todos.Persistence;using Todos.Persistence.Seed;namespace Todos;/** <summary>Todos module.</summary> */ public sealed class TodosModule:IModule{/** <inheritdoc/> */ public string Name=>"Todos";/** <inheritdoc/> */ public void Register(IServiceCollection s,IConfiguration c){ArgumentNullException.ThrowIfNull(s);ArgumentNullException.ThrowIfNull(c);s.AddScoped<ITodoRepository,TodoRepository>();s.AddScoped<IChartDataSource,TodosChartDataSource>();s.AddHostedService<TodosSeedHostedService>();}/** <inheritdoc/> */ public void MapEndpoints(IEndpointRouteBuilder e)=>e.MapEndpointsFromAssembly(typeof(TodosModule).Assembly);}
+namespace Todos;
 
+/// <summary>Todos module.</summary>
+public sealed class TodosModule : IModule
+{
+    /// <inheritdoc />
+    public string Name => "Todos";
 
+    /// <inheritdoc />
+    public void Register(IServiceCollection s, IConfiguration c)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        ArgumentNullException.ThrowIfNull(c);
+        s.AddScoped<ITodoRepository, TodoRepository>();
+        s.AddScoped<IChartDataSource, TodosChartDataSource>();
+        s.AddHostedService<TodosSeedHostedService>();
+    }
+
+    /// <inheritdoc />
+    public void MapEndpoints(IEndpointRouteBuilder e) =>
+        e.MapEndpointsFromAssembly(typeof(TodosModule).Assembly);
+}

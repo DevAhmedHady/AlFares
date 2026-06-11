@@ -26,7 +26,8 @@ public sealed class LoginHandler(
     IMembershipRepository memberships,
     IRefreshTokenRepository refreshTokens,
     IPasswordHasher<User> hasher,
-    ITokenService tokens) : ICommandHandler<LoginCommand, AuthTokensResponse>
+    ITokenService tokens
+) : ICommandHandler<LoginCommand, AuthTokensResponse>
 {
     public async Task<Result<AuthTokensResponse>> Handle(LoginCommand c, CancellationToken ct)
     {
@@ -56,7 +57,12 @@ public sealed class LoginHandler(
             return IdentityErrors.NotAMember;
 
         var access = await memberships.GetEffectiveAccessAsync(c.TenantId, user.Id, ct);
-        var accessToken = tokens.CreateAccessToken(user, c.TenantId, access.Roles, access.Permissions);
+        var accessToken = tokens.CreateAccessToken(
+            user,
+            c.TenantId,
+            access.Roles,
+            access.Permissions
+        );
 
         var (refresh, hash) = tokens.CreateRefreshToken();
         refreshTokens.Add(new RefreshToken(user.Id, c.TenantId, hash, tokens.RefreshExpiryUtc()));

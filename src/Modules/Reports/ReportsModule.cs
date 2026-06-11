@@ -13,7 +13,12 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Reports;
 
 /// <summary>Owner ledger request.</summary>
-public sealed record OwnerLedgerRequest(OwnerType OwnerType, Guid OwnerId, DateOnly? From, DateOnly? To);
+public sealed record OwnerLedgerRequest(
+    OwnerType OwnerType,
+    Guid OwnerId,
+    DateOnly? From,
+    DateOnly? To
+);
 
 /// <summary>Owner export request.</summary>
 public sealed record OwnerLedgerExportRequest(
@@ -22,7 +27,8 @@ public sealed record OwnerLedgerExportRequest(
     DateOnly? From,
     DateOnly? To,
     ExportFormat Format,
-    string OwnerName);
+    string OwnerName
+);
 
 /// <summary>Owner balances request.</summary>
 public sealed record OwnerBalancesRequest(OwnerType OwnerType, IReadOnlyCollection<Guid> Ids);
@@ -35,7 +41,8 @@ public sealed record OwnerLedgerResponse(
     decimal TotalExpenses,
     decimal TotalRevenues,
     decimal Net,
-    IReadOnlyList<LedgerEntry> Entries);
+    IReadOnlyList<LedgerEntry> Entries
+);
 
 /// <summary>Read-only reports module.</summary>
 public sealed class ReportsModule : IModule
@@ -44,9 +51,7 @@ public sealed class ReportsModule : IModule
     public string Name => "Reports";
 
     /// <inheritdoc />
-    public void Register(IServiceCollection services, IConfiguration config)
-    {
-    }
+    public void Register(IServiceCollection services, IConfiguration config) { }
 
     /// <inheritdoc />
     public void MapEndpoints(IEndpointRouteBuilder endpoints) =>
@@ -68,27 +73,30 @@ public sealed class ReportsEndpoints : IEndpoint
     private static async Task<OwnerLedgerResponse> Build(
         OwnerLedgerRequest request,
         IEnumerable<ILedgerSource> sources,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var entries = new List<LedgerEntry>();
 
         // Ledger sources share the scoped MainDbContext, so EF operations cannot overlap.
         foreach (var source in sources)
         {
-            entries.AddRange(await source.GetEntriesAsync(
-                request.OwnerType,
-                request.OwnerId,
-                request.From,
-                request.To,
-                cancellationToken));
+            entries.AddRange(
+                await source.GetEntriesAsync(
+                    request.OwnerType,
+                    request.OwnerId,
+                    request.From,
+                    request.To,
+                    cancellationToken
+                )
+            );
         }
 
-        var rows = entries
-            .OrderBy(entry => entry.Date)
-            .ThenBy(entry => entry.Kind)
-            .ToArray();
-        var expenses = rows.Where(entry => entry.Kind == LedgerKind.Expense).Sum(entry => entry.Amount);
-        var revenues = rows.Where(entry => entry.Kind == LedgerKind.Revenue).Sum(entry => entry.Amount);
+        var rows = entries.OrderBy(entry => entry.Date).ThenBy(entry => entry.Kind).ToArray();
+        var expenses = rows.Where(entry => entry.Kind == LedgerKind.Expense)
+            .Sum(entry => entry.Amount);
+        var revenues = rows.Where(entry => entry.Kind == LedgerKind.Revenue)
+            .Sum(entry => entry.Amount);
 
         return new(expenses, revenues, revenues - expenses, rows);
     }
@@ -96,13 +104,14 @@ public sealed class ReportsEndpoints : IEndpoint
     private static async Task<IResult> Ledger(
         OwnerLedgerRequest request,
         IEnumerable<ILedgerSource> sources,
-        CancellationToken cancellationToken) =>
-        Results.Ok(await Build(request, sources, cancellationToken));
+        CancellationToken cancellationToken
+    ) => Results.Ok(await Build(request, sources, cancellationToken));
 
     private static async Task<IResult> Balances(
         OwnerBalancesRequest request,
         IEnumerable<ILedgerSource> sources,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var result = request.Ids.ToDictionary(id => id, _ => new OwnerBalance(0, 0, 0));
         foreach (var source in sources)
@@ -112,13 +121,15 @@ public sealed class ReportsEndpoints : IEndpoint
                 request.Ids,
                 null,
                 null,
-                cancellationToken);
+                cancellationToken
+            );
             foreach (var (id, total) in totals)
             {
                 var old = result[id];
-                result[id] = source.Kind == LedgerKind.Expense
-                    ? new(total, old.Revenues, old.Revenues - total)
-                    : new(old.Expenses, total, total - old.Expenses);
+                result[id] =
+                    source.Kind == LedgerKind.Expense
+                        ? new(total, old.Revenues, old.Revenues - total)
+                        : new(old.Expenses, total, total - old.Expenses);
             }
         }
 
@@ -129,25 +140,29 @@ public sealed class ReportsEndpoints : IEndpoint
         OwnerLedgerExportRequest request,
         IEnumerable<ILedgerSource> sources,
         IGridExporterFactory exporterFactory,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var ledger = await Build(
             new(request.OwnerType, request.OwnerId, request.From, request.To),
             sources,
-            cancellationToken);
+            cancellationToken
+        );
         var columns = new[]
         {
             new ExportColumn("Date", "التاريخ", GridFieldType.Date),
             new ExportColumn("Kind", "النوع", GridFieldType.Enum),
             new ExportColumn("Description", "البيان", GridFieldType.Text),
-            new ExportColumn("Amount", "المبلغ", GridFieldType.Number)
+            new ExportColumn("Amount", "المبلغ", GridFieldType.Number),
         };
-        var title = $"تقرير {request.OwnerName} | مصروفات {ledger.TotalExpenses:N2} | "
+        var title =
+            $"تقرير {request.OwnerName} | مصروفات {ledger.TotalExpenses:N2} | "
             + $"إيرادات {ledger.TotalRevenues:N2} | صافي {ledger.Net:N2}";
         var bytes = exporterFactory.For(request.Format).Export(ledger.Entries, columns, title);
-        var contentType = request.Format == ExportFormat.Xlsx
-            ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            : "application/pdf";
+        var contentType =
+            request.Format == ExportFormat.Xlsx
+                ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                : "application/pdf";
         var extension = request.Format == ExportFormat.Xlsx ? "xlsx" : "pdf";
 
         return Results.File(bytes, contentType, $"owner-ledger.{extension}");

@@ -21,5 +21,8 @@ public interface IChartDataSource
     /// <param name="request">Chart computation request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Computed chart series.</returns>
-    Task<ChartSeries> ComputeAsync(ChartComputeRequest request, CancellationToken cancellationToken);
+    Task<ChartSeries> ComputeAsync(
+        ChartComputeRequest request,
+        CancellationToken cancellationToken
+    );
 }

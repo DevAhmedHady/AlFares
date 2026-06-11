@@ -11,7 +11,8 @@ public sealed class Role : AggregateRoot
 
     private Role() { }
 
-    public Role(Guid id, string name, bool isSystem) : base(id)
+    public Role(Guid id, string name, bool isSystem)
+        : base(id)
     {
         Name = name;
         IsSystem = isSystem;
@@ -35,4 +36,9 @@ public sealed class RolePermission
 }
 
 // Read model: a role template with the permission ids it grants (used by provisioning).
-public sealed record RoleTemplate(Guid RoleId, string Name, bool IsSystem, IReadOnlyList<Guid> PermissionIds);
+public sealed record RoleTemplate(
+    Guid RoleId,
+    string Name,
+    bool IsSystem,
+    IReadOnlyList<Guid> PermissionIds
+);

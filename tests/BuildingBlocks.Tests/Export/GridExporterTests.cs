@@ -16,12 +16,12 @@ public sealed class GridExporterTests
     [
         new("Name", "الاسم", GridFieldType.Text),
         new("Amount", "المبلغ", GridFieldType.Number),
-        new("Date", "التاريخ", GridFieldType.Date)
+        new("Date", "التاريخ", GridFieldType.Date),
     ];
 
     private static readonly ExportRow[] Rows =
     [
-        new("عميل تجريبي", 125.50m, new DateOnly(2026, 6, 9))
+        new("عميل تجريبي", 125.50m, new DateOnly(2026, 6, 9)),
     ];
 
     /// <summary>Verifies workbook headers and typed first-row values round trip.</summary>
@@ -67,7 +67,11 @@ public sealed class GridExporterTests
     private sealed record ExportRow(string Name, decimal Amount, DateOnly Date);
 
     private static bool IsArabicGlyph(char character) =>
-        character is >= '\u0600' and <= '\u06FF'
-            or >= '\uFB50' and <= '\uFDFF'
-            or >= '\uFE70' and <= '\uFEFF';
+        character
+            is >= '\u0600'
+                and <= '\u06FF'
+                or >= '\uFB50'
+                and <= '\uFDFF'
+                or >= '\uFE70'
+                and <= '\uFEFF';
 }

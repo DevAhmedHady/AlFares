@@ -3,8 +3,10 @@ using Microsoft.EntityFrameworkCore;
 namespace Api.Persistence;
 
 /// <summary>Applies the single main database migration set before module seeders run.</summary>
-public sealed class MainDatabaseInitializer(IServiceProvider services, ILogger<MainDatabaseInitializer> logger)
-    : IHostedService
+public sealed class MainDatabaseInitializer(
+    IServiceProvider services,
+    ILogger<MainDatabaseInitializer> logger
+) : IHostedService
 {
     /// <inheritdoc />
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -27,7 +29,8 @@ public sealed class MainDatabaseInitializer(IServiceProvider services, ILogger<M
     /// </remarks>
     public static async Task MigrateAsync(
         MainDbContext db,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await db.Database.ExecuteSqlRawAsync(
             """
@@ -45,7 +48,8 @@ public sealed class MainDatabaseInitializer(IServiceProvider services, ILogger<M
                   WHERE "MigrationId" = '20260609140539_InitialMainDatabase'
               );
             """,
-            cancellationToken);
+            cancellationToken
+        );
         await db.Database.MigrateAsync(cancellationToken);
         await db.Database.ExecuteSqlRawAsync(NewModuleSchemaSql, cancellationToken);
     }
@@ -55,8 +59,7 @@ public sealed class MainDatabaseInitializer(IServiceProvider services, ILogger<M
     /// those modules existed. Every statement is <c>IF NOT EXISTS</c>, so it is a no-op on an
     /// already-current schema.
     /// </summary>
-    private const string NewModuleSchemaSql =
-        """
+    private const string NewModuleSchemaSql = """
         CREATE SCHEMA IF NOT EXISTS revenues;
         CREATE SCHEMA IF NOT EXISTS cars;
         CREATE SCHEMA IF NOT EXISTS workers;

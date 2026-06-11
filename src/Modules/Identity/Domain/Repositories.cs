@@ -24,7 +24,10 @@ public interface IRoleTemplateRepository
 }
 
 // Effective access for a member within one tenant.
-public sealed record EffectiveAccess(IReadOnlyList<string> Roles, IReadOnlyList<string> Permissions);
+public sealed record EffectiveAccess(
+    IReadOnlyList<string> Roles,
+    IReadOnlyList<string> Permissions
+);
 
 public interface IMembershipRepository
 {
