@@ -1,6 +1,7 @@
-<div class="page-head">
-  <div><h1>العملاء</h1><div class="sub">إدارة حسابات العملاء</div></div>
-</div>
+<section class="feature-page">
+<header class="feature-hero">
+  <div class="feature-title"><span class="feature-icon"><i class="pi pi-address-book" aria-hidden="true"></i></span><div><h1>العملاء</h1><p>إدارة حسابات العملاء</p></div></div>
+</header>
 
 <app-grid
   title="قائمة العملاء"
@@ -14,43 +15,45 @@
 
 <ng-template #actions let-row>
   <div class="row-actions">
-    @if (canWrite) { <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" pTooltip="تعديل" (onClick)="openEdit(row)" /> }
-    @if (canWrite) { <p-button icon="pi pi-sync" severity="secondary" [text]="true" [rounded]="true" pTooltip="تبديل الحالة" (onClick)="toggleStatus(row)" /> }
-    @if (canDelete) { <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" pTooltip="حذف" (onClick)="remove(row)" /> }
+    @if (canWrite) { <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" ariaLabel="تعديل العميل" pTooltip="تعديل العميل" (onClick)="openEdit(row)" /> }
+    @if (canWrite) { <p-button icon="pi pi-sync" severity="secondary" [text]="true" [rounded]="true" ariaLabel="تبديل حالة العميل" pTooltip="تبديل حالة العميل" (onClick)="toggleStatus(row)" /> }
+    @if (canDelete) { <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" ariaLabel="حذف العميل" pTooltip="حذف العميل" (onClick)="remove(row)" /> }
   </div>
 </ng-template>
 
 <p-dialog [visible]="showForm()" (visibleChange)="showForm.set($event)" [modal]="true" [draggable]="false"
-          [dismissableMask]="true" [style]="{ width: '520px' }"
+          [dismissableMask]="true" [style]="{ width: 'min(520px, calc(100vw - 2rem))' }"
           [header]="editing() ? 'تعديل عميل' : 'عميل جديد'">
   <div class="field">
-    <label>اسم العميل</label>
-    <input pInputText class="w-full" [ngModel]="form().name" (ngModelChange)="patch('name', $event)" />
+    <label for="client-name">اسم العميل</label>
+    <input id="client-name" pInputText class="w-full" autocomplete="organization" [ngModel]="form().name" (ngModelChange)="patch('name', $event)" />
   </div>
   <div class="field">
-    <label>جهة الاتصال</label>
-    <input pInputText class="w-full" [ngModel]="form().contactName" (ngModelChange)="patch('contactName', $event)" />
+    <label for="client-contact">جهة الاتصال</label>
+    <input id="client-contact" pInputText class="w-full" [ngModel]="form().contactName" (ngModelChange)="patch('contactName', $event)" />
   </div>
   <div class="row">
-    <div class="field spacer"><label>الهاتف</label>
-      <input pInputText class="w-full" [ngModel]="form().phone" (ngModelChange)="patch('phone', $event)" /></div>
-    <div class="field spacer"><label>البريد</label>
-      <input pInputText class="w-full" [ngModel]="form().email" (ngModelChange)="patch('email', $event)" /></div>
+    <div class="field spacer"><label for="client-phone">الهاتف</label>
+      <input id="client-phone" pInputText class="w-full" type="tel" autocomplete="tel" [ngModel]="form().phone" (ngModelChange)="patch('phone', $event)" /></div>
+    <div class="field spacer"><label for="client-email">البريد</label>
+      <input id="client-email" pInputText class="w-full" type="email" autocomplete="email" [ngModel]="form().email" (ngModelChange)="patch('email', $event)" /></div>
   </div>
   <div class="row">
-    <div class="field spacer"><label>الرصيد الافتتاحي</label>
-      <p-inputnumber class="w-full" mode="decimal" [minFractionDigits]="2"
+    <div class="field spacer"><label for="client-balance">الرصيد الافتتاحي</label>
+      <p-inputnumber inputId="client-balance" class="w-full" mode="decimal" [minFractionDigits]="2"
                      [ngModel]="form().accountBalance" (ngModelChange)="patch('accountBalance', $event || 0)" /></div>
-    <div class="field spacer"><label>مستوى النشاط</label>
-      <p-select class="w-full" [options]="activityOptions" optionLabel="1" optionValue="0" appendTo="body"
+    <div class="field spacer"><label for="client-activity">مستوى النشاط</label>
+      <p-select inputId="client-activity" class="w-full" [options]="activityOptions" optionLabel="1" optionValue="0" appendTo="body"
                 [ngModel]="form().activityLevel" (ngModelChange)="patch('activityLevel', +$event)" /></div>
   </div>
   <div class="field">
-    <label>ملاحظات</label>
-    <textarea pTextarea class="w-full" rows="2" [ngModel]="form().notes" (ngModelChange)="patch('notes', $event)"></textarea>
+    <label for="client-notes">ملاحظات</label>
+    <textarea id="client-notes" pTextarea class="w-full" rows="2" [ngModel]="form().notes" (ngModelChange)="patch('notes', $event)"></textarea>
   </div>
+  @if (formError()) { <p class="form-error" id="client-form-error" role="alert">{{ formError() }}</p> }
   <ng-template pTemplate="footer">
     <p-button label="إلغاء" severity="secondary" [text]="true" (onClick)="showForm.set(false)" />
-    <p-button label="حفظ" icon="pi pi-check" (onClick)="save()" [disabled]="saving() || !form().name" />
+    <p-button label="حفظ" icon="pi pi-check" (onClick)="save()" [loading]="saving()" [disabled]="saving() || !form().name" />
   </ng-template>
 </p-dialog>
+</section>

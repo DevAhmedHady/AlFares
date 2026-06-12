@@ -9,7 +9,7 @@ import { DashboardService } from '../../core/api/dashboard.service';
 import {
   ChartAggregation, ChartDataSourceMetadata, ChartDefinition, ChartRequest, ChartSeries, ChartType,
 } from '../../core/models';
-import { chartTypeLabels, optionsFrom } from '../../core/labels';
+import { chartTypeLabels } from '../../core/labels';
 
 const PALETTES: Record<string, string[]> = {
   افتراضي: ['#2563EB', '#16A34A', '#DC2626', '#D97706', '#7C3AED', '#0891B2', '#DB2777', '#65A30D'],
@@ -49,8 +49,8 @@ export class ChartBuilderComponent {
   readonly aggregation = signal<ChartAggregation>(ChartAggregation.Count);
   readonly paletteName = signal('افتراضي');
 
-  readonly typeOptions = optionsFrom(chartTypeLabels);
-  readonly aggOptions = optionsFrom(AGG_LABELS);
+  readonly typeOptions = Object.entries(chartTypeLabels).map(([k, v]) => ({ label: v, value: +k }));
+  readonly aggOptions = Object.entries(AGG_LABELS).map(([k, v]) => ({ label: v, value: +k }));
   readonly paletteNames = Object.keys(PALETTES);
   readonly Count = ChartAggregation.Count;
 

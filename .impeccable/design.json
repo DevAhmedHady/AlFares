@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-12T00:00:00.000Z",
+  "title": "Design System: AlFaris | الفارس",
+  "extensions": {
+    "colorMeta": {
+      "action-blue": {
+        "role": "primary",
+        "displayName": "Action Blue",
+        "canonical": "#2563EB",
+        "tonalRamp": ["#0B1F4D", "#12367D", "#1D4ED8", "#2563EB", "#60A5FA", "#93C5FD", "#DBEAFE", "#EFF6FF"]
+      },
+      "operational-navy": {
+        "role": "secondary",
+        "displayName": "Operational Navy",
+        "canonical": "#0B1220",
+        "tonalRamp": ["#070B13", "#0B1220", "#111C30", "#1E293B", "#334155", "#64748B", "#CBD5E1", "#F1F5F9"]
+      },
+      "slate-ink": {
+        "role": "neutral",
+        "displayName": "Slate Ink",
+        "canonical": "#0F172A",
+        "tonalRamp": ["#020617", "#0F172A", "#1E293B", "#334155", "#64748B", "#94A3B8", "#E2E8F0", "#F8FAFC"]
+      },
+      "app-background": {
+        "role": "neutral",
+        "displayName": "Clear Slate Canvas",
+        "canonical": "#F1F5F9",
+        "tonalRamp": ["#0F172A", "#1E293B", "#475569", "#94A3B8", "#CBD5E1", "#E2E8F0", "#F1F5F9", "#F8FAFC"]
+      },
+      "positive": {
+        "role": "semantic",
+        "displayName": "Operational Positive",
+        "canonical": "#15803D",
+        "tonalRamp": ["#052E16", "#14532D", "#166534", "#15803D", "#22C55E", "#86EFAC", "#DCFCE7", "#F0FDF4"]
+      },
+      "negative": {
+        "role": "semantic",
+        "displayName": "Operational Negative",
+        "canonical": "#B91C1C",
+        "tonalRamp": ["#450A0A", "#7F1D1D", "#991B1B", "#B91C1C", "#EF4444", "#FCA5A5", "#FEE2E2", "#FEF2F2"]
+      }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Page Headline", "purpose": "Arabic page titles and major dialog headings." },
+      "title": { "displayName": "Working Title", "purpose": "Grid, chart, and section titles." },
+      "body": { "displayName": "Interface Body", "purpose": "Primary Arabic interface copy and values." },
+      "label": { "displayName": "Control Label", "purpose": "Form labels, metadata, and compact support text." }
+    },
+    "shadows": [
+      { "name": "surface-low", "value": "0 1px 3px rgba(15, 23, 42, 0.06)", "purpose": "Minimal separation for grids and chart surfaces." },
+      { "name": "active-navigation", "value": "0 4px 12px rgba(37, 99, 235, 0.35)", "purpose": "Active sidebar destination only." }
+    ],
+    "motion": [
+      { "name": "state-fast", "value": "150ms cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Hover, focus, and compact state feedback." },
+      { "name": "state-standard", "value": "200ms cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Dialogs, menus, and larger state transitions." },
+      { "name": "reduced-motion", "value": "0ms", "purpose": "Instant state updates when reduced motion is requested." }
+    ],
+    "breakpoints": [
+      { "name": "shell-collapse", "value": "720px" },
+      { "name": "login-stack", "value": "800px" },
+      { "name": "form-stack", "value": "850px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The main action in a management workflow.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">حفظ</button>",
+      "css": ".ds-btn-primary { border: 0; border-radius: 8px; background: #2563eb; color: #fff; padding: 10px 16px; font: 600 14px/1.5 Cairo, 'Segoe UI', Tahoma, sans-serif; cursor: pointer; transition: background-color 150ms cubic-bezier(.22,1,.36,1); } .ds-btn-primary:hover { background: #1d4ed8; } .ds-btn-primary:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; } .ds-btn-primary:active { background: #1e40af; }"
+    },
+    {
+      "name": "Ghost Utility Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "A quiet secondary or row-level utility action.",
+      "html": "<button class=\"ds-btn-ghost\" type=\"button\">إلغاء</button>",
+      "css": ".ds-btn-ghost { border: 0; border-radius: 8px; background: transparent; color: #475569; padding: 10px 12px; font: 600 14px/1.5 Cairo, 'Segoe UI', Tahoma, sans-serif; cursor: pointer; transition: background-color 150ms cubic-bezier(.22,1,.36,1), color 150ms cubic-bezier(.22,1,.36,1); } .ds-btn-ghost:hover { background: #f1f5f9; color: #0f172a; } .ds-btn-ghost:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }"
+    },
+    {
+      "name": "Arabic Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A persistent-label field for Arabic management forms.",
+      "html": "<label class=\"ds-field\"><span>اسم العميل</span><input type=\"text\" value=\"شركة المثال\"></label>",
+      "css": ".ds-field { display: grid; gap: 6px; color: #475569; font: 600 13px/1.5 Cairo, 'Segoe UI', Tahoma, sans-serif; direction: rtl; } .ds-field input { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #0f172a; padding: 10px 12px; font: 400 15px/1.6 Cairo, 'Segoe UI', Tahoma, sans-serif; } .ds-field input:hover { border-color: #94a3b8; } .ds-field input:focus-visible { border-color: #2563eb; outline: 3px solid #dbeafe; outline-offset: 1px; }"
+    },
+    {
+      "name": "Active Navigation Item",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "The current destination in the Operational Navy sidebar.",
+      "html": "<a class=\"ds-nav-active\" href=\"#\" dir=\"rtl\"><span aria-hidden=\"true\">●</span><span>لوحة المعلومات</span></a>",
+      "css": ".ds-nav-active { display: flex; align-items: center; gap: 11px; border-radius: 10px; background: #2563eb; color: #fff; padding: 11px 14px; font: 500 15px/1.5 Cairo, 'Segoe UI', Tahoma, sans-serif; text-decoration: none; box-shadow: 0 4px 12px rgba(37,99,235,.35); } .ds-nav-active:hover { background: #1d4ed8; } .ds-nav-active:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }"
+    },
+    {
+      "name": "Working Surface",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A restrained container for grids, charts, and reports.",
+      "html": "<section class=\"ds-surface\" dir=\"rtl\"><h3>قائمة العملاء</h3><p>محتوى تشغيلي منظم داخل سطح عمل واضح.</p></section>",
+      "css": ".ds-surface { border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; color: #0f172a; padding: 16px; font-family: Cairo, 'Segoe UI', Tahoma, sans-serif; } .ds-surface h3 { margin: 0 0 8px; font-size: 18px; line-height: 1.5; } .ds-surface p { margin: 0; color: #475569; line-height: 1.7; } .ds-surface:focus-within { border-color: #2563eb; }"
+    },
+    {
+      "name": "Status Tag",
+      "kind": "chip",
+      "description": "A compact status label that pairs semantic color with Arabic text.",
+      "html": "<span class=\"ds-status-positive\">نشط</span>",
+      "css": ".ds-status-positive { display: inline-flex; align-items: center; border-radius: 999px; background: #dcfce7; color: #166534; padding: 4px 10px; font: 600 12px/1.5 Cairo, 'Segoe UI', Tahoma, sans-serif; } .ds-status-positive:focus-visible { outline: 3px solid #86efac; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Management Desk",
+    "overview": "AlFaris should feel like a well-organized management desk: important records are visible, controls are where experienced users expect them, and every visual decision supports a concrete operational task. The system is Arabic-first and right-to-left, with Cairo typography, a bright working surface, and a stable dark navigation frame. The interface is clear, efficient, simple, and professional. Density is purposeful rather than sparse. Generic AI-generated styling, glow effects, glass surfaces, excessive gradients, and ornamental dashboard elements are explicitly rejected.",
+    "keyCharacteristics": [
+      "Arabic-first RTL structure and Cairo typography.",
+      "Restrained slate surfaces with blue reserved for actions and selection.",
+      "Compact, familiar controls suited to repeated management work.",
+      "Clear hierarchy through spacing, borders, and typography before shadow.",
+      "Responsive structures that preserve task order and keyboard usability."
+    ],
+    "rules": [
+      { "name": "The Action Rarity Rule", "body": "Action Blue should occupy less than 10% of a typical screen. Its scarcity preserves meaning.", "section": "colors" },
+      { "name": "The Working Surface Rule", "body": "Operational content remains on light surfaces for sustained daytime use; dark color belongs to navigation and identity framing.", "section": "colors" },
+      { "name": "The No Glow Rule", "body": "Glow effects are forbidden. Focus must use a crisp outline or border change, never luminous decoration.", "section": "colors" },
+      { "name": "The One-Family Rule", "body": "Use Cairo throughout the product UI. Do not introduce display or Latin-first fonts for visual novelty.", "section": "typography" },
+      { "name": "The Arabic Rhythm Rule", "body": "Preserve comfortable Arabic line height and natural RTL reading order; never compress labels to imitate dense Latin dashboards.", "section": "typography" },
+      { "name": "The Flat-by-Default Rule", "body": "A resting component uses either a structural border or a low shadow. It never uses a border plus a wide decorative shadow.", "section": "elevation" },
+      { "name": "The State Elevation Rule", "body": "Elevation indicates hierarchy or interaction state, not prestige or visual richness.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do reserve Action Blue for primary actions, active navigation, links, focus, and selection.",
+      "Do use Cairo consistently and preserve Arabic-first RTL reading, navigation, and form order.",
+      "Do use familiar PrimeNG interaction behavior while standardizing spacing, radius, state, and copy.",
+      "Do use borders, spacing, and surface contrast before adding elevation.",
+      "Do meet WCAG 2.2 AA contrast, keyboard navigation, screen-reader, and reduced-motion requirements."
+    ],
+    "donts": [
+      "Don't use interfaces that visibly resemble generic AI-generated designs.",
+      "Don't use decorative glow effects, glassmorphism, or luminous focus styling.",
+      "Don't use excessive gradients, ornamental dashboard decoration, or visual novelty that competes with operational data.",
+      "Don't inflate ordinary content into repeated oversized cards or nest cards inside cards.",
+      "Don't rely on color alone for status, financial direction, validation, or selection."
+    ]
+  }
+}

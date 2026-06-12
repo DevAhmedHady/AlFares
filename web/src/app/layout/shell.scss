@@ -2,7 +2,7 @@
 
 .sidebar {
   width: 248px;
-  background: linear-gradient(180deg, #0f172a, #0b1220);
+  background: #0b1220;
   color: #e2e8f0;
   display: flex;
   flex-direction: column;
@@ -23,7 +23,46 @@
 }
 .brand .pi { color: #60a5fa; }
 
-nav { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; }
+nav { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; overflow-y: auto; }
+.nav-group { display: flex; flex-direction: column; }
+.nav-row { display: flex; align-items: stretch; gap: 0.2rem; }
+.nav-row .nav-link { flex: 1; }
+.nav-group-label {
+  color: #cbd5e1;
+  cursor: pointer;
+}
+.nav-group-label .pi { font-size: 1.05rem; width: 1.2rem; text-align: center; }
+.nav-toggle {
+  background: none;
+  border: none;
+  color: #7c8aa3;
+  width: 2rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.2s ease;
+}
+.nav-toggle:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+.nav-toggle .pi { transition: transform 0.2s ease; }
+.nav-toggle.open .pi { transform: rotate(180deg); }
+.nav-children {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  transition: grid-template-rows 0.2s ease;
+}
+.nav-children.open { grid-template-rows: 1fr; }
+.nav-children-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-height: 0;
+  padding-right: 1.1rem;
+  padding-top: 0.2rem;
+}
+.nav-children a { font-size: 0.85rem; padding: 0.5rem 0.85rem; }
 nav a {
   color: #cbd5e1;
   padding: 0.7rem 0.85rem;
@@ -37,7 +76,7 @@ nav a {
 nav a .pi { font-size: 1.05rem; width: 1.2rem; text-align: center; }
 nav a:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
 nav a.active {
-  background: linear-gradient(90deg, #2563eb, #1d4ed8);
+  background: #2563eb;
   color: #fff;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
@@ -52,6 +91,10 @@ nav a.active {
 
 @media (max-width: 720px) {
   .shell { flex-direction: column; }
-  .sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; }
-  nav { flex-direction: row; flex-wrap: wrap; }
+  .sidebar { width: 100%; height: auto; position: static; padding: .7rem; gap: .65rem; }
+  .brand { font-size: 1.25rem; padding: .25rem .4rem; }
+  nav { flex-direction: row; overflow-x: auto; padding-bottom: .25rem; scrollbar-width: thin; }
+  nav a { flex: 0 0 auto; min-height: 44px; }
+  .sidebar-footer { display: none; }
+  .content { padding: 1.1rem max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-bottom)); }
 }

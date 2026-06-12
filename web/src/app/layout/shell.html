@@ -2,10 +2,38 @@
   <aside class="sidebar">
     <div class="brand"><i class="pi pi-bolt"></i> الفارس</div>
     <nav>
-      @for (item of nav(); track item.path) {
-        <a [routerLink]="item.path" routerLinkActive="active">
-          <i [class]="item.icon"></i><span>{{ item.label }}</span>
-        </a>
+      @for (item of nav(); track item.label) {
+        <div class="nav-group" [class.has-children]="item.children?.length">
+          <div class="nav-row">
+            @if (item.path) {
+              <a class="nav-link" [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+                <i [class]="item.icon"></i><span>{{ item.label }}</span>
+              </a>
+            } @else {
+              <span class="nav-link nav-group-label" (click)="item.children?.length && toggle(item.label)">
+                <i [class]="item.icon"></i><span>{{ item.label }}</span>
+              </span>
+            }
+            @if (item.children?.length) {
+              <button type="button" class="nav-toggle" [class.open]="isExpanded(item.label)"
+                      [attr.aria-expanded]="isExpanded(item.label)" [attr.aria-label]="(isExpanded(item.label) ? 'إخفاء' : 'إظهار') + ' ' + item.label"
+                      (click)="toggle(item.label)">
+                <i class="pi pi-chevron-down"></i>
+              </button>
+            }
+          </div>
+          @if (item.children?.length) {
+            <div class="nav-children" [class.open]="isExpanded(item.label)">
+              <div class="nav-children-inner">
+                @for (child of item.children; track child.path) {
+                  <a [routerLink]="child.path" routerLinkActive="active">
+                    <i [class]="child.icon"></i><span>{{ child.label }}</span>
+                  </a>
+                }
+              </div>
+            </div>
+          }
+        </div>
       }
     </nav>
     <div class="sidebar-footer">

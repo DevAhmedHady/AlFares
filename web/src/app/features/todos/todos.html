@@ -1,13 +1,14 @@
-<div class="page-head">
-  <div><h1>المهام</h1><div class="sub">مهام محددة بزمن الاستحقاق</div></div>
-</div>
+<section class="feature-page">
+<header class="feature-hero">
+  <div class="feature-title"><span class="feature-icon"><i class="pi pi-list-check" aria-hidden="true"></i></span><div><h1>المهام</h1><p>مهام محددة بزمن الاستحقاق</p></div></div>
+</header>
 
-<div class="card">
-  <h3>مهام اليوم</h3>
+<section class="today-panel" aria-labelledby="today-heading">
+  <h2 id="today-heading">مهام اليوم</h2>
   @for (task of todayTasks(); track task.id) {
-    <div>{{ task.title }} - {{ todoPriorityLabels[task.priority] }} @if (task.dueTime) { ({{ task.dueTime }}) }</div>
-  } @empty { <div class="sub">لا توجد مهام اليوم</div> }
-</div>
+    <div class="today-task"><strong>{{ task.title }}</strong><span>{{ todoPriorityLabels[task.priority] }} @if (task.dueTime) { · {{ task.dueTime }} }</span></div>
+  } @empty { <div class="today-empty"><i class="pi pi-check-circle" aria-hidden="true"></i> لا توجد مهام مستحقة اليوم</div> }
+</section>
 
 <app-grid
   title="قائمة المهام"
@@ -21,34 +22,36 @@
 
 <ng-template #actions let-row>
   <div class="row-actions">
-    @if (canWrite) { <p-button icon="pi pi-replay" severity="secondary" [text]="true" [rounded]="true" pTooltip="تغيير الحالة" (onClick)="cycleStatus(row)" /> }
-    @if (canWrite) { <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" pTooltip="تعديل" (onClick)="openEdit(row)" /> }
-    @if (canDelete) { <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" pTooltip="حذف" (onClick)="remove(row)" /> }
+    @if (canWrite) { <p-button icon="pi pi-replay" severity="secondary" [text]="true" [rounded]="true" ariaLabel="تغيير حالة المهمة" pTooltip="تغيير حالة المهمة" (onClick)="cycleStatus(row)" /> }
+    @if (canWrite) { <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" ariaLabel="تعديل المهمة" pTooltip="تعديل المهمة" (onClick)="openEdit(row)" /> }
+    @if (canDelete) { <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" ariaLabel="حذف المهمة" pTooltip="حذف المهمة" (onClick)="remove(row)" /> }
   </div>
-  <div class="field"><label>وقت الاستحقاق</label>
-    <input pInputText type="time" class="w-full" [ngModel]="form().dueTime" (ngModelChange)="patch('dueTime', $event || null)" /></div>
 </ng-template>
 
 <p-dialog [visible]="showForm()" (visibleChange)="showForm.set($event)" [modal]="true" [draggable]="false"
-          [dismissableMask]="true" [style]="{ width: '520px' }"
+          [dismissableMask]="true" [style]="{ width: 'min(520px, calc(100vw - 2rem))' }"
           [header]="editing() ? 'تعديل مهمة' : 'مهمة جديدة'">
   <div class="field">
-    <label>العنوان</label>
-    <input pInputText class="w-full" [ngModel]="form().title" (ngModelChange)="patch('title', $event)" />
+    <label for="todo-title">العنوان</label>
+    <input id="todo-title" pInputText class="w-full" [ngModel]="form().title" (ngModelChange)="patch('title', $event)" />
   </div>
   <div class="row">
-    <div class="field spacer"><label>تاريخ الاستحقاق</label>
-      <p-datepicker [ngModel]="dueDateModel()" (ngModelChange)="patch('dueDate', toIso($event))" [minDate]="todayDate" dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input" appendTo="body" styleClass="w-full" inputStyleClass="w-full" /></div>
-    <div class="field spacer"><label>الأولوية</label>
-      <p-select class="w-full" [options]="priorityOptions" optionLabel="1" optionValue="0" appendTo="body"
+    <div class="field spacer"><label for="todo-date">تاريخ الاستحقاق</label>
+      <p-datepicker inputId="todo-date" [ngModel]="dueDateModel()" (ngModelChange)="patch('dueDate', toIso($event))" [minDate]="todayDate" dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input" appendTo="body" styleClass="w-full" inputStyleClass="w-full" /></div>
+    <div class="field spacer"><label for="todo-priority">الأولوية</label>
+      <p-select inputId="todo-priority" class="w-full" [options]="priorityOptions" optionLabel="1" optionValue="0" appendTo="body"
                 [ngModel]="form().priority" (ngModelChange)="patch('priority', +$event)" /></div>
   </div>
+  <div class="field"><label for="todo-time">وقت الاستحقاق</label>
+    <input id="todo-time" pInputText type="time" class="w-full" [ngModel]="form().dueTime" (ngModelChange)="patch('dueTime', $event || null)" /></div>
   <div class="field">
-    <label>ملاحظات</label>
-    <textarea pTextarea class="w-full" rows="2" [ngModel]="form().notes" (ngModelChange)="patch('notes', $event)"></textarea>
+    <label for="todo-notes">ملاحظات</label>
+    <textarea id="todo-notes" pTextarea class="w-full" rows="2" [ngModel]="form().notes" (ngModelChange)="patch('notes', $event)"></textarea>
   </div>
+  @if (formError()) { <p class="form-error" role="alert">{{ formError() }}</p> }
   <ng-template pTemplate="footer">
     <p-button label="إلغاء" severity="secondary" [text]="true" (onClick)="showForm.set(false)" />
-    <p-button label="حفظ" icon="pi pi-check" (onClick)="save()" [disabled]="saving() || !form().title" />
+    <p-button label="حفظ" icon="pi pi-check" (onClick)="save()" [loading]="saving()" [disabled]="saving() || !form().title" />
   </ng-template>
 </p-dialog>
+</section>

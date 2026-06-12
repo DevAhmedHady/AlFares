@@ -1,47 +1,102 @@
-<div class="page-head">
+<div class="page-head dashboard-head">
   <div>
     <h1>لوحة المعلومات</h1>
-    <div class="sub">نظرة عامة على بيانات المصنع</div>
+    <div class="sub">ملخص تشغيلي يساعد الإدارة على تحديد ما يحتاج إلى متابعة</div>
   </div>
   <span class="spacer"></span>
-  @if (canManage) { <p-button label="رسم جديد" icon="pi pi-plus" (onClick)="openCreate()" /> }
+  @if (canManage && charts().length > 1 && !managingOrder()) {
+    <p-button label="ترتيب الرسوم" icon="pi pi-sort-alt" severity="secondary" [outlined]="true" (onClick)="beginOrdering()" />
+  }
+  @if (canManage && !managingOrder()) { <p-button label="رسم جديد" icon="pi pi-plus" (onClick)="openCreate()" /> }
 </div>
 
 @if (loading()) {
-  <p class="muted">جارٍ التحميل…</p>
+  <section class="dashboard-state" aria-live="polite" aria-busy="true">
+    <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+    <div><strong>جارٍ تجهيز لوحة المعلومات</strong><span>يتم تحميل الرسوم وبياناتها الآن.</span></div>
+  </section>
+} @else if (listError()) {
+  <section class="dashboard-state error-state" role="alert">
+    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+    <div><strong>تعذر تحميل لوحة المعلومات</strong><span>تحقق من الاتصال ثم أعد المحاولة.</span></div>
+    <p-button label="إعادة المحاولة" icon="pi pi-refresh" severity="danger" [outlined]="true" (onClick)="load()" />
+  </section>
 } @else if (charts().length === 0) {
-  <p-card><p class="muted empty-state"><i class="pi pi-chart-bar"></i> لا توجد رسوم بعد.</p></p-card>
+  <section class="dashboard-state empty-state">
+    <i class="pi pi-chart-bar" aria-hidden="true"></i>
+    <div>
+      <strong>لا توجد رسوم في لوحة المعلومات</strong>
+      <span>{{ canManage ? 'أضف أول رسم لعرض مؤشرات المصنع المهمة.' : 'سيظهر هنا ملخص بيانات المصنع بعد إعداد الرسوم.' }}</span>
+    </div>
+    @if (canManage) { <p-button label="إضافة أول رسم" icon="pi pi-plus" (onClick)="openCreate()" /> }
+  </section>
 } @else {
+  <section class="status-strip" aria-label="حالة لوحة المعلومات">
+    <div><span>الرسوم الجاهزة</span><strong>{{ readyCharts() }} من {{ charts().length }}</strong></div>
+    <div><span>نقاط البيانات</span><strong>{{ totalPoints() }}</strong></div>
+    <div><span>آخر تحديث</span><strong>{{ loadedAtLabel() }}</strong></div>
+    <p-button icon="pi pi-refresh" label="تحديث" severity="secondary" [text]="true" (onClick)="load()" />
+  </section>
+
+  @if (managingOrder()) {
+    <section class="ordering-bar" aria-live="polite">
+      <div><strong>وضع ترتيب الرسوم</strong><span>اسحب الرسم أو استخدم أزرار التحريك، ثم احفظ الترتيب.</span></div>
+      <span class="spacer"></span>
+      <p-button label="إلغاء" severity="secondary" [text]="true" [disabled]="savingOrder()" (onClick)="cancelOrdering()" />
+      <p-button label="حفظ الترتيب" icon="pi pi-check" [loading]="savingOrder()" [disabled]="!orderDirty()" (onClick)="saveOrdering()" />
+    </section>
+  }
+
+  <div class="section-intro">
+    <div><h2>المؤشرات التشغيلية</h2><p>ابدأ بأول رسم، ثم راجع بقية المؤشرات حسب ترتيب الأولوية.</p></div>
+  </div>
+
   <div class="chart-grid">
-    @for (chart of charts(); track chart.id) {
-      <div class="chart-card" draggable="true"
+    @for (chart of charts(); track chart.id; let index = $index) {
+      <article class="chart-card" [class.priority-chart]="index === 0" [class.ordering]="managingOrder()"
+           [draggable]="managingOrder()"
            (dragstart)="onDragStart(chart.id)" (dragover)="$event.preventDefault()" (drop)="onDrop(chart.id)">
         <p-card>
           <ng-template pTemplate="header">
             <div class="chart-head">
-              <i class="pi pi-bars handle"></i>
-              <strong>{{ chart.title }}</strong>
-              <p-tag [value]="typeLabels[chart.type]" severity="info" [rounded]="true" />
+              @if (managingOrder()) { <i class="pi pi-bars handle" aria-hidden="true"></i> }
+              <div class="chart-title"><strong>{{ chart.title }}</strong><span>{{ typeLabels[chart.type] }}</span></div>
               <span class="spacer"></span>
+              @if (managingOrder()) {
+                <div class="order-actions" aria-label="تغيير ترتيب الرسم">
+                  <p-button icon="pi pi-arrow-up" severity="secondary" [text]="true" [rounded]="true"
+                            ariaLabel="تحريك الرسم للأعلى" [disabled]="index === 0" (onClick)="moveChart(index, -1)" />
+                  <p-button icon="pi pi-arrow-down" severity="secondary" [text]="true" [rounded]="true"
+                            ariaLabel="تحريك الرسم للأسفل" [disabled]="index === charts().length - 1" (onClick)="moveChart(index, 1)" />
+                </div>
+              }
               @if (canManage) {
-                <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" (onClick)="openEdit(chart)" />
-                <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" (onClick)="remove(chart)" />
+                <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true" ariaLabel="تعديل الرسم" pTooltip="تعديل الرسم" [disabled]="managingOrder()" (onClick)="openEdit(chart)" />
+                <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" ariaLabel="حذف الرسم" pTooltip="حذف الرسم" [disabled]="managingOrder()" (onClick)="remove(chart)" />
               }
             </div>
           </ng-template>
-          @if (data()[chart.id]) {
-            <app-chart [type]="chart.type" [series]="data()[chart.id]" [colors]="colors(chart)" />
+          @if (chartStates()[chart.id] === 'ready') {
+            <app-chart [title]="chart.title" [type]="chart.type" [series]="data()[chart.id]" [colors]="colors(chart)" />
+          } @else if (chartStates()[chart.id] === 'error') {
+            <div class="chart-state error-state" role="alert">
+              <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+              <span>تعذر تحميل بيانات هذا الرسم.</span>
+              <p-button label="إعادة المحاولة" icon="pi pi-refresh" severity="danger" [text]="true" (onClick)="loadChart(chart.id)" />
+            </div>
           } @else {
-            <p class="muted">…</p>
+            <div class="chart-state" aria-live="polite" aria-busy="true">
+              <i class="pi pi-spin pi-spinner" aria-hidden="true"></i><span>جارٍ تحميل بيانات الرسم…</span>
+            </div>
           }
         </p-card>
-      </div>
+      </article>
     }
   </div>
 }
 
 <p-dialog [visible]="builderOpen()" (visibleChange)="builderOpen.set($event)" [modal]="true"
-          [style]="{ width: '560px' }" [draggable]="false" [dismissableMask]="true"
+          [style]="{ width: 'min(560px, calc(100vw - 2rem))' }" [draggable]="false" [dismissableMask]="true"
           [header]="editing() ? 'تعديل رسم' : 'رسم جديد'">
   @if (builderOpen()) {
     <app-chart-builder [existing]="editing()" (saved)="onSaved()" (cancelled)="builderOpen.set(false)" />

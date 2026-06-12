@@ -25,13 +25,13 @@ import { ColumnDef } from '../../shared/grid/grid-column';
         [rowActions]="actions" createPermission="cars.write" exportPermission="cars.export"
         (createClicked)="open()" />
     </section>
-    <ng-template #actions let-row><div class="row-actions"><p-button icon="pi pi-eye" [rounded]="true" [text]="true" pTooltip="التفاصيل" (onClick)="details(row)"/><p-button icon="pi pi-pencil" [rounded]="true" [text]="true" pTooltip="تعديل" (onClick)="edit(row)"/></div></ng-template>
-    <p-dialog [visible]="show()" (visibleChange)="show.set($event)" [modal]="true" [draggable]="false" [style]="{width:'min(560px, 94vw)'}" [header]="editing() ? 'تعديل السيارة' : 'إضافة سيارة'">
+    <ng-template #actions let-row><div class="row-actions"><p-button icon="pi pi-eye" [rounded]="true" [text]="true" ariaLabel="عرض تفاصيل السيارة" pTooltip="التفاصيل" (onClick)="details(row)"/><p-button icon="pi pi-pencil" [rounded]="true" [text]="true" ariaLabel="تعديل السيارة" pTooltip="تعديل" (onClick)="edit(row)"/></div></ng-template>
+    <p-dialog [visible]="show()" (visibleChange)="show.set($event)" [modal]="true" [draggable]="false" [style]="{width:'min(560px, calc(100vw - 2rem))'}" [header]="editing() ? 'تعديل السيارة' : 'إضافة سيارة'">
       <div class="form-grid">
-        <div class="field span-2"><label>اسم السيارة</label><input pInputText [ngModel]="form().name" (ngModelChange)="patch('name',$event)" placeholder="مثال: سيارة نقل 1"/></div>
-        <div class="field"><label>رقم اللوحة</label><input pInputText [ngModel]="form().plateNumber" (ngModelChange)="patch('plateNumber',$event)"/></div>
-        <div class="field"><label>السائق</label><input pInputText [ngModel]="form().driverName" (ngModelChange)="patch('driverName',$event)"/></div>
-        <div class="field span-2"><label>نوع الملكية</label><p-select [options]="typeOptions" optionLabel="1" optionValue="0" [ngModel]="form().type" (ngModelChange)="patch('type',+$event)"/></div>
+        <div class="field span-2"><label for="car-name">اسم السيارة</label><input id="car-name" pInputText [ngModel]="form().name" (ngModelChange)="patch('name',$event)" placeholder="مثال: سيارة نقل 1"/></div>
+        <div class="field"><label for="car-plate">رقم اللوحة</label><input id="car-plate" pInputText [ngModel]="form().plateNumber" (ngModelChange)="patch('plateNumber',$event)"/></div>
+        <div class="field"><label for="car-driver">السائق</label><input id="car-driver" pInputText [ngModel]="form().driverName" (ngModelChange)="patch('driverName',$event)"/></div>
+        <div class="field span-2"><label for="car-type">نوع الملكية</label><p-select inputId="car-type" [options]="typeOptions" optionLabel="1" optionValue="0" [ngModel]="form().type" (ngModelChange)="patch('type',+$event)" appendTo="body"/></div>
       </div>
       <ng-template pTemplate="footer"><div class="dialog-actions"><p-button label="إلغاء" severity="secondary" [text]="true" (onClick)="show.set(false)"/><p-button label="حفظ" icon="pi pi-check" [loading]="saving()" [disabled]="!form().name.trim()" (onClick)="save()"/></div></ng-template>
     </p-dialog>`,

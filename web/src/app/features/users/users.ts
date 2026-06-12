@@ -10,7 +10,13 @@ import { formatDate } from '../../core/labels';
   selector: 'app-users',
   standalone: true,
   imports: [GridComponent],
-  template: `<app-grid title="المستخدمون" [columns]="columns" [source]="service" />`,
+  template: `
+    <section class="feature-page">
+      <header class="feature-hero">
+        <div class="feature-title"><span class="feature-icon"><i class="pi pi-user" aria-hidden="true"></i></span><div><h1>المستخدمون</h1><p>عرض حسابات مستخدمي النظام وحالتها</p></div></div>
+      </header>
+      <app-grid title="قائمة المستخدمين" [columns]="columns" [source]="service" />
+    </section>`,
 })
 export class UsersComponent {
   readonly service = inject(UsersService);

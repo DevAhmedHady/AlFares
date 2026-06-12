@@ -7,8 +7,8 @@
   <div class="row">
     <div class="field spacer">
       <label>النوع</label>
-      <p-select class="w-full" [options]="typeOptions" optionLabel="1" optionValue="0"
-                [ngModel]="type()" (ngModelChange)="type.set(+$event); refresh()" appendTo="body" />
+      <p-select class="w-full" [options]="typeOptions" optionLabel="label" optionValue="value"
+                [ngModel]="type()" (ngModelChange)="type.set($event); refresh()" appendTo="body" />
     </div>
     <div class="field spacer">
       <label>مصدر البيانات</label>
@@ -25,8 +25,8 @@
     </div>
     <div class="field spacer">
       <label>التجميع</label>
-      <p-select class="w-full" [options]="aggOptions" optionLabel="1" optionValue="0"
-                [ngModel]="aggregation()" (ngModelChange)="aggregation.set(+$event); refresh()" appendTo="body" />
+      <p-select class="w-full" [options]="aggOptions" optionLabel="label" optionValue="value"
+                [ngModel]="aggregation()" (ngModelChange)="aggregation.set($event); refresh()" appendTo="body" />
     </div>
   </div>
 

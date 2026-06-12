@@ -76,6 +76,7 @@ public sealed class RevenueEndpoints : IEndpoint
     private static IQueryable<RevenueResponse> Query(IMainDbContext db) =>
         from x in db.Set<Revenue>().AsNoTracking()
         join t in db.Set<RevenueType>().AsNoTracking() on x.RevenueTypeId equals t.Id
+        orderby x.Date descending
         select new RevenueResponse
         {
             Id = x.Id,

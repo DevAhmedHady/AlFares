@@ -7,6 +7,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
+import { TooltipModule } from 'primeng/tooltip';
+import { MessageService } from 'primeng/api';
 import { GridComponent } from '../../shared/grid/grid';
 import { ColumnDef } from '../../shared/grid/grid-column';
 import { ClientsService, ReportsService } from '../../core/api/resources';
@@ -23,7 +25,7 @@ import {
   standalone: true,
   imports: [
     CommonModule, FormsModule, GridComponent, DialogModule, ButtonModule,
-    InputTextModule, InputNumberModule, SelectModule, TextareaModule,
+    InputTextModule, InputNumberModule, SelectModule, TextareaModule, TooltipModule,
   ],
   templateUrl: './clients.html',
 })
@@ -31,6 +33,7 @@ export class ClientsComponent {
   readonly service = inject(ClientsService);
   private readonly reports = inject(ReportsService);
   private readonly store = inject(AuthStore);
+  private readonly messages = inject(MessageService);
   private readonly grid = viewChild.required(GridComponent);
 
   readonly canWrite = this.store.has('clients.write');
@@ -54,6 +57,7 @@ export class ClientsComponent {
   readonly editing = signal<ClientResponse | null>(null);
   readonly showForm = signal(false);
   readonly saving = signal(false);
+  readonly formError = signal<string | null>(null);
   readonly form = signal<CreateClientRequest>(this.blank());
   readonly source = {
     grid: (query: import('../../core/grid.models').GridQuery) => this.service.grid(query).pipe(
@@ -73,7 +77,7 @@ export class ClientsComponent {
     this.form.update((f) => ({ ...f, [key]: value }));
   }
 
-  openCreate(): void { this.editing.set(null); this.form.set(this.blank()); this.showForm.set(true); }
+  openCreate(): void { this.editing.set(null); this.form.set(this.blank()); this.formError.set(null); this.showForm.set(true); }
 
   openEdit(row: ClientResponse): void {
     this.editing.set(row);
@@ -81,27 +85,44 @@ export class ClientsComponent {
       name: row.name, contactName: row.contactName, phone: row.phone ?? '', email: row.email ?? '',
       accountBalance: row.accountBalance, activityLevel: row.activityLevel, notes: row.notes ?? '',
     });
+    this.formError.set(null);
     this.showForm.set(true);
   }
 
   save(): void {
     this.saving.set(true);
+    this.formError.set(null);
     const body = this.form();
     const editing = this.editing();
     const req = editing ? this.service.update(editing.id, body) : this.service.create(body);
     req.subscribe({
-      next: () => { this.saving.set(false); this.showForm.set(false); this.grid().load(); },
-      error: () => this.saving.set(false),
+      next: () => {
+        this.saving.set(false); this.showForm.set(false); this.grid().load();
+        this.messages.add({ severity: 'success', summary: 'تم الحفظ', detail: editing ? 'تم تحديث بيانات العميل' : 'تمت إضافة العميل' });
+      },
+      error: (error) => {
+        this.saving.set(false);
+        this.formError.set(error?.error?.description ?? 'تعذر حفظ بيانات العميل. راجع الحقول ثم أعد المحاولة.');
+      },
     });
   }
 
   remove(row: ClientResponse): void {
     if (!confirm(`حذف العميل "${row.name}"؟`)) return;
-    this.service.remove(row.id).subscribe(() => this.grid().load());
+    this.service.remove(row.id).subscribe({
+      next: () => { this.grid().load(); this.messages.add({ severity: 'success', summary: 'تم الحذف', detail: `تم حذف العميل ${row.name}` }); },
+      error: () => this.messages.add({ severity: 'error', summary: 'تعذر الحذف', detail: 'لم يتم حذف العميل. أعد المحاولة.' }),
+    });
   }
 
   toggleStatus(row: ClientResponse): void {
     const next = row.status === ClientStatus.Active ? ClientStatus.Inactive : ClientStatus.Active;
-    this.service.setStatus(row.id, next).subscribe(() => this.grid().load());
+    this.service.setStatus(row.id, next).subscribe({
+      next: () => {
+        this.grid().load();
+        this.messages.add({ severity: 'success', summary: 'تم تحديث الحالة', detail: `الحالة الجديدة: ${clientStatusLabels[next]}` });
+      },
+      error: () => this.messages.add({ severity: 'error', summary: 'تعذر تحديث الحالة', detail: 'أعد المحاولة بعد قليل.' }),
+    });
   }
 }

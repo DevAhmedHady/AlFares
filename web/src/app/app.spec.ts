@@ -3,6 +3,8 @@ import { AuthStore } from './core/auth/auth.store';
 import { ActivityLevel } from './core/models';
 import { emptyGridQuery, GridFilterOp } from './core/grid.models';
 import { activityLabels, optionsFrom, formatMoney } from './core/labels';
+import { buildChartInsight } from './shared/chart/chart';
+import { moveItem } from './features/dashboard/dashboard';
 
 /** Builds an unsigned JWT with the given payload (decode only reads the payload segment). */
 function fakeJwt(payload: Record<string, unknown>): string {
@@ -70,5 +72,22 @@ describe('grid + label helpers', () => {
     const opts = optionsFrom(activityLabels);
     expect(opts).toContainEqual([String(ActivityLevel.Medium), 'متوسط']);
     expect(formatMoney(1500)).toContain('٥٠٠');
+  });
+});
+
+describe('dashboard helpers', () => {
+  it('moves a chart without mutating the original order', () => {
+    const original = ['a', 'b', 'c'];
+    expect(moveItem(original, 2, 0)).toEqual(['c', 'a', 'b']);
+    expect(original).toEqual(['a', 'b', 'c']);
+  });
+
+  it('describes the highest chart value in Arabic', () => {
+    const insight = buildChartInsight({
+      name: 'المصروفات',
+      points: [{ label: 'وقود', value: 120 }, { label: 'صيانة', value: 350 }],
+    });
+    expect(insight).toContain('صيانة');
+    expect(insight).toContain('تصنيفات');
   });
 });

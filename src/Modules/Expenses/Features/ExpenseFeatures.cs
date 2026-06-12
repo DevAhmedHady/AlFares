@@ -123,6 +123,7 @@ public static class ExpenseGrid
     public static IQueryable<ExpenseGridRow> Query(IMainDbContext db) =>
         from e in db.Set<Expense>().AsNoTracking()
         join t in db.Set<ExpenseType>().AsNoTracking() on e.ExpenseTypeId equals t.Id
+        orderby e.Date descending //default ordering
         select new ExpenseGridRow
         {
             Id = e.Id,

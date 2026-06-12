@@ -1,5 +1,96 @@
-<div class="page-head"><div><h1>المصروفات</h1><div class="sub">تتبع مصروفات المصنع</div></div></div>
-<div class="row"><div class="field spacer"><label>من</label><p-datepicker [ngModel]="fromModel()" (ngModelChange)="from.set(toIso($event))" dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input" [showButtonBar]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"/></div><div class="field spacer"><label>إلى</label><p-datepicker [ngModel]="toModel()" (ngModelChange)="to.set(toIso($event))" dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input" [showButtonBar]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"/></div><div class="field spacer"><label>النوع</label><p-select [options]="types()" optionLabel="name" optionValue="id" [showClear]="true" [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event||'')"/></div><p-button label="تطبيق" (onClick)="applyFilters()"/></div>
-<app-grid title="قائمة المصروفات" exportName="expenses" [columns]="columns" [source]="source" [rowActions]="actions" [exportPermission]="'expenses.export'" [createPermission]="'expenses.write'" (createClicked)="openCreate()"/>
-<ng-template #actions let-row><div class="row-actions">@if(canWrite){<p-button icon="pi pi-pencil" [text]="true" (onClick)="openEdit(row)"/>}@if(canDelete){<p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="remove(row)"/>}</div></ng-template>
-<p-dialog [visible]="showForm()" (visibleChange)="showForm.set($event)" [modal]="true" [style]="{width:'520px'}" [header]="editing()?'تعديل مصروف':'مصروف جديد'"><div class="field"><label>نوع المصروف</label><p-select class="w-full" [options]="types()" optionLabel="name" optionValue="id" [ngModel]="form().expenseTypeId" (ngModelChange)="patch('expenseTypeId',$event)"/></div><div class="row"><div class="field spacer"><label>المبلغ</label><p-inputnumber [ngModel]="form().amount" (ngModelChange)="patch('amount',$event||0)"/></div><div class="field spacer"><label>التاريخ</label><p-datepicker [ngModel]="dateModel()" (ngModelChange)="patch('date',toIso($event))" dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input" appendTo="body" styleClass="w-full" inputStyleClass="w-full"/></div></div><div class="row"><div class="field spacer"><label>ربط بحساب</label><p-select class="w-full" [options]="ownerOptions" optionLabel="label" optionValue="value" [ngModel]="form().ownerType" (ngModelChange)="setOwnerType($event)"/></div>@if(form().ownerType!==General){<div class="field spacer"><label>الحساب</label><p-select class="w-full" [options]="entityOptions()" optionLabel="label" optionValue="id" [filter]="true" filterBy="label" [ngModel]="form().ownerId" (ngModelChange)="patch('ownerId',$event)" placeholder="اختر الحساب"/></div>}</div><div class="field"><label>المستفيد</label><input pInputText class="w-full" [ngModel]="form().payee" (ngModelChange)="patch('payee',$event)"/></div><div class="field"><label>ملاحظات</label><textarea pTextarea class="w-full" [ngModel]="form().notes" (ngModelChange)="patch('notes',$event)"></textarea></div><ng-template pTemplate="footer"><p-button label="إلغاء" [text]="true" (onClick)="showForm.set(false)"/><p-button label="حفظ" (onClick)="save()" [disabled]="saving()||!form().expenseTypeId"/></ng-template></p-dialog>
+<section class="feature-page">
+<header class="feature-hero">
+  <div class="feature-title"><span class="feature-icon"><i class="pi pi-wallet" aria-hidden="true"></i></span><div><h1>المصروفات</h1><p>تتبع مصروفات المصنع</p></div></div>
+</header>
+
+<section class="report-panel scope-filters" aria-label="تصفية المصروفات">
+  <div class="field">
+    <label for="expense-filter-from">من</label>
+    <p-datepicker inputId="expense-filter-from" [ngModel]="fromModel()" (ngModelChange)="from.set(toIso($event))" dateFormat="dd/mm/yy"
+                  [showIcon]="true" iconDisplay="input" [showButtonBar]="true" appendTo="body"
+                  styleClass="w-full" inputStyleClass="w-full" />
+  </div>
+  <div class="field">
+    <label for="expense-filter-to">إلى</label>
+    <p-datepicker inputId="expense-filter-to" [ngModel]="toModel()" (ngModelChange)="to.set(toIso($event))" dateFormat="dd/mm/yy"
+                  [showIcon]="true" iconDisplay="input" [showButtonBar]="true" appendTo="body"
+                  styleClass="w-full" inputStyleClass="w-full" />
+  </div>
+  <div class="field">
+    <label for="expense-filter-type">نوع المصروف</label>
+    <p-select inputId="expense-filter-type" class="w-full" [options]="types()" optionLabel="name" optionValue="id" [showClear]="true"
+              [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event || '')" placeholder="كل الأنواع" appendTo="body" />
+  </div>
+  <p-button label="تطبيق التصفية" icon="pi pi-filter" (onClick)="applyFilters()" />
+  <p-button label="مسح" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearScopeFilters()" />
+  @if (filterError()) { <p class="form-error scope-filter-error" role="alert">{{ filterError() }}</p> }
+</section>
+
+<app-grid title="قائمة المصروفات" exportName="expenses" [columns]="columns" [source]="source"
+          [rowActions]="actions" [exportPermission]="'expenses.export'" [createPermission]="'expenses.write'"
+          (createClicked)="openCreate()" />
+
+<ng-template #actions let-row>
+  <div class="row-actions">
+    @if (canWrite) {
+      <p-button icon="pi pi-pencil" severity="secondary" [text]="true" [rounded]="true"
+                ariaLabel="تعديل المصروف" pTooltip="تعديل المصروف" (onClick)="openEdit(row)" />
+    }
+    @if (canDelete) {
+      <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+                ariaLabel="حذف المصروف" pTooltip="حذف المصروف" (onClick)="remove(row)" />
+    }
+  </div>
+</ng-template>
+
+<p-dialog [visible]="showForm()" (visibleChange)="showForm.set($event)" [modal]="true" [draggable]="false"
+          [dismissableMask]="true" [style]="{ width: 'min(520px, calc(100vw - 2rem))' }"
+          [header]="editing() ? 'تعديل مصروف' : 'مصروف جديد'">
+  <div class="field">
+    <label for="expense-type">نوع المصروف</label>
+    <p-select inputId="expense-type" class="w-full" [options]="types()" optionLabel="name" optionValue="id" appendTo="body"
+              [ngModel]="form().expenseTypeId" (ngModelChange)="patch('expenseTypeId', $event)" />
+  </div>
+  <div class="row">
+    <div class="field spacer">
+      <label for="expense-amount">المبلغ</label>
+      <p-inputnumber inputId="expense-amount" class="w-full" mode="decimal" [min]="0" [minFractionDigits]="2"
+                     [ngModel]="form().amount" (ngModelChange)="patch('amount', $event || 0)" />
+    </div>
+    <div class="field spacer">
+      <label for="expense-date">التاريخ</label>
+      <p-datepicker inputId="expense-date" [ngModel]="dateModel()" (ngModelChange)="patch('date', toIso($event))" dateFormat="dd/mm/yy"
+                    [showIcon]="true" iconDisplay="input" appendTo="body" styleClass="w-full" inputStyleClass="w-full" />
+    </div>
+  </div>
+  <div class="row">
+    <div class="field spacer">
+      <label for="expense-owner-type">ربط بحساب</label>
+      <p-select inputId="expense-owner-type" class="w-full" [options]="ownerOptions" optionLabel="label" optionValue="value" appendTo="body"
+                [ngModel]="form().ownerType" (ngModelChange)="setOwnerType($event)" />
+    </div>
+    @if (form().ownerType !== General) {
+      <div class="field spacer">
+        <label for="expense-owner">الحساب</label>
+        <p-select inputId="expense-owner" class="w-full" [options]="entityOptions()" optionLabel="label" optionValue="id" [filter]="true"
+                  filterBy="label" appendTo="body" [ngModel]="form().ownerId" (ngModelChange)="patch('ownerId', $event)"
+                  placeholder="اختر الحساب" />
+      </div>
+    }
+  </div>
+  <div class="field">
+    <label for="expense-payee">المستفيد</label>
+    <input id="expense-payee" pInputText class="w-full" [ngModel]="form().payee" (ngModelChange)="patch('payee', $event)" />
+  </div>
+  <div class="field">
+    <label for="expense-notes">ملاحظات</label>
+    <textarea id="expense-notes" pTextarea class="w-full" rows="3" [ngModel]="form().notes" (ngModelChange)="patch('notes', $event)"></textarea>
+  </div>
+  @if (formError()) { <p class="form-error" role="alert">{{ formError() }}</p> }
+  <ng-template pTemplate="footer">
+    <p-button label="إلغاء" severity="secondary" [text]="true" (onClick)="showForm.set(false)" />
+    <p-button label="حفظ" icon="pi pi-check" [loading]="saving()" (onClick)="save()"
+              [disabled]="saving() || !form().expenseTypeId || form().amount <= 0" />
+  </ng-template>
+</p-dialog>
+</section>
