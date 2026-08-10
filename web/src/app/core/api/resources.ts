@@ -4,9 +4,9 @@ import { Observable } from 'rxjs';
 import { API_BASE } from '../config';
 import { GridClient } from './grid-client';
 import {
-  ClientResponse, ExpenseResponse, TodoResponse, UserResponse, TodoStatus, ClientStatus, RevenueResponse, CarResponse, WorkerResponse, ExpenseTypeResponse, RevenueTypeResponse, ExpenseScope, OwnerLedgerResponse, OwnerType, OwnerBalance, WorkerReportResponse,
+  ClientResponse, ExpenseResponse, TodoResponse, UserResponse, TodoStatus, ClientStatus, RevenueResponse, CarResponse, WorkerResponse, ExpenseTypeResponse, RevenueTypeResponse, ExpenseScope, OwnerLedgerResponse, OwnerType, OwnerBalance, WorkerReportResponse, ExpenseReportRequest, ExpenseReportResponse,
 } from '../models';
-import { PagedResult, GridQuery } from '../grid.models';
+import { PagedResult, GridQuery, ExportFormat } from '../grid.models';
 
 @Injectable({ providedIn: 'root' })
 export class ClientsService extends GridClient<ClientResponse> {
@@ -23,6 +23,25 @@ export class ExpensesService extends GridClient<ExpenseResponse> {
   private readonly client=inject(HttpClient);private readonly base=inject(API_BASE);
   constructor() { super(inject(HttpClient), inject(API_BASE), 'expenses'); }
   types(scope?:ExpenseScope):Observable<ExpenseTypeResponse[]>{return this.client.get<ExpenseTypeResponse[]>(`${this.base}/api/expenses/types${scope===undefined?'':`?scope=${scope}`}`);}
+  report(body: ExpenseReportRequest): Observable<ExpenseReportResponse> {
+    return this.client.post<ExpenseReportResponse>(`${this.base}/api/expenses/report`, {
+      from: body.from || null,
+      to: body.to || null,
+      year: body.year ?? null,
+      month: body.month ?? null,
+      expenseTypeId: body.expenseTypeId || null,
+    });
+  }
+  reportExport(format: ExportFormat, body: ExpenseReportRequest): Observable<Blob> {
+    return this.client.post(`${this.base}/api/expenses/report/export`, {
+      from: body.from || null,
+      to: body.to || null,
+      year: body.year ?? null,
+      month: body.month ?? null,
+      expenseTypeId: body.expenseTypeId || null,
+      format,
+    }, { responseType: 'blob' });
+  }
 }
 
 @Injectable({providedIn:'root'}) export class RevenuesService extends GridClient<RevenueResponse>{private readonly client=inject(HttpClient);private readonly base=inject(API_BASE);constructor(){super(inject(HttpClient),inject(API_BASE),'revenues');}types():Observable<RevenueTypeResponse[]>{return this.client.get<RevenueTypeResponse[]>(`${this.base}/api/revenues/types`);}}

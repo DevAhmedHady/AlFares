@@ -94,6 +94,24 @@ public sealed class ExpensesEndpoints : IEndpoint
             )
             .RequirePermission("expenses.read");
         g.MapPost("/export", ExportAsync).RequirePermission("expenses.export");
+        g.MapPost(
+                "/report",
+                async (ExpenseReportRequest r, IDispatcher d, CancellationToken ct) =>
+                    (
+                        await d.Send<ExpenseReportResponse>(
+                            new GetExpenseReportQuery(
+                                r.From,
+                                r.To,
+                                r.Year,
+                                r.Month,
+                                r.ExpenseTypeId
+                            ),
+                            ct
+                        )
+                    ).ToHttpResult()
+            )
+            .RequirePermission("expenses.read");
+        g.MapPost("/report/export", ExportReportAsync).RequirePermission("expenses.export");
         g.MapGet("/types", ListTypes).RequirePermission("expenses.read");
         g.MapPost("/types", CreateType).RequirePermission("expenses.write");
         g.MapPut("/types/{id:guid}", UpdateType).RequirePermission("expenses.write");
@@ -189,6 +207,45 @@ public sealed class ExpensesEndpoints : IEndpoint
                 x => new ExpenseTypeResponse(x.Id, x.Name, x.Scope, x.IsActive),
                 ct
             )
+        );
+    }
+
+    private static async Task<IResult> ExportReportAsync(
+        ExpenseReportExportRequest r,
+        IMainDbContext db,
+        IGridExporterFactory factory,
+        CancellationToken ct
+    )
+    {
+        var rows = await ExpenseReportBuilder
+            .Filter(db, r.From, r.To, r.Year, r.Month, r.ExpenseTypeId)
+            .OrderByDescending(x => x.Date)
+            .ThenByDescending(x => x.Amount)
+            .Take(GridExportLimits.MaxRows)
+            .Select(x => new ExpenseReportRow(
+                x.Id,
+                x.ExpenseTypeName,
+                x.Amount,
+                x.Date,
+                x.Payee,
+                x.Notes
+            ))
+            .ToListAsync(ct);
+        ExportColumn[] cols =
+        [
+            new("Date", "التاريخ", GridFieldType.Date),
+            new("ExpenseTypeName", "نوع المصروف", GridFieldType.Text),
+            new("Payee", "المستفيد", GridFieldType.Text),
+            new("Amount", "المبلغ", GridFieldType.Number),
+            new("Notes", "ملاحظات", GridFieldType.Text),
+        ];
+        var bytes = factory.For(r.Format).Export(rows, cols, "تقرير المصروفات");
+        return Results.File(
+            bytes,
+            r.Format == ExportFormat.Xlsx
+                ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                : "application/pdf",
+            $"expense-report.{(r.Format == ExportFormat.Xlsx ? "xlsx" : "pdf")}"
         );
     }
 

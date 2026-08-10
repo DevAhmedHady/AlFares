@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -27,7 +28,7 @@ import { ColumnDef } from '../../shared/grid/grid-column';
   selector: 'app-expenses',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, GridComponent, DialogModule, ButtonModule, InputTextModule,
+    CommonModule, FormsModule, RouterLink, GridComponent, DialogModule, ButtonModule, InputTextModule,
     InputNumberModule, TextareaModule, SelectModule, DatePickerModule, TooltipModule,
   ],
   templateUrl: './expenses.html',

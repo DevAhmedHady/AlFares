@@ -1,0 +1,212 @@
+<section class="expense-report feature-page" [class.reveal]="reveal()">
+  <header class="exp-hero">
+    <div class="feature-title">
+      <span class="feature-icon exp-icon"><i class="pi pi-chart-bar" aria-hidden="true"></i></span>
+      <div>
+        <h1>تقرير المصروفات</h1>
+        <p>تابع أين ذهبت أموال المصنع — ملخص، رسوم، وتفاصيل ضمن الفترة.</p>
+      </div>
+    </div>
+    <div class="exp-hero-meta">
+      @if (loaded() && data()) {
+        <span class="exp-period-pill">{{ periodLabel() }}</span>
+      }
+      @if (canExport && data()) {
+        <div class="exp-export-actions">
+          <p-button label="Excel" icon="pi pi-file-excel" severity="success" [outlined]="true"
+                    [loading]="exporting() === Xlsx" [disabled]="exporting() !== null" (onClick)="exportAs(Xlsx)" />
+          <p-button label="PDF" icon="pi pi-file-pdf" severity="danger" [outlined]="true"
+                    [loading]="exporting() === Pdf" [disabled]="exporting() !== null" (onClick)="exportAs(Pdf)" />
+        </div>
+      }
+    </div>
+  </header>
+
+  <div class="report-panel exp-filters">
+    <div class="exp-filter-modes">
+      <div class="exp-filter-group" [class.active]="!usingMonthScope()">
+        <span class="exp-filter-label">من — إلى</span>
+        <div class="exp-filter-row">
+          <div class="field">
+            <label for="exp-report-from">من تاريخ</label>
+            <p-datepicker inputId="exp-report-from" [ngModel]="fromModel()" (ngModelChange)="setFrom($event)"
+                          dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input" [showButtonBar]="true"
+                          appendTo="body" styleClass="w-full" inputStyleClass="w-full" />
+          </div>
+          <div class="field">
+            <label for="exp-report-to">إلى تاريخ</label>
+            <p-datepicker inputId="exp-report-to" [ngModel]="toModel()" (ngModelChange)="setTo($event)"
+                          dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input" [showButtonBar]="true"
+                          appendTo="body" styleClass="w-full" inputStyleClass="w-full" />
+          </div>
+        </div>
+      </div>
+
+      <div class="exp-filter-or" aria-hidden="true">أو</div>
+
+      <div class="exp-filter-group" [class.active]="usingMonthScope()">
+        <span class="exp-filter-label">لشهر</span>
+        <div class="exp-filter-row">
+          <div class="field">
+            <label for="exp-report-year">السنة</label>
+            <p-select inputId="exp-report-year" class="w-full" [options]="yearOptions" optionLabel="label"
+                      optionValue="value" [showClear]="true" [ngModel]="forYear()"
+                      (ngModelChange)="setForYear($event ?? null)" placeholder="السنة" appendTo="body" />
+          </div>
+          <div class="field">
+            <label for="exp-report-month">الشهر</label>
+            <p-select inputId="exp-report-month" class="w-full" [options]="monthOptions" optionLabel="label"
+                      optionValue="value" [showClear]="true" [ngModel]="forMonth()"
+                      (ngModelChange)="setForMonth($event ?? null)" placeholder="الشهر" appendTo="body"
+                      [disabled]="forYear() == null" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="exp-filter-footer">
+      <div class="field">
+        <label for="exp-report-type">نوع المصروف</label>
+        <p-select inputId="exp-report-type" class="w-full" [options]="types()" optionLabel="name" optionValue="id"
+                  [showClear]="true" [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event || '')"
+                  placeholder="كل الأنواع" appendTo="body" />
+      </div>
+      <div class="field report-action">
+        <p-button label="عرض التقرير" icon="pi pi-search" [loading]="loading()" (onClick)="load()" />
+      </div>
+    </div>
+    @if (filterError()) {
+      <p class="form-error" role="alert">{{ filterError() }}</p>
+    }
+  </div>
+
+  @if (data(); as report) {
+    <section class="exp-kpi-grid" aria-label="ملخص المصروفات">
+      <article class="exp-kpi exp-kpi-hero">
+        <span>إجمالي المصروفات</span>
+        <strong>{{ money(report.summary.total) }}</strong>
+        <small>{{ report.summary.count }} حركة</small>
+      </article>
+      <article class="exp-kpi">
+        <span>عدد الحركات</span>
+        <strong>{{ report.summary.count }}</strong>
+      </article>
+      <article class="exp-kpi">
+        <span>متوسط الحركة</span>
+        <strong>{{ money(report.summary.average) }}</strong>
+      </article>
+      <article class="exp-kpi">
+        <span>أعلى نوع</span>
+        <strong>{{ report.summary.topCategory || '—' }}</strong>
+        @if (report.summary.topCategory) {
+          <small>{{ money(report.summary.topCategoryAmount) }} · {{ report.summary.topCategoryShare }}%</small>
+        }
+      </article>
+    </section>
+
+    @if (composition().length) {
+      <section class="exp-composition" aria-label="توزيع المصروفات حسب النوع">
+        <div class="exp-composition-head">
+          <strong>تركيب المصروفات</strong>
+          <span>نسبة كل نوع من الإجمالي</span>
+        </div>
+        <div class="exp-composition-bar" role="img" [attr.aria-label]="'توزيع المصروفات: ' + composition().length + ' أنواع'">
+          @for (segment of composition(); track segment.label) {
+            <span class="exp-composition-segment" [style.width.%]="segment.share" [style.background]="segment.color"
+                  [pTooltip]="segment.label + ': ' + segment.share + '%'" tooltipPosition="top"></span>
+          }
+        </div>
+        <ul class="exp-composition-legend">
+          @for (segment of composition(); track segment.label) {
+            <li>
+              <span class="dot" [style.background]="segment.color"></span>
+              <span>{{ segment.label }}</span>
+              <strong>{{ segment.share }}%</strong>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <div class="exp-chart-grid">
+      <article class="exp-chart-card">
+        <p-card>
+          <ng-template pTemplate="header">
+            <div class="exp-chart-head"><strong>حسب النوع</strong><span>توزيع المبالغ</span></div>
+          </ng-template>
+          @if (categorySeries(); as series) {
+            <app-chart title="المصروفات حسب النوع" [type]="ChartType.Pie" [series]="series" [colors]="chartColors" />
+          } @else {
+            <div class="exp-chart-empty">لا توجد بيانات للرسم.</div>
+          }
+        </p-card>
+      </article>
+      <article class="exp-chart-card exp-chart-wide">
+        <p-card>
+          <ng-template pTemplate="header">
+            <div class="exp-chart-head"><strong>عبر الزمن</strong><span>مجموع شهري</span></div>
+          </ng-template>
+          @if (monthSeries(); as series) {
+            <app-chart title="المصروفات عبر الزمن" [type]="ChartType.Line" [series]="series" [colors]="chartColors" height="280px" />
+          } @else {
+            <div class="exp-chart-empty">لا توجد بيانات للرسم.</div>
+          }
+        </p-card>
+      </article>
+    </div>
+
+    <div class="report-panel exp-table-panel">
+      <div class="exp-table-head">
+        <div>
+          <h2>تفاصيل الحركات</h2>
+          @if (report.itemsTruncated) {
+            <p class="exp-truncated">يعرض أول 5,000 حركة — استخدم التصدير للحصول على القائمة الكاملة.</p>
+          }
+        </div>
+      </div>
+      @if (report.items.length) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>نوع المصروف</th>
+              <th>المستفيد</th>
+              <th>ملاحظات</th>
+              <th class="num">المبلغ</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of report.items; track item.id) {
+              <tr>
+                <td>{{ date(item.date) }}</td>
+                <td>{{ item.expenseTypeName }}</td>
+                <td>{{ item.payee }}</td>
+                <td class="exp-notes">{{ item.notes || '—' }}</td>
+                <td class="num amount-out">{{ money(item.amount) }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="exp-table-total">
+              <td colspan="4">
+                <strong>الإجمالي</strong>
+                <span class="exp-table-count">{{ report.summary.count }} حركة</span>
+              </td>
+              <td class="num amount-out"><strong>{{ money(report.summary.total) }}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      } @else {
+        <div class="empty-panel">
+          <i class="pi pi-inbox"></i>
+          <p>لا توجد مصروفات في هذه الفترة — غيّر التصفية أو أضف مصروفات من صفحة المصروفات.</p>
+        </div>
+      }
+    </div>
+  } @else if (loaded()) {
+    <div class="report-panel empty-panel">
+      <i class="pi pi-search"></i>
+      <p>اضبط الفترة ثم اضغط «عرض التقرير».</p>
+    </div>
+  }
+</section>

@@ -47,6 +47,15 @@ public sealed record GetExpenseByIdQuery(Guid Id) : IQuery<ExpenseResponse>;
 /// <summary>Grid query.</summary>
 public sealed record GetExpensesGridQuery(GridQuery Grid) : IQuery<PagedResult<ExpenseResponse>>;
 
+/// <summary>Report query.</summary>
+public sealed record GetExpenseReportQuery(
+    DateOnly? From,
+    DateOnly? To,
+    int? Year,
+    int? Month,
+    Guid? ExpenseTypeId
+) : IQuery<ExpenseReportResponse>;
+
 /// <summary>Create validator.</summary>
 public sealed class CreateExpenseValidator : AbstractValidator<CreateExpenseCommand>
 {
@@ -321,4 +330,142 @@ public sealed class GetExpensesGridHandler(IMainDbContext db)
             Aggregates = new Dictionary<string, decimal> { ["amount"] = totalAmount },
         };
     }
+}
+
+/// <summary>Builds expense report aggregates from filtered grid rows.</summary>
+public static class ExpenseReportBuilder
+{
+    /// <summary>Maximum detail rows returned in the report response.</summary>
+    public const int MaxItems = 5000;
+
+    /// <summary>Filters expense grid rows for report scope.</summary>
+    public static IQueryable<ExpenseGridRow> Filter(
+        IMainDbContext db,
+        DateOnly? from,
+        DateOnly? to,
+        int? year,
+        int? month,
+        Guid? expenseTypeId
+    )
+    {
+        var q = ExpenseGrid.Query(db);
+        if (year is >= 1 and var y && month is >= 1 and <= 12 and var m)
+        {
+            var start = new DateOnly(y, m, 1);
+            var end = new DateOnly(y, m, DateTime.DaysInMonth(y, m));
+            q = q.Where(x => x.Date >= start && x.Date <= end);
+        }
+        else
+        {
+            if (from.HasValue)
+                q = q.Where(x => x.Date >= from);
+            if (to.HasValue)
+                q = q.Where(x => x.Date <= to);
+        }
+
+        if (expenseTypeId.HasValue)
+            q = q.Where(x => x.ExpenseTypeId == expenseTypeId);
+        return q;
+    }
+
+    /// <summary>Builds the expense report from filtered rows.</summary>
+    public static async Task<ExpenseReportResponse> BuildAsync(
+        IQueryable<ExpenseGridRow> query,
+        CancellationToken ct
+    )
+    {
+        var rows = await query
+            .Select(x => new
+            {
+                x.Id,
+                x.ExpenseTypeName,
+                x.Amount,
+                x.Date,
+                x.Payee,
+                x.Notes,
+            })
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        var total = rows.Sum(x => x.Amount);
+        var count = rows.Count;
+        var average = count == 0 ? 0 : total / count;
+
+        var byCategoryRaw = rows.GroupBy(x => x.ExpenseTypeName)
+            .Select(g => new { Label = g.Key, Amount = g.Sum(x => x.Amount) })
+            .OrderByDescending(x => x.Amount)
+            .ToArray();
+        var byCategory = byCategoryRaw
+            .Select(x => new ExpenseReportBreakdown(
+                x.Label,
+                x.Amount,
+                Share(total, x.Amount)
+            ))
+            .ToArray();
+
+        var top = byCategoryRaw.FirstOrDefault();
+        var summary = new ExpenseReportSummary(
+            total,
+            count,
+            average,
+            top?.Label,
+            top?.Amount ?? 0,
+            top is null ? 0 : Share(total, top.Amount)
+        );
+
+        var byMonth = rows.GroupBy(x => new { x.Date.Year, x.Date.Month })
+            .OrderBy(g => g.Key.Year)
+            .ThenBy(g => g.Key.Month)
+            .Select(g =>
+            {
+                var amount = g.Sum(x => x.Amount);
+                return new ExpenseReportBreakdown(
+                    $"{g.Key.Year:D4}-{g.Key.Month:D2}",
+                    amount,
+                    Share(total, amount)
+                );
+            })
+            .ToArray();
+
+        var items = rows.OrderByDescending(x => x.Date)
+            .ThenByDescending(x => x.Amount)
+            .Take(MaxItems)
+            .Select(x => new ExpenseReportRow(
+                x.Id,
+                x.ExpenseTypeName,
+                x.Amount,
+                x.Date,
+                x.Payee,
+                x.Notes
+            ))
+            .ToArray();
+
+        return new ExpenseReportResponse(
+            summary,
+            byCategory,
+            byMonth,
+            items,
+            count > MaxItems
+        );
+    }
+
+    private static decimal Share(decimal total, decimal amount) =>
+        total == 0 ? 0 : Math.Round(amount / total * 100, 1);
+}
+
+/// <summary>Report handler.</summary>
+public sealed class GetExpenseReportHandler(IMainDbContext db)
+    : IQueryHandler<GetExpenseReportQuery, ExpenseReportResponse>
+{
+    /// <inheritdoc />
+    public async Task<Result<ExpenseReportResponse>> Handle(
+        GetExpenseReportQuery q,
+        CancellationToken ct
+    ) =>
+        await ExpenseReportBuilder
+            .BuildAsync(
+                ExpenseReportBuilder.Filter(db, q.From, q.To, q.Year, q.Month, q.ExpenseTypeId),
+                ct
+            )
+            .ConfigureAwait(false);
 }

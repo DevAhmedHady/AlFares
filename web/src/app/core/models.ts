@@ -41,6 +41,38 @@ export interface CreateExpenseRequest {
 }
 export interface ExpenseTypeResponse { id: string; name: string; scope: ExpenseScope; isActive: boolean; }
 
+export interface ExpenseReportSummary {
+  total: number;
+  count: number;
+  average: number;
+  topCategory?: string | null;
+  topCategoryAmount: number;
+  topCategoryShare: number;
+}
+export interface ExpenseReportBreakdown { label: string; amount: number; share: number; }
+export interface ExpenseReportRow {
+  id: string;
+  expenseTypeName: string;
+  amount: number;
+  date: string;
+  payee: string;
+  notes?: string | null;
+}
+export interface ExpenseReportResponse {
+  summary: ExpenseReportSummary;
+  byCategory: ExpenseReportBreakdown[];
+  byMonth: ExpenseReportBreakdown[];
+  items: ExpenseReportRow[];
+  itemsTruncated: boolean;
+}
+export interface ExpenseReportRequest {
+  from?: string | null;
+  to?: string | null;
+  year?: number | null;
+  month?: number | null;
+  expenseTypeId?: string | null;
+}
+
 // ---- Revenues ----
 export interface RevenueResponse { id:string; revenueTypeId:string; revenueTypeName:string; amount:number; date:string; source:string; notes?:string|null; ownerType:OwnerType; ownerId?:string|null; createdAtUtc:string; updatedAtUtc:string; }
 export interface RevenueTypeResponse { id:string; name:string; isActive:boolean; }
