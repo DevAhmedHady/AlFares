@@ -21,6 +21,7 @@ public sealed class RevenueConfiguration : IEntityTypeConfiguration<Revenue>
         b.HasOne<RevenueType>()
             .WithMany()
             .HasForeignKey(x => x.RevenueTypeId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
         b.HasIndex(x => x.Date);
         b.HasIndex(x => new { x.OwnerType, x.OwnerId });

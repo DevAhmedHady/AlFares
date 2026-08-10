@@ -7,7 +7,7 @@ namespace Expenses.Contracts;
 
 /// <summary>Create request.</summary>
 public sealed record CreateExpenseRequest(
-    Guid ExpenseTypeId,
+    Guid? ExpenseTypeId,
     decimal Amount,
     DateOnly Date,
     string Payee,
@@ -18,7 +18,7 @@ public sealed record CreateExpenseRequest(
 
 /// <summary>Update request.</summary>
 public sealed record UpdateExpenseRequest(
-    Guid ExpenseTypeId,
+    Guid? ExpenseTypeId,
     decimal Amount,
     DateOnly Date,
     string Payee,
@@ -30,7 +30,7 @@ public sealed record UpdateExpenseRequest(
 /// <summary>Response.</summary>
 public sealed record ExpenseResponse(
     Guid Id,
-    Guid ExpenseTypeId,
+    Guid? ExpenseTypeId,
     string ExpenseTypeName,
     decimal Amount,
     DateOnly Date,

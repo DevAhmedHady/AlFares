@@ -33,11 +33,11 @@ export interface CreateClientRequest {
 export enum OwnerType { General = 0, Client = 1, OwnedCar = 2, RentedCar = 3, Worker = 4 }
 export enum ExpenseScope { General = 0, Car = 1 }
 export interface ExpenseResponse {
-  id: string; expenseTypeId: string; expenseTypeName: string; amount: number; date: string;
+  id: string; expenseTypeId?: string | null; expenseTypeName: string; amount: number; date: string;
   payee?: string | null; notes?: string | null; ownerType: OwnerType; ownerId?: string | null; createdAtUtc: string; updatedAtUtc: string;
 }
 export interface CreateExpenseRequest {
-  expenseTypeId: string; amount: number; date: string; payee?: string | null; notes?: string | null; ownerType: OwnerType; ownerId?: string | null;
+  expenseTypeId?: string | null; amount: number; date: string; payee?: string | null; notes?: string | null; ownerType: OwnerType; ownerId?: string | null;
 }
 export interface ExpenseTypeResponse { id: string; name: string; scope: ExpenseScope; isActive: boolean; }
 
@@ -74,7 +74,10 @@ export interface ExpenseReportRequest {
 }
 
 // ---- Revenues ----
-export interface RevenueResponse { id:string; revenueTypeId:string; revenueTypeName:string; amount:number; date:string; source:string; notes?:string|null; ownerType:OwnerType; ownerId?:string|null; createdAtUtc:string; updatedAtUtc:string; }
+export interface RevenueResponse { id:string; revenueTypeId?:string|null; revenueTypeName:string; amount:number; date:string; source:string; notes?:string|null; ownerType:OwnerType; ownerId?:string|null; createdAtUtc:string; updatedAtUtc:string; }
+export interface CreateRevenueRequest {
+  revenueTypeId?: string | null; amount: number; date: string; source: string; notes?: string | null; ownerType: OwnerType; ownerId?: string | null;
+}
 export interface RevenueTypeResponse { id:string; name:string; isActive:boolean; }
 
 export interface RevenueReportSummary {

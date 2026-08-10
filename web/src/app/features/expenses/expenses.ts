@@ -32,6 +32,7 @@ import { ColumnDef } from '../../shared/grid/grid-column';
     InputNumberModule, TextareaModule, SelectModule, DatePickerModule, TooltipModule,
   ],
   templateUrl: './expenses.html',
+  styleUrl: './expenses.scss',
 })
 export class ExpensesComponent {
   readonly service = inject(ExpensesService);
@@ -54,6 +55,10 @@ export class ExpensesComponent {
   readonly yearOptions = yearOptions();
   readonly monthOptions = monthOptions;
   readonly dayOptionsList = computed(() => dayOptions(this.yearFilter(), this.monthFilter()));
+  readonly usingCalendarScope = computed(() => this.yearFilter() != null);
+  readonly hasActiveFilters = computed(() =>
+    !!(this.from() || this.to() || this.yearFilter() || this.monthFilter() || this.dayFilter() || this.typeFilter()),
+  );
   readonly source = new ScopedGridSource(this.service, () => this.filters());
   readonly columns: ColumnDef<ExpenseResponse>[] = [
     { key: 'expenseTypeName', header: 'نوع المصروف', type: GridFieldType.Text },
@@ -145,7 +150,7 @@ export class ExpensesComponent {
   openEdit(row: ExpenseResponse): void {
     this.editing.set(row);
     this.form.set({
-      expenseTypeId: row.expenseTypeId, amount: row.amount, date: row.date.slice(0, 10),
+      expenseTypeId: row.expenseTypeId ?? null, amount: row.amount, date: row.date.slice(0, 10),
       payee: row.payee ?? '', notes: row.notes ?? '', ownerType: row.ownerType, ownerId: row.ownerId,
     });
     this.formError.set(null);
@@ -156,7 +161,8 @@ export class ExpensesComponent {
     this.saving.set(true);
     this.formError.set(null);
     const editing = this.editing();
-    const request = editing ? this.service.update(editing.id, this.form()) : this.service.create(this.form());
+    const payload = { ...this.form(), expenseTypeId: this.form().expenseTypeId || null };
+    const request = editing ? this.service.update(editing.id, payload) : this.service.create(payload);
     request.subscribe({
       next: () => {
         this.saving.set(false);
@@ -189,6 +195,6 @@ export class ExpensesComponent {
   }
 
   private blank(): CreateExpenseRequest {
-    return { expenseTypeId: '', amount: 0, date: new Date().toISOString().slice(0, 10), payee: '', notes: '', ownerType: OwnerType.General, ownerId: null };
+    return { expenseTypeId: null, amount: 0, date: new Date().toISOString().slice(0, 10), payee: '', notes: '', ownerType: OwnerType.General, ownerId: null };
   }
 }

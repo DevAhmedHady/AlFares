@@ -54,7 +54,7 @@ public sealed class ExpenseType : AggregateRoot
 public sealed class Expense : AggregateRoot
 {
     /// <summary>Expense type id.</summary>
-    public Guid ExpenseTypeId { get; private set; }
+    public Guid? ExpenseTypeId { get; private set; }
 
     /// <summary>Amount.</summary>
     public decimal Amount { get; private set; }
@@ -83,7 +83,7 @@ public sealed class Expense : AggregateRoot
     private Expense() { }
 
     private Expense(
-        Guid typeId,
+        Guid? typeId,
         decimal amount,
         DateOnly date,
         string payee,
@@ -105,7 +105,7 @@ public sealed class Expense : AggregateRoot
 
     /// <summary>Creates expense.</summary>
     public static Result<Expense> Create(
-        Guid typeId,
+        Guid? typeId,
         decimal amount,
         DateOnly date,
         string? payee,
@@ -114,8 +114,6 @@ public sealed class Expense : AggregateRoot
         Guid? ownerId = null
     )
     {
-        if (typeId == Guid.Empty)
-            return ExpenseErrors.TypeRequired;
         if (amount <= 0)
             return ExpenseErrors.AmountInvalid;
         if (string.IsNullOrWhiteSpace(payee))
@@ -135,7 +133,7 @@ public sealed class Expense : AggregateRoot
 
     /// <summary>Updates expense.</summary>
     public Result<Expense> Update(
-        Guid typeId,
+        Guid? typeId,
         decimal amount,
         DateOnly date,
         string? payee,

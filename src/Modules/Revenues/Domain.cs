@@ -36,7 +36,7 @@ public sealed class RevenueType : AggregateRoot
 /// <summary>Revenue aggregate.</summary>
 public sealed class Revenue : AggregateRoot
 {
-    public Guid RevenueTypeId { get; private set; }
+    public Guid? RevenueTypeId { get; private set; }
     public decimal Amount { get; private set; }
     public DateOnly Date { get; private set; }
     public string Source { get; private set; } = string.Empty;
@@ -49,7 +49,7 @@ public sealed class Revenue : AggregateRoot
     private Revenue() { }
 
     private Revenue(
-        Guid typeId,
+        Guid? typeId,
         decimal amount,
         DateOnly date,
         string source,
@@ -70,7 +70,7 @@ public sealed class Revenue : AggregateRoot
     }
 
     public static Result<Revenue> Create(
-        Guid typeId,
+        Guid? typeId,
         decimal amount,
         DateOnly date,
         string? source,
@@ -80,8 +80,7 @@ public sealed class Revenue : AggregateRoot
     )
     {
         if (
-            typeId == Guid.Empty
-            || amount <= 0
+            amount <= 0
             || string.IsNullOrWhiteSpace(source)
             || (ownerType != OwnerType.General && ownerId is null)
         )
@@ -98,7 +97,7 @@ public sealed class Revenue : AggregateRoot
     }
 
     public Result<Revenue> Update(
-        Guid typeId,
+        Guid? typeId,
         decimal amount,
         DateOnly date,
         string? source,

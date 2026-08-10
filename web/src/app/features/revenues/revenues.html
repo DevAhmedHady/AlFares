@@ -1,7 +1,7 @@
 <section class="feature-page">
   <header class="feature-hero">
     <div class="feature-title">
-      <span class="feature-icon"><i class="pi pi-chart-line" aria-hidden="true"></i></span>
+      <span class="feature-icon rev-page-icon"><i class="pi pi-chart-line" aria-hidden="true"></i></span>
       <div><h1>الإيرادات</h1><p>تسجيل ومراجعة مصادر الدخل اليومية للمصنع.</p></div>
     </div>
     <a routerLink="/reports/revenues" class="exp-report-link">
@@ -9,47 +9,76 @@
     </a>
   </header>
 
-  <section class="report-panel scope-filters" aria-label="تصفية الإيرادات">
-    <div class="field">
-      <label for="revenue-filter-from">من</label>
-      <p-datepicker inputId="revenue-filter-from" [ngModel]="fromModel()" (ngModelChange)="from.set(toIso($event))" dateFormat="dd/mm/yy"
-                    [showIcon]="true" iconDisplay="input" [showButtonBar]="true" appendTo="body"
-                    styleClass="w-full" inputStyleClass="w-full" />
+  <section class="report-panel rev-scope-panel" aria-label="تصفية الإيرادات">
+    <div class="rev-scope-head">
+      <div>
+        <h2>تصفية السجل</h2>
+        <p>حدّد الفترة بالتاريخ أو بالتقويم، ثم اختر نوع الإيراد إن رغبت.</p>
+      </div>
+      @if (hasActiveFilters()) {
+        <span class="rev-scope-active">تصفية مفعّلة</span>
+      }
     </div>
-    <div class="field">
-      <label for="revenue-filter-to">إلى</label>
-      <p-datepicker inputId="revenue-filter-to" [ngModel]="toModel()" (ngModelChange)="to.set(toIso($event))" dateFormat="dd/mm/yy"
-                    [showIcon]="true" iconDisplay="input" [showButtonBar]="true" appendTo="body"
-                    styleClass="w-full" inputStyleClass="w-full" />
+
+    <div class="rev-scope-modes">
+      <div class="rev-scope-group" [class.active]="!usingCalendarScope()">
+        <span class="rev-scope-eyebrow">من — إلى</span>
+        <div class="rev-scope-row">
+          <div class="field">
+            <label for="revenue-filter-from">من تاريخ</label>
+            <p-datepicker inputId="revenue-filter-from" [ngModel]="fromModel()" (ngModelChange)="from.set(toIso($event))" dateFormat="dd/mm/yy"
+                          [showIcon]="true" iconDisplay="input" [showButtonBar]="true" appendTo="body"
+                          styleClass="w-full" inputStyleClass="w-full" />
+          </div>
+          <div class="field">
+            <label for="revenue-filter-to">إلى تاريخ</label>
+            <p-datepicker inputId="revenue-filter-to" [ngModel]="toModel()" (ngModelChange)="to.set(toIso($event))" dateFormat="dd/mm/yy"
+                          [showIcon]="true" iconDisplay="input" [showButtonBar]="true" appendTo="body"
+                          styleClass="w-full" inputStyleClass="w-full" />
+          </div>
+        </div>
+      </div>
+
+      <div class="rev-scope-or" aria-hidden="true">أو</div>
+
+      <div class="rev-scope-group" [class.active]="usingCalendarScope()">
+        <span class="rev-scope-eyebrow">بالتقويم</span>
+        <div class="rev-scope-row rev-scope-row--triple">
+          <div class="field">
+            <label for="revenue-filter-year">السنة</label>
+            <p-select inputId="revenue-filter-year" class="w-full" [options]="yearOptions" optionLabel="label" optionValue="value"
+                      [showClear]="true" [ngModel]="yearFilter()" (ngModelChange)="setYear($event ?? null)"
+                      placeholder="السنة" appendTo="body" />
+          </div>
+          <div class="field">
+            <label for="revenue-filter-month">الشهر</label>
+            <p-select inputId="revenue-filter-month" class="w-full" [options]="monthOptions" optionLabel="label" optionValue="value"
+                      [showClear]="true" [ngModel]="monthFilter()" (ngModelChange)="setMonth($event ?? null)"
+                      placeholder="الشهر" appendTo="body" [disabled]="yearFilter() == null" />
+          </div>
+          <div class="field">
+            <label for="revenue-filter-day">اليوم</label>
+            <p-select inputId="revenue-filter-day" class="w-full" [options]="dayOptionsList()" optionLabel="label" optionValue="value"
+                      [showClear]="true" [ngModel]="dayFilter()" (ngModelChange)="dayFilter.set($event ?? null)"
+                      placeholder="اليوم" appendTo="body" [disabled]="monthFilter() == null" />
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="field">
-      <label for="revenue-filter-year">السنة</label>
-      <p-select inputId="revenue-filter-year" class="w-full" [options]="yearOptions" optionLabel="label" optionValue="value"
-                [showClear]="true" [ngModel]="yearFilter()" (ngModelChange)="setYear($event ?? null)"
-                placeholder="الكل" appendTo="body" />
+
+    <div class="rev-scope-footer">
+      <div class="field">
+        <label for="revenue-filter-type">نوع الإيراد</label>
+        <p-select inputId="revenue-filter-type" class="w-full" [options]="types()" optionLabel="name" optionValue="id" [showClear]="true"
+                  [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event || '')" placeholder="كل الأنواع" appendTo="body" />
+      </div>
+      <div class="rev-scope-actions">
+        <p-button label="تطبيق التصفية" icon="pi pi-filter" (onClick)="applyFilters()" />
+        <p-button label="مسح" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearScopeFilters()" />
+      </div>
     </div>
-    <div class="field">
-      <label for="revenue-filter-month">الشهر</label>
-      <p-select inputId="revenue-filter-month" class="w-full" [options]="monthOptions" optionLabel="label" optionValue="value"
-                [showClear]="true" [ngModel]="monthFilter()" (ngModelChange)="setMonth($event ?? null)"
-                placeholder="الكل" appendTo="body" [disabled]="yearFilter() == null" />
-    </div>
-    <div class="field">
-      <label for="revenue-filter-day">اليوم</label>
-      <p-select inputId="revenue-filter-day" class="w-full" [options]="dayOptionsList()" optionLabel="label" optionValue="value"
-                [showClear]="true" [ngModel]="dayFilter()" (ngModelChange)="dayFilter.set($event ?? null)"
-                placeholder="الكل" appendTo="body" [disabled]="monthFilter() == null" />
-    </div>
-    <div class="field">
-      <label for="revenue-filter-type">نوع الإيراد</label>
-      <p-select inputId="revenue-filter-type" class="w-full" [options]="types()" optionLabel="name" optionValue="id" [showClear]="true"
-                [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event || '')" placeholder="كل الأنواع" appendTo="body" />
-    </div>
-    <div class="scope-actions">
-      <p-button label="تطبيق التصفية" icon="pi pi-filter" (onClick)="applyFilters()" />
-      <p-button label="مسح" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearScopeFilters()" />
-    </div>
-    @if (filterError()) { <p class="form-error scope-filter-error" role="alert">{{ filterError() }}</p> }
+
+    @if (filterError()) { <p class="form-error rev-scope-error" role="alert">{{ filterError() }}</p> }
   </section>
 
   <app-grid title="سجل الإيرادات" exportName="revenues" [columns]="columns" [source]="source"
@@ -74,8 +103,9 @@
     <div class="form-grid">
       <div class="field">
         <label for="revenue-type">نوع الإيراد</label>
-        <p-select inputId="revenue-type" [options]="types()" optionLabel="name" optionValue="id" placeholder="اختر النوع"
-                  [ngModel]="form().revenueTypeId" (ngModelChange)="patch('revenueTypeId', $event)" appendTo="body" />
+        <p-select inputId="revenue-type" [options]="types()" optionLabel="name" optionValue="id" placeholder="اختياري"
+                  [showClear]="true"
+                  [ngModel]="form().revenueTypeId" (ngModelChange)="patch('revenueTypeId', $event || null)" appendTo="body" />
       </div>
       <div class="field">
         <label for="revenue-amount">المبلغ</label>

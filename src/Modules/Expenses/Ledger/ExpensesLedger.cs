@@ -20,7 +20,8 @@ public sealed class ExpensesLedgerSource(IMainDbContext db) : ILedgerSource
     {
         var q =
             from e in db.Set<Expense>().AsNoTracking()
-            join t in db.Set<ExpenseType>() on e.ExpenseTypeId equals t.Id
+            join t in db.Set<ExpenseType>() on e.ExpenseTypeId equals t.Id into types
+            from t in types.DefaultIfEmpty()
             where e.OwnerType == ownerType && e.OwnerId == ownerId
             select new { e, t };
         if (from.HasValue)
@@ -32,7 +33,7 @@ public sealed class ExpensesLedgerSource(IMainDbContext db) : ILedgerSource
                 Kind,
                 x.e.OwnerType,
                 x.e.OwnerId,
-                x.t.Name,
+                x.t != null ? x.t.Name : (x.e.Payee.Trim().Length == 0 ? "Others" : x.e.Payee),
                 x.e.Amount,
                 x.e.Date
             ))

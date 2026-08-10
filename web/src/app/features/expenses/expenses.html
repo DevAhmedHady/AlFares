@@ -1,52 +1,81 @@
 <section class="feature-page">
 <header class="feature-hero">
-  <div class="feature-title"><span class="feature-icon"><i class="pi pi-wallet" aria-hidden="true"></i></span><div><h1>المصروفات</h1><p>تتبع مصروفات المصنع</p></div></div>
+  <div class="feature-title"><span class="feature-icon exp-page-icon"><i class="pi pi-wallet" aria-hidden="true"></i></span><div><h1>المصروفات</h1><p>تتبع مصروفات المصنع</p></div></div>
   <a routerLink="/reports/expenses" class="exp-report-link">
     <p-button label="عرض التقرير" icon="pi pi-chart-bar" severity="secondary" [outlined]="true" />
   </a>
 </header>
 
-<section class="report-panel scope-filters" aria-label="تصفية المصروفات">
-  <div class="field">
-    <label for="expense-filter-from">من</label>
-    <p-datepicker inputId="expense-filter-from" [ngModel]="fromModel()" (ngModelChange)="from.set(toIso($event))" dateFormat="dd/mm/yy"
-                  [showIcon]="true" iconDisplay="input" [showButtonBar]="true" appendTo="body"
-                  styleClass="w-full" inputStyleClass="w-full" />
+<section class="report-panel exp-scope-panel" aria-label="تصفية المصروفات">
+  <div class="exp-scope-head">
+    <div>
+      <h2>تصفية السجل</h2>
+      <p>حدّد الفترة بالتاريخ أو بالتقويم، ثم اختر نوع المصروف إن رغبت.</p>
+    </div>
+    @if (hasActiveFilters()) {
+      <span class="exp-scope-active">تصفية مفعّلة</span>
+    }
   </div>
-  <div class="field">
-    <label for="expense-filter-to">إلى</label>
-    <p-datepicker inputId="expense-filter-to" [ngModel]="toModel()" (ngModelChange)="to.set(toIso($event))" dateFormat="dd/mm/yy"
-                  [showIcon]="true" iconDisplay="input" [showButtonBar]="true" appendTo="body"
-                  styleClass="w-full" inputStyleClass="w-full" />
+
+  <div class="exp-scope-modes">
+    <div class="exp-scope-group" [class.active]="!usingCalendarScope()">
+      <span class="exp-scope-eyebrow">من — إلى</span>
+      <div class="exp-scope-row">
+        <div class="field">
+          <label for="expense-filter-from">من تاريخ</label>
+          <p-datepicker inputId="expense-filter-from" [ngModel]="fromModel()" (ngModelChange)="from.set(toIso($event))" dateFormat="dd/mm/yy"
+                        [showIcon]="true" iconDisplay="input" [showButtonBar]="true" appendTo="body"
+                        styleClass="w-full" inputStyleClass="w-full" />
+        </div>
+        <div class="field">
+          <label for="expense-filter-to">إلى تاريخ</label>
+          <p-datepicker inputId="expense-filter-to" [ngModel]="toModel()" (ngModelChange)="to.set(toIso($event))" dateFormat="dd/mm/yy"
+                        [showIcon]="true" iconDisplay="input" [showButtonBar]="true" appendTo="body"
+                        styleClass="w-full" inputStyleClass="w-full" />
+        </div>
+      </div>
+    </div>
+
+    <div class="exp-scope-or" aria-hidden="true">أو</div>
+
+    <div class="exp-scope-group" [class.active]="usingCalendarScope()">
+      <span class="exp-scope-eyebrow">بالتقويم</span>
+      <div class="exp-scope-row exp-scope-row--triple">
+        <div class="field">
+          <label for="expense-filter-year">السنة</label>
+          <p-select inputId="expense-filter-year" class="w-full" [options]="yearOptions" optionLabel="label" optionValue="value"
+                    [showClear]="true" [ngModel]="yearFilter()" (ngModelChange)="setYear($event ?? null)"
+                    placeholder="السنة" appendTo="body" />
+        </div>
+        <div class="field">
+          <label for="expense-filter-month">الشهر</label>
+          <p-select inputId="expense-filter-month" class="w-full" [options]="monthOptions" optionLabel="label" optionValue="value"
+                    [showClear]="true" [ngModel]="monthFilter()" (ngModelChange)="setMonth($event ?? null)"
+                    placeholder="الشهر" appendTo="body" [disabled]="yearFilter() == null" />
+        </div>
+        <div class="field">
+          <label for="expense-filter-day">اليوم</label>
+          <p-select inputId="expense-filter-day" class="w-full" [options]="dayOptionsList()" optionLabel="label" optionValue="value"
+                    [showClear]="true" [ngModel]="dayFilter()" (ngModelChange)="dayFilter.set($event ?? null)"
+                    placeholder="اليوم" appendTo="body" [disabled]="monthFilter() == null" />
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="field">
-    <label for="expense-filter-year">السنة</label>
-    <p-select inputId="expense-filter-year" class="w-full" [options]="yearOptions" optionLabel="label" optionValue="value"
-              [showClear]="true" [ngModel]="yearFilter()" (ngModelChange)="setYear($event ?? null)"
-              placeholder="الكل" appendTo="body" />
+
+  <div class="exp-scope-footer">
+    <div class="field">
+      <label for="expense-filter-type">نوع المصروف</label>
+      <p-select inputId="expense-filter-type" class="w-full" [options]="types()" optionLabel="name" optionValue="id" [showClear]="true"
+                [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event || '')" placeholder="كل الأنواع" appendTo="body" />
+    </div>
+    <div class="exp-scope-actions">
+      <p-button label="تطبيق التصفية" icon="pi pi-filter" (onClick)="applyFilters()" />
+      <p-button label="مسح" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearScopeFilters()" />
+    </div>
   </div>
-  <div class="field">
-    <label for="expense-filter-month">الشهر</label>
-    <p-select inputId="expense-filter-month" class="w-full" [options]="monthOptions" optionLabel="label" optionValue="value"
-              [showClear]="true" [ngModel]="monthFilter()" (ngModelChange)="setMonth($event ?? null)"
-              placeholder="الكل" appendTo="body" [disabled]="yearFilter() == null" />
-  </div>
-  <div class="field">
-    <label for="expense-filter-day">اليوم</label>
-    <p-select inputId="expense-filter-day" class="w-full" [options]="dayOptionsList()" optionLabel="label" optionValue="value"
-              [showClear]="true" [ngModel]="dayFilter()" (ngModelChange)="dayFilter.set($event ?? null)"
-              placeholder="الكل" appendTo="body" [disabled]="monthFilter() == null" />
-  </div>
-  <div class="field">
-    <label for="expense-filter-type">نوع المصروف</label>
-    <p-select inputId="expense-filter-type" class="w-full" [options]="types()" optionLabel="name" optionValue="id" [showClear]="true"
-              [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event || '')" placeholder="كل الأنواع" appendTo="body" />
-  </div>
-  <div class="scope-actions">
-    <p-button label="تطبيق التصفية" icon="pi pi-filter" (onClick)="applyFilters()" />
-    <p-button label="مسح" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearScopeFilters()" />
-  </div>
-  @if (filterError()) { <p class="form-error scope-filter-error" role="alert">{{ filterError() }}</p> }
+
+  @if (filterError()) { <p class="form-error exp-scope-error" role="alert">{{ filterError() }}</p> }
 </section>
 
 <app-grid title="قائمة المصروفات" exportName="expenses" [columns]="columns" [source]="source"
@@ -73,7 +102,8 @@
   <div class="field">
     <label for="expense-type">نوع المصروف</label>
     <p-select inputId="expense-type" class="w-full" [options]="types()" optionLabel="name" optionValue="id" appendTo="body"
-              [ngModel]="form().expenseTypeId" (ngModelChange)="patch('expenseTypeId', $event)" />
+              [showClear]="true" placeholder="اختياري"
+              [ngModel]="form().expenseTypeId" (ngModelChange)="patch('expenseTypeId', $event || null)" />
   </div>
   <div class="row">
     <div class="field spacer">
@@ -114,7 +144,7 @@
   <ng-template pTemplate="footer">
     <p-button label="إلغاء" severity="secondary" [text]="true" (onClick)="showForm.set(false)" />
     <p-button label="حفظ" icon="pi pi-check" [loading]="saving()" (onClick)="save()"
-              [disabled]="saving() || !form().expenseTypeId || form().amount <= 0" />
+              [disabled]="saving() || form().amount <= 0" />
   </ng-template>
 </p-dialog>
 </section>

@@ -1,0 +1,171 @@
+:host {
+  --exp-ink: #0f172a;
+  --exp-muted: #64748b;
+  --exp-copper: #c2410c;
+  --exp-copper-soft: #fff7ed;
+  --exp-border: #dbe4ef;
+  display: block;
+}
+
+.exp-page-icon {
+  color: var(--exp-copper);
+  background: var(--exp-copper-soft);
+}
+
+.exp-scope-panel {
+  padding-top: 0.85rem;
+}
+
+.exp-scope-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.exp-scope-head h2 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--exp-ink);
+}
+
+.exp-scope-head p {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: var(--exp-muted);
+}
+
+.exp-scope-active {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--exp-copper-soft);
+  color: var(--exp-copper);
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.exp-scope-modes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: stretch;
+  margin-bottom: 0.85rem;
+}
+
+.exp-scope-group {
+  padding: 0.75rem;
+  border: 1px solid var(--exp-border);
+  border-radius: 12px;
+  background: var(--app-subtle, #f8fafc);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.exp-scope-group.active {
+  border-color: #fed7aa;
+  background: var(--exp-copper-soft);
+  box-shadow: inset 0 0 0 1px rgba(194, 65, 12, 0.08);
+}
+
+.exp-scope-eyebrow {
+  display: block;
+  margin-bottom: 0.55rem;
+  color: var(--exp-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.exp-scope-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.exp-scope-row--triple {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.exp-scope-row .field {
+  margin: 0;
+}
+
+.exp-scope-or {
+  display: grid;
+  place-content: center;
+  align-self: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--app-surface, #fff);
+  border: 1px solid var(--exp-border);
+  color: var(--exp-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.exp-scope-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.exp-scope-footer .field {
+  margin: 0;
+}
+
+.exp-scope-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.exp-scope-error {
+  margin: 0.75rem 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exp-scope-group {
+    transition: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .exp-scope-modes {
+    grid-template-columns: 1fr;
+  }
+
+  .exp-scope-or {
+    justify-self: center;
+  }
+
+  .exp-scope-row--triple {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .exp-scope-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .exp-scope-row,
+  .exp-scope-row--triple,
+  .exp-scope-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .exp-scope-actions {
+    width: 100%;
+  }
+
+  .exp-scope-actions .p-button {
+    flex: 1;
+  }
+}

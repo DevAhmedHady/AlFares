@@ -13,7 +13,7 @@ namespace Expenses.Features;
 
 /// <summary>Create command.</summary>
 public sealed record CreateExpenseCommand(
-    Guid ExpenseTypeId,
+    Guid? ExpenseTypeId,
     decimal Amount,
     DateOnly Date,
     string Payee,
@@ -25,7 +25,7 @@ public sealed record CreateExpenseCommand(
 /// <summary>Update command.</summary>
 public sealed record UpdateExpenseCommand(
     Guid Id,
-    Guid ExpenseTypeId,
+    Guid? ExpenseTypeId,
     decimal Amount,
     DateOnly Date,
     string Payee,
@@ -62,7 +62,6 @@ public sealed class CreateExpenseValidator : AbstractValidator<CreateExpenseComm
     /// <summary>Rules.</summary>
     public CreateExpenseValidator()
     {
-        RuleFor(x => x.ExpenseTypeId).NotEmpty();
         RuleFor(x => x.Amount).GreaterThan(0);
         RuleFor(x => x.Payee).NotEmpty();
     }
@@ -74,7 +73,7 @@ public sealed class CreateExpenseValidator : AbstractValidator<CreateExpenseComm
 public sealed record ExpenseGridRow
 {
     public Guid Id { get; init; }
-    public Guid ExpenseTypeId { get; init; }
+    public Guid? ExpenseTypeId { get; init; }
     public string ExpenseTypeName { get; init; } = string.Empty;
     public decimal Amount { get; init; }
     public DateOnly Date { get; init; }
@@ -133,25 +132,6 @@ public static class ExpenseGrid
         }
     );
 
-    public static IQueryable<ExpenseGridRow> Query(IMainDbContext db) =>
-        from e in db.Set<Expense>().AsNoTracking()
-        join t in db.Set<ExpenseType>().AsNoTracking() on e.ExpenseTypeId equals t.Id
-        orderby e.Date descending //default ordering
-        select new ExpenseGridRow
-        {
-            Id = e.Id,
-            ExpenseTypeId = e.ExpenseTypeId,
-            ExpenseTypeName = t.Name,
-            Amount = e.Amount,
-            Date = e.Date,
-            Payee = e.Payee,
-            Notes = e.Notes,
-            OwnerType = e.OwnerType,
-            OwnerId = e.OwnerId,
-            CreatedAtUtc = e.CreatedAtUtc,
-            UpdatedAtUtc = e.UpdatedAtUtc,
-        };
-
     public static readonly Expression<Func<ExpenseGridRow, ExpenseResponse>> Projection = x =>
         new(
             x.Id,
@@ -166,6 +146,30 @@ public static class ExpenseGrid
             x.CreatedAtUtc,
             x.UpdatedAtUtc
         );
+
+    /// <summary>Display label for grid/report when no expense type is selected.</summary>
+    public static string DisplayTypeName(ExpenseType? type, string payee) =>
+        type?.Name ?? (string.IsNullOrWhiteSpace(payee) ? "Others" : payee.Trim());
+
+    public static IQueryable<ExpenseGridRow> Query(IMainDbContext db) =>
+        from e in db.Set<Expense>().AsNoTracking()
+        join t in db.Set<ExpenseType>().AsNoTracking() on e.ExpenseTypeId equals t.Id into types
+        from t in types.DefaultIfEmpty()
+        orderby e.Date descending //default ordering
+        select new ExpenseGridRow
+        {
+            Id = e.Id,
+            ExpenseTypeId = e.ExpenseTypeId,
+            ExpenseTypeName = t != null ? t.Name : (e.Payee.Trim().Length == 0 ? "Others" : e.Payee),
+            Amount = e.Amount,
+            Date = e.Date,
+            Payee = e.Payee,
+            Notes = e.Notes,
+            OwnerType = e.OwnerType,
+            OwnerId = e.OwnerId,
+            CreatedAtUtc = e.CreatedAtUtc,
+            UpdatedAtUtc = e.UpdatedAtUtc,
+        };
 }
 
 /// <summary>Create handler.</summary>
@@ -174,9 +178,14 @@ public sealed class CreateExpenseHandler(IExpenseRepository repo, IMainDbContext
 {
     public async Task<Result<ExpenseResponse>> Handle(CreateExpenseCommand c, CancellationToken ct)
     {
-        var t = await db.Set<ExpenseType>().FindAsync([c.ExpenseTypeId], ct);
-        if (t is null)
-            return ExpenseErrors.TypeRequired;
+        ExpenseType? t = null;
+        if (c.ExpenseTypeId is Guid typeId)
+        {
+            t = await db.Set<ExpenseType>().FindAsync([typeId], ct);
+            if (t is null)
+                return ExpenseErrors.TypeRequired;
+        }
+
         var e = Expense.Create(
             c.ExpenseTypeId,
             c.Amount,
@@ -192,8 +201,8 @@ public sealed class CreateExpenseHandler(IExpenseRepository repo, IMainDbContext
         await repo.SaveChangesAsync(ct);
         return new ExpenseResponse(
             e.Value.Id,
-            t.Id,
-            t.Name,
+            e.Value.ExpenseTypeId,
+            ExpenseGrid.DisplayTypeName(t, e.Value.Payee),
             e.Value.Amount,
             e.Value.Date,
             e.Value.Payee,
@@ -215,9 +224,14 @@ public sealed class UpdateExpenseHandler(IExpenseRepository repo, IMainDbContext
         var e = await repo.GetByIdAsync(c.Id, ct);
         if (e is null)
             return ExpenseErrors.NotFound(c.Id);
-        var t = await db.Set<ExpenseType>().FindAsync([c.ExpenseTypeId], ct);
-        if (t is null)
-            return ExpenseErrors.TypeRequired;
+        ExpenseType? t = null;
+        if (c.ExpenseTypeId is Guid typeId)
+        {
+            t = await db.Set<ExpenseType>().FindAsync([typeId], ct);
+            if (t is null)
+                return ExpenseErrors.TypeRequired;
+        }
+
         var r = e.Update(
             c.ExpenseTypeId,
             c.Amount,
@@ -232,8 +246,8 @@ public sealed class UpdateExpenseHandler(IExpenseRepository repo, IMainDbContext
         await repo.SaveChangesAsync(ct);
         return new ExpenseResponse(
             e.Id,
-            t.Id,
-            t.Name,
+            e.ExpenseTypeId,
+            ExpenseGrid.DisplayTypeName(t, e.Payee),
             e.Amount,
             e.Date,
             e.Payee,

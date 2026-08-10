@@ -25,7 +25,7 @@ namespace Revenues;
 public sealed record RevenueResponse
 {
     public Guid Id { get; init; }
-    public Guid RevenueTypeId { get; init; }
+    public Guid? RevenueTypeId { get; init; }
     public string RevenueTypeName { get; init; } = string.Empty;
     public decimal Amount { get; init; }
     public DateOnly Date { get; init; }
@@ -39,7 +39,7 @@ public sealed record RevenueResponse
 
 /// <summary>Revenue request.</summary>
 public sealed record RevenueRequest(
-    Guid RevenueTypeId,
+    Guid? RevenueTypeId,
     decimal Amount,
     DateOnly Date,
     string Source,
@@ -247,15 +247,19 @@ public sealed class RevenuesModule : IModule
 /// <summary>Revenue endpoints.</summary>
 public sealed class RevenueEndpoints : IEndpoint
 {
+    internal static string DisplayTypeName(RevenueType? type, string source) =>
+        type?.Name ?? (string.IsNullOrWhiteSpace(source) ? "Others" : source.Trim());
+
     internal static IQueryable<RevenueResponse> Query(IMainDbContext db) =>
         from x in db.Set<Revenue>().AsNoTracking()
-        join t in db.Set<RevenueType>().AsNoTracking() on x.RevenueTypeId equals t.Id
+        join t in db.Set<RevenueType>().AsNoTracking() on x.RevenueTypeId equals t.Id into types
+        from t in types.DefaultIfEmpty()
         orderby x.Date descending
         select new RevenueResponse
         {
             Id = x.Id,
             RevenueTypeId = x.RevenueTypeId,
-            RevenueTypeName = t.Name,
+            RevenueTypeName = t != null ? t.Name : (x.Source.Trim().Length == 0 ? "Others" : x.Source),
             Amount = x.Amount,
             Date = x.Date,
             Source = x.Source,
@@ -381,6 +385,9 @@ public sealed class RevenueEndpoints : IEndpoint
         CancellationToken ct
     )
     {
+        if (r.RevenueTypeId is Guid typeId && !await db.Set<RevenueType>().AnyAsync(x => x.Id == typeId, ct))
+            return Results.BadRequest(new { Code = "revenues.type_required", Description = "Revenue type is required." });
+
         var x = Revenue.Create(
             r.RevenueTypeId,
             r.Amount,
@@ -410,6 +417,9 @@ public sealed class RevenueEndpoints : IEndpoint
         var x = await db.Set<Revenue>().FindAsync([id], ct);
         if (x is null)
             return Results.NotFound();
+        if (r.RevenueTypeId is Guid typeId && !await db.Set<RevenueType>().AnyAsync(t => t.Id == typeId, ct))
+            return Results.BadRequest(new { Code = "revenues.type_required", Description = "Revenue type is required." });
+
         var z = x.Update(
             r.RevenueTypeId,
             r.Amount,
@@ -611,7 +621,8 @@ public sealed class RevenuesLedgerSource(IMainDbContext db) : ILedgerSource
     {
         var q =
             from x in db.Set<Revenue>().AsNoTracking()
-            join t in db.Set<RevenueType>() on x.RevenueTypeId equals t.Id
+            join t in db.Set<RevenueType>() on x.RevenueTypeId equals t.Id into types
+            from t in types.DefaultIfEmpty()
             where x.OwnerType == ownerType && x.OwnerId == ownerId
             select new { x, t };
         if (from.HasValue)
@@ -623,7 +634,7 @@ public sealed class RevenuesLedgerSource(IMainDbContext db) : ILedgerSource
                 Kind,
                 v.x.OwnerType,
                 v.x.OwnerId,
-                v.t.Name,
+                v.t != null ? v.t.Name : (v.x.Source.Trim().Length == 0 ? "Others" : v.x.Source),
                 v.x.Amount,
                 v.x.Date
             ))

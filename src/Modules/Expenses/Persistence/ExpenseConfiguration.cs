@@ -22,6 +22,7 @@ public sealed class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
         b.HasOne<ExpenseType>()
             .WithMany()
             .HasForeignKey(x => x.ExpenseTypeId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

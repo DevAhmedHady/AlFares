@@ -18,7 +18,7 @@ import {
 import { emptyGridQuery, GridFieldType, GridFilter, GridFilterOp } from '../../core/grid.models';
 import { formatDate, formatMoney, toDate, toIso } from '../../core/labels';
 import { ownerEntityOptions, ownerLinkOptions } from '../../core/owner-link';
-import { CarResponse, ClientResponse, OwnerType, RevenueResponse, RevenueTypeResponse } from '../../core/models';
+import { CarResponse, ClientResponse, CreateRevenueRequest, OwnerType, RevenueResponse, RevenueTypeResponse } from '../../core/models';
 import { GridComponent } from '../../shared/grid/grid';
 import { ColumnDef } from '../../shared/grid/grid-column';
 
@@ -30,6 +30,7 @@ import { ColumnDef } from '../../shared/grid/grid-column';
     SelectModule, DatePickerModule, TooltipModule, GridComponent,
   ],
   templateUrl: './revenues.html',
+  styleUrl: './revenues.scss',
 })
 export class RevenuesComponent {
   readonly service = inject(RevenuesService);
@@ -52,6 +53,10 @@ export class RevenuesComponent {
   readonly yearOptions = yearOptions();
   readonly monthOptions = monthOptions;
   readonly dayOptionsList = computed(() => dayOptions(this.yearFilter(), this.monthFilter()));
+  readonly usingCalendarScope = computed(() => this.yearFilter() != null);
+  readonly hasActiveFilters = computed(() =>
+    !!(this.from() || this.to() || this.yearFilter() || this.monthFilter() || this.dayFilter() || this.typeFilter()),
+  );
   readonly source = new ScopedGridSource(this.service, () => this.filters());
   readonly show = signal(false);
   readonly saving = signal(false);
@@ -60,9 +65,9 @@ export class RevenuesComponent {
   readonly cars = signal<CarResponse[]>([]);
   readonly ownerOptions = ownerLinkOptions;
   readonly General = OwnerType.General;
-  readonly form = signal({
-    revenueTypeId: '', amount: 0, date: new Date().toISOString().slice(0, 10),
-    source: '', notes: '', ownerType: OwnerType.General, ownerId: null as string | null,
+  readonly form = signal<CreateRevenueRequest>({
+    revenueTypeId: null, amount: 0, date: new Date().toISOString().slice(0, 10),
+    source: '', notes: '', ownerType: OwnerType.General, ownerId: null,
   });
   readonly entityOptions = computed(() => ownerEntityOptions(this.form().ownerType, this.clients(), this.cars()));
   readonly toIso = toIso;
@@ -135,13 +140,13 @@ export class RevenuesComponent {
 
   valid(): boolean {
     const form = this.form();
-    return !!form.revenueTypeId && form.amount > 0 && !!form.date && !!form.source.trim();
+    return form.amount > 0 && !!form.date && !!form.source.trim();
   }
 
   open(): void {
     this.editing.set(null);
     this.form.set({
-      revenueTypeId: '', amount: 0, date: new Date().toISOString().slice(0, 10),
+      revenueTypeId: null, amount: 0, date: new Date().toISOString().slice(0, 10),
       source: '', notes: '', ownerType: OwnerType.General, ownerId: null,
     });
     this.show.set(true);
@@ -150,7 +155,7 @@ export class RevenuesComponent {
   edit(row: RevenueResponse): void {
     this.editing.set(row);
     this.form.set({
-      revenueTypeId: row.revenueTypeId, amount: row.amount, date: row.date.slice(0, 10),
+      revenueTypeId: row.revenueTypeId ?? null, amount: row.amount, date: row.date.slice(0, 10),
       source: row.source, notes: row.notes ?? '', ownerType: row.ownerType, ownerId: row.ownerId ?? null,
     });
     this.show.set(true);
@@ -159,7 +164,8 @@ export class RevenuesComponent {
   save(): void {
     this.saving.set(true);
     const row = this.editing();
-    (row ? this.service.update(row.id, this.form()) : this.service.create(this.form())).subscribe({
+    const payload = { ...this.form(), revenueTypeId: this.form().revenueTypeId || null };
+    (row ? this.service.update(row.id, payload) : this.service.create(payload)).subscribe({
       next: () => {
         this.show.set(false);
         this.grid().load();

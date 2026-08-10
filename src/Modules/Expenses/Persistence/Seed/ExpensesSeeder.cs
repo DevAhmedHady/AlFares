@@ -65,7 +65,8 @@ public static class ExpensesSeeder
 
         foreach (var expense in expenses)
         {
-            if (!mergedTypeIds.TryGetValue(expense.ExpenseTypeId, out var primaryTypeId))
+            if (expense.ExpenseTypeId is not Guid expenseTypeId
+                || !mergedTypeIds.TryGetValue(expenseTypeId, out var primaryTypeId))
                 continue;
 
             var update = expense.Update(
