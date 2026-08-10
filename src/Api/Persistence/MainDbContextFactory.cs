@@ -11,7 +11,7 @@ public sealed class MainDbContextFactory : IDesignTimeDbContextFactory<MainDbCon
     {
         var connectionString =
             Environment.GetEnvironmentVariable("ConnectionStrings__Default")
-            ?? "Host=localhost;Port=5433;Database=alfaris;Username=postgres;Password=postgres";
+            ?? "Host=localhost;Port=5432;Database=alfaris;Username=postgres;Password=postgres";
         var options = new DbContextOptionsBuilder<MainDbContext>()
             .UseNpgsql(connectionString)
             .Options;

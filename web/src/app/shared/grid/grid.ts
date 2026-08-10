@@ -17,6 +17,7 @@ import { MessageService } from 'primeng/api';
 import { Subscription, finalize } from 'rxjs';
 import { AuthStore } from '../../core/auth/auth.store';
 import { downloadBlob } from '../../core/api/grid-client';
+import { formatMoney } from '../../core/labels';
 import {
   ExportFormat, GridFieldType, GridFilter, GridFilterOp, GridQuery, GridSort, PagedResult, emptyGridQuery,
 } from '../../core/grid.models';
@@ -47,12 +48,17 @@ export class GridComponent implements OnDestroy {
   readonly exportName = input('export');
   readonly exportPermission = input<string | null>(null);
   readonly createPermission = input<string | null>(null);
+  readonly deletePermission = input<string | null>(null);
+  readonly selectable = input(false);
   readonly rowActions = input<TemplateRef<unknown> | null>(null);
   readonly createClicked = output<void>();
 
   readonly rows = signal<Row[]>([]);
   readonly total = signal(0);
+  readonly aggregates = signal<Record<string, number> | null>(null);
+  readonly selection = signal<Row[]>([]);
   readonly loading = signal(false);
+  readonly deleting = signal(false);
   readonly error = signal<string | null>(null);
   readonly exporting = signal<ExportFormat | null>(null);
 
@@ -79,6 +85,15 @@ export class GridComponent implements OnDestroy {
   readonly columnOptions = computed(() => this.columns().map((c) => ({ label: c.header, value: c.key })));
   readonly canExport = computed(() => this.store.has(this.exportPermission()));
   readonly canCreate = computed(() => this.store.has(this.createPermission()));
+  readonly canBulkDelete = computed(() =>
+    this.selectable()
+    && !!this.deletePermission()
+    && this.store.has(this.deletePermission())
+    && !!this.source().removeMany);
+  readonly showFooter = computed(() => {
+    const agg = this.aggregates();
+    return !!agg && Object.keys(agg).length > 0;
+  });
   readonly activeFilterCount = computed(() =>
     Object.values(this.columnFilters()).filter((value) => value !== '').length
     + (this.search() ? 1 : 0)
@@ -130,7 +145,13 @@ export class GridComponent implements OnDestroy {
     this.loading.set(true);
     this.error.set(null);
     this.loadSubscription = this.source().grid(this.query()).subscribe({
-      next: (r: PagedResult<Row>) => { this.rows.set(r.items); this.total.set(r.totalCount); this.loading.set(false); },
+      next: (r: PagedResult<Row>) => {
+        this.rows.set(r.items);
+        this.total.set(r.totalCount);
+        this.aggregates.set(r.aggregates ?? null);
+        this.selection.set([]);
+        this.loading.set(false);
+      },
       error: (e) => { this.error.set(e?.error?.description ?? 'تعذر تحميل البيانات'); this.loading.set(false); },
     });
   }
@@ -213,6 +234,50 @@ export class GridComponent implements OnDestroy {
     return v === null || v === undefined ? '' : String(v);
   }
 
+  footerValue(col: ColumnDef): string {
+    const agg = this.aggregates();
+    if (!agg) return '';
+    const value = agg[col.key];
+    if (value === undefined || value === null) return '';
+    if (col.key === 'amount' || col.type === GridFieldType.Number) return formatMoney(value);
+    return String(value);
+  }
+
+  colspan(): number {
+    return this.orderedColumns().length
+      + (this.rowActions() ? 1 : 0)
+      + (this.selectable() ? 1 : 0);
+  }
+
+  onSelectionChange(rows: Row[]): void {
+    this.selection.set(rows ?? []);
+  }
+
+  bulkDelete(): void {
+    const selected = this.selection();
+    const source = this.source();
+    if (!selected.length || !source.removeMany || this.deleting()) return;
+    if (!confirm(`حذف ${selected.length} سجل محدد؟`)) return;
+    this.deleting.set(true);
+    const ids = selected.map((row) => String(row.id));
+    source.removeMany(ids).pipe(finalize(() => this.deleting.set(false))).subscribe({
+      next: (result) => {
+        this.messages.add({
+          severity: 'success',
+          summary: 'تم الحذف',
+          detail: `تم حذف ${result.deleted} سجل`,
+        });
+        this.selection.set([]);
+        this.load();
+      },
+      error: () => this.messages.add({
+        severity: 'error',
+        summary: 'تعذر الحذف',
+        detail: 'لم يتم حذف السجلات المحددة. أعد المحاولة.',
+      }),
+    });
+  }
+
   onPage(e: PaginatorState): void {
     this.pageSize.set(e.rows ?? this.pageSize());
     this.page.set((e.page ?? 0) + 1);
@@ -228,9 +293,13 @@ export class GridComponent implements OnDestroy {
 
   onColReorder(e: { dragIndex?: number; dropIndex?: number }): void {
     const visible = this.orderedColumns().map((c) => c.key);
-    if (e.dragIndex === undefined || e.dropIndex === undefined) return;
-    const [moved] = visible.splice(e.dragIndex, 1);
-    visible.splice(e.dropIndex, 0, moved);
+    // Account for optional leading checkbox column in reorder indices.
+    const offset = this.selectable() ? 1 : 0;
+    const drag = (e.dragIndex ?? 0) - offset;
+    const drop = (e.dropIndex ?? 0) - offset;
+    if (drag < 0 || drop < 0 || drag >= visible.length || drop >= visible.length) return;
+    const [moved] = visible.splice(drag, 1);
+    visible.splice(drop, 0, moved);
     const hidden = this.order().filter((k) => !visible.includes(k));
     this.order.set([...visible, ...hidden]);
   }

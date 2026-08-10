@@ -44,6 +44,9 @@ th:hover .column-move, th:focus-within .column-move { opacity: 1; }
   box-shadow: -1px 0 0 #e2e8f0;
 }
 th.actions-col { z-index: 3; background: #f8fafc; }
+.select-col { width: 3rem; text-align: center; }
+.totals-row td { font-weight: 600; background: #f8fafc; border-top: 1px solid #e2e8f0; }
+.totals-row .muted { font-weight: 500; color: #64748b; }
 .empty { text-align: center; color: #64748b; padding: 2.5rem 1rem; }
 .empty i, .empty strong, .empty span { display: block; }
 .empty i { margin-bottom: .6rem; color: #94a3b8; font-size: 1.5rem; }

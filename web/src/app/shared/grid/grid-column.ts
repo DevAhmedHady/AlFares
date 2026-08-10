@@ -1,4 +1,5 @@
-import { GridFieldType } from '../../core/grid.models';
+import { Observable } from 'rxjs';
+import { ExportFormat, GridFieldType, GridQuery, PagedResult } from '../../core/grid.models';
 
 /** Declarative column definition driving the reusable server-side grid. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,11 +20,10 @@ export interface ColumnDef<T = any> {
   options?: [string, string][];
 }
 
-/** A data source the grid can page + export. */
+/** A data source the grid can page + export (+ optional bulk delete). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface GridSource<T = any> {
-  grid(query: import('../../core/grid.models').GridQuery):
-    import('rxjs').Observable<import('../../core/grid.models').PagedResult<T>>;
-  export?(format: import('../../core/grid.models').ExportFormat,
-    grid: import('../../core/grid.models').GridQuery): import('rxjs').Observable<Blob>;
+  grid(query: GridQuery): Observable<PagedResult<T>>;
+  export?(format: ExportFormat, grid: GridQuery): Observable<Blob>;
+  removeMany?(ids: string[]): Observable<{ deleted: number }>;
 }

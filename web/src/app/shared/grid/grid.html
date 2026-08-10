@@ -5,6 +5,9 @@
   [reorderableColumns]="true"
   (onColReorder)="onColReorder($event)"
   dataKey="id"
+  [selection]="selection()"
+  (selectionChange)="onSelectionChange($event)"
+  [selectionMode]="selectable() ? 'multiple' : undefined"
   styleClass="p-datatable-sm grid-table"
   [scrollable]="true"
   [attr.aria-label]="title()">
@@ -37,6 +40,12 @@
                 ariaLabel="مسح البحث والفلاتر والترتيب" pTooltip="مسح البحث والفلاتر والترتيب"
                 [disabled]="activeFilterCount() === 0" (onClick)="clearFilters()" />
 
+      @if (canBulkDelete() && selection().length) {
+        <p-button [label]="'حذف المحدد (' + selection().length + ')'" icon="pi pi-trash"
+                  severity="danger" [loading]="deleting()" [disabled]="deleting()"
+                  (onClick)="bulkDelete()" />
+      }
+
       @if (canExport() && source().export) {
         <p-button label="Excel" icon="pi pi-file-excel" severity="success" [text]="true"
                   [loading]="exporting() === Xlsx" [disabled]="exporting() !== null" (onClick)="exportAs(Xlsx)" />
@@ -51,6 +60,11 @@
 
   <ng-template pTemplate="header" let-columns>
     <tr>
+      @if (selectable()) {
+        <th class="select-col" style="width: 3rem">
+          <p-tableHeaderCheckbox />
+        </th>
+      }
       @for (col of columns; track col.key) {
         <th pReorderableColumn [class.sortable]="col.sortable !== false" [attr.aria-sort]="col.sortable !== false ? sortAria(col) : null">
           <div class="th-content">
@@ -69,6 +83,7 @@
       @if (rowActions()) { <th class="actions-col">إجراءات</th> }
     </tr>
     <tr class="filter-row">
+      @if (selectable()) { <th></th> }
       @for (col of columns; track col.key) {
         <th>
           @if (col.filterable !== false) {
@@ -93,6 +108,11 @@
 
   <ng-template pTemplate="body" let-row let-columns="columns">
     <tr>
+      @if (selectable()) {
+        <td class="select-col">
+          <p-tableCheckbox [value]="row" />
+        </td>
+      }
       @for (col of columns; track col.key) {
         <td>{{ cellValue(row, col) }}</td>
       }
@@ -104,8 +124,26 @@
     </tr>
   </ng-template>
 
+  <ng-template pTemplate="footer" let-columns>
+    @if (showFooter()) {
+      <tr class="totals-row">
+        @if (selectable()) { <td></td> }
+        @for (col of columns; track col.key; let i = $index) {
+          <td>
+            @if (i === 0 && !footerValue(col)) {
+              <span class="muted">الإجمالي</span>
+            } @else {
+              <strong>{{ footerValue(col) }}</strong>
+            }
+          </td>
+        }
+        @if (rowActions()) { <td class="actions-col"></td> }
+      </tr>
+    }
+  </ng-template>
+
   <ng-template pTemplate="emptymessage">
-    <tr><td [attr.colspan]="orderedColumns().length + (rowActions() ? 1 : 0)" class="empty">
+    <tr><td [attr.colspan]="colspan()" class="empty">
       <i class="pi pi-inbox" aria-hidden="true"></i>
       <strong>{{ activeFilterCount() ? 'لا توجد نتائج مطابقة' : 'لا توجد سجلات بعد' }}</strong>
       <span>{{ activeFilterCount() ? 'جرّب تعديل البحث أو الفلاتر الحالية.' : 'ستظهر السجلات هنا عند إضافتها.' }}</span>

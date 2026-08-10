@@ -1,7 +1,7 @@
-import { InjectionToken } from '@angular/core';
+import { InjectionToken, isDevMode } from '@angular/core';
 
-/** Base URL of the الفارس API. Overridable for different environments. */
+/** Base URL of the الفارس API. Empty in prod = same-origin (SPA served by the API). */
 export const API_BASE = new InjectionToken<string>('API_BASE', {
   providedIn: 'root',
-  factory: () => 'http://localhost:5113',
+  factory: () => (isDevMode() ? 'http://localhost:5113' : ''),
 });

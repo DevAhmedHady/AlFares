@@ -13,6 +13,9 @@ import { TooltipModule } from 'primeng/tooltip';
 import { CarsService, ClientsService, ExpensesService } from '../../core/api/resources';
 import { ScopedGridSource } from '../../core/api/scoped-source';
 import { AuthStore } from '../../core/auth/auth.store';
+import {
+  dayOptions, monthOptions, validateYmd, yearOptions, ymdDateFilters,
+} from '../../core/date-scope';
 import { emptyGridQuery, GridFieldType, GridFilter, GridFilterOp } from '../../core/grid.models';
 import { formatDate, formatMoney, toDate, toIso } from '../../core/labels';
 import { CarResponse, ClientResponse, CreateExpenseRequest, ExpenseResponse, ExpenseTypeResponse, OwnerType } from '../../core/models';
@@ -42,8 +45,14 @@ export class ExpensesComponent {
   readonly types = signal<ExpenseTypeResponse[]>([]);
   readonly from = signal('');
   readonly to = signal('');
+  readonly yearFilter = signal<number | null>(null);
+  readonly monthFilter = signal<number | null>(null);
+  readonly dayFilter = signal<number | null>(null);
   readonly typeFilter = signal('');
   readonly filterError = signal<string | null>(null);
+  readonly yearOptions = yearOptions();
+  readonly monthOptions = monthOptions;
+  readonly dayOptionsList = computed(() => dayOptions(this.yearFilter(), this.monthFilter()));
   readonly source = new ScopedGridSource(this.service, () => this.filters());
   readonly columns: ColumnDef<ExpenseResponse>[] = [
     { key: 'expenseTypeName', header: 'نوع المصروف', type: GridFieldType.Text },
@@ -78,9 +87,32 @@ export class ExpensesComponent {
     this.form.update((form) => ({ ...form, ownerType: type, ownerId: null }));
   }
 
+  setYear(value: number | null): void {
+    this.yearFilter.set(value);
+    if (value == null) {
+      this.monthFilter.set(null);
+      this.dayFilter.set(null);
+    }
+  }
+
+  setMonth(value: number | null): void {
+    this.monthFilter.set(value);
+    if (value == null) this.dayFilter.set(null);
+    else {
+      const max = dayOptions(this.yearFilter(), value).length;
+      const day = this.dayFilter();
+      if (day != null && day > max) this.dayFilter.set(null);
+    }
+  }
+
   applyFilters(): void {
     if (this.from() && this.to() && this.from() > this.to()) {
       this.filterError.set('يجب أن يكون تاريخ البداية قبل تاريخ النهاية.');
+      return;
+    }
+    const ymdError = validateYmd(this.yearFilter(), this.monthFilter(), this.dayFilter());
+    if (ymdError) {
+      this.filterError.set(ymdError);
       return;
     }
     this.filterError.set(null);
@@ -90,6 +122,9 @@ export class ExpensesComponent {
   clearScopeFilters(): void {
     this.from.set('');
     this.to.set('');
+    this.yearFilter.set(null);
+    this.monthFilter.set(null);
+    this.dayFilter.set(null);
     this.typeFilter.set('');
     this.filterError.set(null);
     this.grid().load();
@@ -147,6 +182,7 @@ export class ExpensesComponent {
     const filters: GridFilter[] = [];
     if (this.from()) filters.push({ field: 'date', op: GridFilterOp.Gte, value: this.from() });
     if (this.to()) filters.push({ field: 'date', op: GridFilterOp.Lte, value: this.to() });
+    filters.push(...ymdDateFilters(this.yearFilter(), this.monthFilter(), this.dayFilter()));
     if (this.typeFilter()) filters.push({ field: 'expenseTypeId', op: GridFilterOp.Eq, value: this.typeFilter() });
     return filters;
   }

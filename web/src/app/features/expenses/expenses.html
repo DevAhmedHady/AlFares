@@ -17,17 +17,38 @@
                   styleClass="w-full" inputStyleClass="w-full" />
   </div>
   <div class="field">
+    <label for="expense-filter-year">السنة</label>
+    <p-select inputId="expense-filter-year" class="w-full" [options]="yearOptions" optionLabel="label" optionValue="value"
+              [showClear]="true" [ngModel]="yearFilter()" (ngModelChange)="setYear($event ?? null)"
+              placeholder="الكل" appendTo="body" />
+  </div>
+  <div class="field">
+    <label for="expense-filter-month">الشهر</label>
+    <p-select inputId="expense-filter-month" class="w-full" [options]="monthOptions" optionLabel="label" optionValue="value"
+              [showClear]="true" [ngModel]="monthFilter()" (ngModelChange)="setMonth($event ?? null)"
+              placeholder="الكل" appendTo="body" [disabled]="yearFilter() == null" />
+  </div>
+  <div class="field">
+    <label for="expense-filter-day">اليوم</label>
+    <p-select inputId="expense-filter-day" class="w-full" [options]="dayOptionsList()" optionLabel="label" optionValue="value"
+              [showClear]="true" [ngModel]="dayFilter()" (ngModelChange)="dayFilter.set($event ?? null)"
+              placeholder="الكل" appendTo="body" [disabled]="monthFilter() == null" />
+  </div>
+  <div class="field">
     <label for="expense-filter-type">نوع المصروف</label>
     <p-select inputId="expense-filter-type" class="w-full" [options]="types()" optionLabel="name" optionValue="id" [showClear]="true"
               [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event || '')" placeholder="كل الأنواع" appendTo="body" />
   </div>
-  <p-button label="تطبيق التصفية" icon="pi pi-filter" (onClick)="applyFilters()" />
-  <p-button label="مسح" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearScopeFilters()" />
+  <div class="scope-actions">
+    <p-button label="تطبيق التصفية" icon="pi pi-filter" (onClick)="applyFilters()" />
+    <p-button label="مسح" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearScopeFilters()" />
+  </div>
   @if (filterError()) { <p class="form-error scope-filter-error" role="alert">{{ filterError() }}</p> }
 </section>
 
 <app-grid title="قائمة المصروفات" exportName="expenses" [columns]="columns" [source]="source"
           [rowActions]="actions" [exportPermission]="'expenses.export'" [createPermission]="'expenses.write'"
+          [selectable]="true" [deletePermission]="'expenses.delete'"
           (createClicked)="openCreate()" />
 
 <ng-template #actions let-row>

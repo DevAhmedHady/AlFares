@@ -6,7 +6,14 @@ namespace BuildingBlocks.Grids;
 /// <param name="Page">One-based page number.</param>
 /// <param name="PageSize">Effective page size.</param>
 /// <param name="TotalCount">Total rows before paging.</param>
-public sealed record PagedResult<T>(IReadOnlyList<T> Items, int Page, int PageSize, long TotalCount)
+/// <param name="Aggregates">Optional filtered-set aggregates (e.g. amount sum); null when unused.</param>
+public sealed record PagedResult<T>(
+    IReadOnlyList<T> Items,
+    int Page,
+    int PageSize,
+    long TotalCount,
+    IReadOnlyDictionary<string, decimal>? Aggregates = null
+)
 {
     /// <summary>Gets total page count.</summary>
     public int TotalPages => PageSize <= 0 ? 0 : (int)Math.Ceiling(TotalCount / (double)PageSize);

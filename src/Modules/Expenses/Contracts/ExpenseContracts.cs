@@ -45,6 +45,12 @@ public sealed record ExpenseResponse(
 /// <summary>Export request.</summary>
 public sealed record ExpenseExportRequest(GridQuery Grid, ExportFormat Format);
 
+/// <summary>Bulk delete request.</summary>
+public sealed record BulkDeleteExpensesRequest(IReadOnlyList<Guid> Ids);
+
+/// <summary>Bulk delete response.</summary>
+public sealed record BulkDeleteExpensesResponse(int Deleted);
+
 /// <summary>Expense type request.</summary>
 public sealed record ExpenseTypeRequest(string Name, ExpenseScope Scope, bool IsActive = true);
 

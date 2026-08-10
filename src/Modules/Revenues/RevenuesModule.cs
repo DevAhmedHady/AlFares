@@ -54,6 +54,12 @@ public sealed record RevenueTypeResponse(Guid Id, string Name, bool IsActive);
 /// <summary>Revenue type request.</summary>
 public sealed record RevenueTypeRequest(string Name, bool IsActive = true);
 
+/// <summary>Bulk delete request.</summary>
+public sealed record BulkDeleteRevenuesRequest(IReadOnlyList<Guid> Ids);
+
+/// <summary>Bulk delete response.</summary>
+public sealed record BulkDeleteRevenuesResponse(int Deleted);
+
 /// <summary>Revenue module.</summary>
 public sealed class RevenuesModule : IModule
 {
@@ -153,6 +159,7 @@ public sealed class RevenueEndpoints : IEndpoint
         g.MapPost("", Create).RequirePermission("revenues.write");
         g.MapPut("/{id:guid}", Update).RequirePermission("revenues.write");
         g.MapDelete("/{id:guid}", Delete).RequirePermission("revenues.delete");
+        g.MapPost("/bulk-delete", BulkDelete).RequirePermission("revenues.delete");
         g.MapGet("/{id:guid}", Get).RequirePermission("revenues.read");
         g.MapPost("/grid", Grid).RequirePermission("revenues.read");
         g.MapPost("/export", Export).RequirePermission("revenues.export");
@@ -160,6 +167,42 @@ public sealed class RevenueEndpoints : IEndpoint
         g.MapPost("/types", CreateType).RequirePermission("revenues.write");
         g.MapPut("/types/{id:guid}", UpdateType).RequirePermission("revenues.write");
         g.MapDelete("/types/{id:guid}", DeleteType).RequirePermission("revenues.delete");
+    }
+
+    private static async Task<IResult> BulkDelete(
+        BulkDeleteRevenuesRequest r,
+        IMainDbContext db,
+        CancellationToken ct
+    )
+    {
+        const int maxIds = 200;
+        if (r.Ids is null || r.Ids.Count == 0)
+            return Results.BadRequest(
+                new
+                {
+                    Code = "revenues.bulk_ids_required",
+                    Description = "At least one revenue id is required.",
+                }
+            );
+
+        var ids = r.Ids.Where(id => id != Guid.Empty).Distinct().Take(maxIds).ToList();
+        if (ids.Count == 0)
+            return Results.BadRequest(
+                new
+                {
+                    Code = "revenues.bulk_ids_required",
+                    Description = "At least one revenue id is required.",
+                }
+            );
+
+        var entities = await db.Set<Revenue>().Where(x => ids.Contains(x.Id)).ToListAsync(ct);
+        if (entities.Count == 0)
+            return Results.Ok(new BulkDeleteRevenuesResponse(0));
+
+        foreach (var entity in entities)
+            db.Remove(entity);
+        await db.SaveChangesAsync(ct);
+        return Results.Ok(new BulkDeleteRevenuesResponse(entities.Count));
     }
 
     private static async Task<IResult> Create(
@@ -233,7 +276,14 @@ public sealed class RevenueEndpoints : IEndpoint
         var q = Query(db).ApplyGridQuery(r, Map);
         if (q.IsFailure)
             return q.ToHttpResult();
-        return Results.Ok(await q.Value.ToPagedResultAsync(r, x => x, ct));
+        var page = await q.Value.ToPagedResultAsync(r, x => x, ct);
+        var totalAmount = await q.Value.SumAsync(x => x.Amount, ct);
+        return Results.Ok(
+            page with
+            {
+                Aggregates = new Dictionary<string, decimal> { ["amount"] = totalAmount },
+            }
+        );
     }
 
     private static async Task<IResult> Export(

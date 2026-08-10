@@ -38,4 +38,10 @@ public static class ExpenseErrors
     /// <summary>Not found.</summary>
     public static Error NotFound(Guid id) =>
         Error.NotFound("expenses.not_found", $"Expense '{id}' was not found.");
+
+    /// <summary>Bulk delete requires at least one id.</summary>
+    public static readonly Error BulkIdsRequired = Error.Validation(
+        "expenses.bulk_ids_required",
+        "At least one expense id is required."
+    );
 }

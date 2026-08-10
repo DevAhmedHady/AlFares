@@ -29,4 +29,22 @@
     </PackageReference>
   </ItemGroup>
 
+  <!-- On `dotnet publish`, build the Angular SPA and drop it into wwwroot so the API
+       serves it. Single process, no extra tooling at runtime. -->
+  <PropertyGroup>
+    <SpaRoot>..\..\web\</SpaRoot>
+  </PropertyGroup>
+
+  <Target Name="PublishSpa" BeforeTargets="ComputeFilesToPublish">
+    <Exec Command="npm install" WorkingDirectory="$(SpaRoot)" Condition="!Exists('$(SpaRoot)node_modules')" />
+    <Exec Command="npm run build" WorkingDirectory="$(SpaRoot)" />
+    <ItemGroup>
+      <DistFiles Include="$(SpaRoot)dist\web\browser\**\*" />
+      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
 </Project>

@@ -68,6 +68,17 @@ public sealed class ExpensesEndpoints : IEndpoint
                     )
             )
             .RequirePermission("expenses.delete");
+        g.MapPost(
+                "/bulk-delete",
+                async (BulkDeleteExpensesRequest r, IDispatcher d, CancellationToken ct) =>
+                    (
+                        await d.Send<BulkDeleteExpensesResponse>(
+                            new BulkDeleteExpensesCommand(r.Ids),
+                            ct
+                        )
+                    ).ToHttpResult()
+            )
+            .RequirePermission("expenses.delete");
         g.MapGet(
                 "/{id:guid}",
                 async (Guid id, IDispatcher d, CancellationToken ct) =>

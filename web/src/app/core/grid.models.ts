@@ -30,6 +30,8 @@ export interface PagedResult<T> {
   pageSize: number;
   totalCount: number;
   totalPages: number;
+  /** Filtered-set aggregates (e.g. `{ amount: 1234.56 }`); null/undefined when unused. */
+  aggregates?: Record<string, number> | null;
 }
 
 export enum ExportFormat { Xlsx = 0, Pdf = 1 }

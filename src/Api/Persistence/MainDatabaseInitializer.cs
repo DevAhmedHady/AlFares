@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Api.Persistence;
 
@@ -32,6 +34,7 @@ public sealed class MainDatabaseInitializer(
         CancellationToken cancellationToken = default
     )
     {
+        await CreateDatabaseIfMissingAsync(db, cancellationToken);
         await db.Database.ExecuteSqlRawAsync(
             """
             CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
@@ -52,6 +55,18 @@ public sealed class MainDatabaseInitializer(
         );
         await db.Database.MigrateAsync(cancellationToken);
         await db.Database.ExecuteSqlRawAsync(NewModuleSchemaSql, cancellationToken);
+    }
+
+    private static async Task CreateDatabaseIfMissingAsync(
+        MainDbContext db,
+        CancellationToken cancellationToken
+    )
+    {
+        var databaseCreator = db.Database.GetService<IRelationalDatabaseCreator>();
+        if (!await databaseCreator.ExistsAsync(cancellationToken))
+        {
+            await databaseCreator.CreateAsync(cancellationToken);
+        }
     }
 
     /// <summary>

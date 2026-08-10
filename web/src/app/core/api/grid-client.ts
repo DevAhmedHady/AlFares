@@ -27,6 +27,10 @@ export class GridClient<T> {
   create<TReq>(body: TReq): Observable<T> { return this.http.post<T>(this.url, body); }
   update<TReq>(id: string, body: TReq): Observable<T> { return this.http.put<T>(`${this.url}/${id}`, body); }
   remove(id: string): Observable<void> { return this.http.delete<void>(`${this.url}/${id}`); }
+
+  /** Deletes many rows by id via POST /bulk-delete. */
+  removeMany = (ids: string[]): Observable<{ deleted: number }> =>
+    this.http.post<{ deleted: number }>(`${this.url}/bulk-delete`, { ids });
 }
 
 /** Triggers a browser download for an exported grid blob. */

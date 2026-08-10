@@ -39,6 +39,7 @@ public sealed class ExpensesVerticalTests
             default
         );
         grid.Value.Items.Select(x => x.Amount).Should().Equal(250, 100);
+        grid.Value.Aggregates.Should().ContainKey("amount").WhoseValue.Should().Be(350);
         new ExcelGridExporter()
             .Export(
                 grid.Value.Items,
@@ -52,6 +53,35 @@ public sealed class ExpensesVerticalTests
             default
         );
         chart.Points.Should().Contain(x => x.Label == "2026-01" && x.Value == 350);
+    }
+
+    [TestMethod]
+    public async Task BulkDelete_DeletesMatchingIds_AndRejectsEmpty()
+    {
+        await using var db = CreateDb();
+        var type = ExpenseType.Create("مواد", ExpenseScope.General).Value;
+        db.Set<ExpenseType>().Add(type);
+        var keep = Expense.Create(type.Id, 100, new DateOnly(2026, 1, 5), "أ", null).Value;
+        var removeA = Expense.Create(type.Id, 200, new DateOnly(2026, 1, 6), "ب", null).Value;
+        var removeB = Expense.Create(type.Id, 300, new DateOnly(2026, 1, 7), "ج", null).Value;
+        db.Set<Expense>().AddRange(keep, removeA, removeB);
+        await db.SaveChangesAsync();
+
+        var empty = await new BulkDeleteExpensesHandler(db).Handle(
+            new BulkDeleteExpensesCommand([]),
+            default
+        );
+        empty.IsFailure.Should().BeTrue();
+        empty.Error.Code.Should().Be("expenses.bulk_ids_required");
+
+        var result = await new BulkDeleteExpensesHandler(db).Handle(
+            new BulkDeleteExpensesCommand([removeA.Id, removeB.Id, Guid.NewGuid()]),
+            default
+        );
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Deleted.Should().Be(2);
+        (await db.Set<Expense>().CountAsync()).Should().Be(1);
+        (await db.Set<Expense>().SingleAsync()).Id.Should().Be(keep.Id);
     }
 
     private static global::Api.Persistence.MainDbContext CreateDb() => MainDbTestFactory.Create();

@@ -84,6 +84,11 @@ app.MapModuleEndpoints();
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/alive", new() { Predicate = _ => false });
 
+// Serve the built Angular SPA (published into wwwroot) and route client-side paths to it.
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.MapFallbackToFile("index.html");
+
 app.Run();
 
 public partial class Program; // exposed for integration tests

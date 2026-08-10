@@ -37,6 +37,10 @@ public sealed record UpdateExpenseCommand(
 /// <summary>Delete command.</summary>
 public sealed record DeleteExpenseCommand(Guid Id) : ICommand<bool>;
 
+/// <summary>Bulk delete command.</summary>
+public sealed record BulkDeleteExpensesCommand(IReadOnlyList<Guid> Ids)
+    : ICommand<BulkDeleteExpensesResponse>;
+
 /// <summary>Get query.</summary>
 public sealed record GetExpenseByIdQuery(Guid Id) : IQuery<ExpenseResponse>;
 
@@ -248,6 +252,40 @@ public sealed class DeleteExpenseHandler(IExpenseRepository repo)
     }
 }
 
+/// <summary>Bulk delete handler.</summary>
+public sealed class BulkDeleteExpensesHandler(IMainDbContext db)
+    : ICommandHandler<BulkDeleteExpensesCommand, BulkDeleteExpensesResponse>
+{
+    /// <summary>Maximum ids accepted in one bulk delete request.</summary>
+    public const int MaxIds = 200;
+
+    /// <inheritdoc />
+    public async Task<Result<BulkDeleteExpensesResponse>> Handle(
+        BulkDeleteExpensesCommand c,
+        CancellationToken ct
+    )
+    {
+        if (c.Ids is null || c.Ids.Count == 0)
+            return ExpenseErrors.BulkIdsRequired;
+
+        var ids = c.Ids.Where(id => id != Guid.Empty).Distinct().Take(MaxIds).ToList();
+        if (ids.Count == 0)
+            return ExpenseErrors.BulkIdsRequired;
+
+        var entities = await db.Set<Expense>()
+            .Where(e => ids.Contains(e.Id))
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+        if (entities.Count == 0)
+            return new BulkDeleteExpensesResponse(0);
+
+        foreach (var entity in entities)
+            db.Remove(entity);
+        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        return new BulkDeleteExpensesResponse(entities.Count);
+    }
+}
+
 /// <summary>Get handler.</summary>
 public sealed class GetExpenseByIdHandler(IMainDbContext db)
     : IQueryHandler<GetExpenseByIdQuery, ExpenseResponse>
@@ -275,6 +313,12 @@ public sealed class GetExpensesGridHandler(IMainDbContext db)
         var r = ExpenseGrid.Query(db).ApplyGridQuery(q.Grid, ExpenseGrid.Fields);
         if (r.IsFailure)
             return r.Error;
-        return await r.Value.ToPagedResultAsync(q.Grid, ExpenseGrid.Projection, ct);
+        var page = await r.Value.ToPagedResultAsync(q.Grid, ExpenseGrid.Projection, ct)
+            .ConfigureAwait(false);
+        var totalAmount = await r.Value.SumAsync(x => x.Amount, ct).ConfigureAwait(false);
+        return page with
+        {
+            Aggregates = new Dictionary<string, decimal> { ["amount"] = totalAmount },
+        };
     }
 }

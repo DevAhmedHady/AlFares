@@ -78,8 +78,9 @@ a { color: var(--p-primary-color); text-decoration: none; }
 .report-filters .field { margin: 0; }
 .report-action { display: flex; align-items: flex-end; }
 .report-panel > .report-action { margin-top: .8rem; }
-.scope-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: .75rem; align-items: end; margin-bottom: 1rem; }
+.scope-filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .75rem; align-items: end; margin-bottom: 1rem; }
 .scope-filters .field { margin: 0; }
+.scope-filters .scope-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .scope-filter-error { grid-column: 1 / -1; margin: 0; }
 .form-error { margin: .75rem 0 0; color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: .65rem .75rem; font-size: .85rem; }
 .table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }

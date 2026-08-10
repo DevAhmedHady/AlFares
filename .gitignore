@@ -34,3 +34,6 @@ Thumbs.db
 
 # ---- Claude local settings (keep shared .agents skills tracked) ----
 .claude/settings.local.json
+
+# VS Code C# Dev Tools - Auto-generated runners
+.vscodecsdt/Runners/
