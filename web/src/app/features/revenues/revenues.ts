@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -25,7 +26,7 @@ import { ColumnDef } from '../../shared/grid/grid-column';
   selector: 'app-revenues',
   standalone: true,
   imports: [
-    FormsModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule,
+    FormsModule, RouterLink, ButtonModule, DialogModule, InputTextModule, InputNumberModule,
     SelectModule, DatePickerModule, TooltipModule, GridComponent,
   ],
   templateUrl: './revenues.html',

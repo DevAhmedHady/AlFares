@@ -1,0 +1,212 @@
+<section class="revenue-report feature-page" [class.reveal]="reveal()">
+  <header class="rev-hero">
+    <div class="feature-title">
+      <span class="feature-icon rev-icon"><i class="pi pi-chart-line" aria-hidden="true"></i></span>
+      <div>
+        <h1>تقرير الإيرادات</h1>
+        <p>تابع مصادر دخل المصنع — ملخص، رسوم، وتفاصيل ضمن الفترة.</p>
+      </div>
+    </div>
+    <div class="rev-hero-meta">
+      @if (loaded() && data()) {
+        <span class="rev-period-pill">{{ periodLabel() }}</span>
+      }
+      @if (canExport && data()) {
+        <div class="rev-export-actions">
+          <p-button label="Excel" icon="pi pi-file-excel" severity="success" [outlined]="true"
+                    [loading]="exporting() === Xlsx" [disabled]="exporting() !== null" (onClick)="exportAs(Xlsx)" />
+          <p-button label="PDF" icon="pi pi-file-pdf" severity="danger" [outlined]="true"
+                    [loading]="exporting() === Pdf" [disabled]="exporting() !== null" (onClick)="exportAs(Pdf)" />
+        </div>
+      }
+    </div>
+  </header>
+
+  <div class="report-panel rev-filters">
+    <div class="rev-filter-modes">
+      <div class="rev-filter-group" [class.active]="!usingMonthScope()">
+        <span class="rev-filter-label">من — إلى</span>
+        <div class="rev-filter-row">
+          <div class="field">
+            <label for="rev-report-from">من تاريخ</label>
+            <p-datepicker inputId="rev-report-from" [ngModel]="fromModel()" (ngModelChange)="setFrom($event)"
+                          dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input" [showButtonBar]="true"
+                          appendTo="body" styleClass="w-full" inputStyleClass="w-full" />
+          </div>
+          <div class="field">
+            <label for="rev-report-to">إلى تاريخ</label>
+            <p-datepicker inputId="rev-report-to" [ngModel]="toModel()" (ngModelChange)="setTo($event)"
+                          dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input" [showButtonBar]="true"
+                          appendTo="body" styleClass="w-full" inputStyleClass="w-full" />
+          </div>
+        </div>
+      </div>
+
+      <div class="rev-filter-or" aria-hidden="true">أو</div>
+
+      <div class="rev-filter-group" [class.active]="usingMonthScope()">
+        <span class="rev-filter-label">لشهر</span>
+        <div class="rev-filter-row">
+          <div class="field">
+            <label for="rev-report-year">السنة</label>
+            <p-select inputId="rev-report-year" class="w-full" [options]="yearOptions" optionLabel="label"
+                      optionValue="value" [showClear]="true" [ngModel]="forYear()"
+                      (ngModelChange)="setForYear($event ?? null)" placeholder="السنة" appendTo="body" />
+          </div>
+          <div class="field">
+            <label for="rev-report-month">الشهر</label>
+            <p-select inputId="rev-report-month" class="w-full" [options]="monthOptions" optionLabel="label"
+                      optionValue="value" [showClear]="true" [ngModel]="forMonth()"
+                      (ngModelChange)="setForMonth($event ?? null)" placeholder="الشهر" appendTo="body"
+                      [disabled]="forYear() == null" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rev-filter-footer">
+      <div class="field">
+        <label for="rev-report-type">نوع الإيراد</label>
+        <p-select inputId="rev-report-type" class="w-full" [options]="types()" optionLabel="name" optionValue="id"
+                  [showClear]="true" [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event || '')"
+                  placeholder="كل الأنواع" appendTo="body" />
+      </div>
+      <div class="field report-action">
+        <p-button label="عرض التقرير" icon="pi pi-search" [loading]="loading()" (onClick)="load()" />
+      </div>
+    </div>
+    @if (filterError()) {
+      <p class="form-error" role="alert">{{ filterError() }}</p>
+    }
+  </div>
+
+  @if (data(); as report) {
+    <section class="rev-kpi-grid" aria-label="ملخص الإيرادات">
+      <article class="rev-kpi rev-kpi-hero">
+        <span>إجمالي الإيرادات</span>
+        <strong>{{ money(report.summary.total) }}</strong>
+        <small>{{ report.summary.count }} حركة</small>
+      </article>
+      <article class="rev-kpi">
+        <span>عدد الحركات</span>
+        <strong>{{ report.summary.count }}</strong>
+      </article>
+      <article class="rev-kpi">
+        <span>متوسط الحركة</span>
+        <strong>{{ money(report.summary.average) }}</strong>
+      </article>
+      <article class="rev-kpi">
+        <span>أعلى نوع</span>
+        <strong>{{ report.summary.topCategory || '—' }}</strong>
+        @if (report.summary.topCategory) {
+          <small>{{ money(report.summary.topCategoryAmount) }} · {{ report.summary.topCategoryShare }}%</small>
+        }
+      </article>
+    </section>
+
+    @if (composition().length) {
+      <section class="rev-composition" aria-label="توزيع الإيرادات حسب النوع">
+        <div class="rev-composition-head">
+          <strong>تركيب الإيرادات</strong>
+          <span>نسبة كل نوع من الإجمالي</span>
+        </div>
+        <div class="rev-composition-bar" role="img" [attr.aria-label]="'توزيع الإيرادات: ' + composition().length + ' أنواع'">
+          @for (segment of composition(); track segment.label) {
+            <span class="rev-composition-segment" [style.width.%]="segment.share" [style.background]="segment.color"
+                  [pTooltip]="segment.label + ': ' + segment.share + '%'" tooltipPosition="top"></span>
+          }
+        </div>
+        <ul class="rev-composition-legend">
+          @for (segment of composition(); track segment.label) {
+            <li>
+              <span class="dot" [style.background]="segment.color"></span>
+              <span>{{ segment.label }}</span>
+              <strong>{{ segment.share }}%</strong>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <div class="rev-chart-grid">
+      <article class="rev-chart-card">
+        <p-card>
+          <ng-template pTemplate="header">
+            <div class="rev-chart-head"><strong>حسب النوع</strong><span>توزيع المبالغ</span></div>
+          </ng-template>
+          @if (categorySeries(); as series) {
+            <app-chart title="الإيرادات حسب النوع" [type]="ChartType.Pie" [series]="series" [colors]="chartColors" />
+          } @else {
+            <div class="rev-chart-empty">لا توجد بيانات للرسم.</div>
+          }
+        </p-card>
+      </article>
+      <article class="rev-chart-card rev-chart-wide">
+        <p-card>
+          <ng-template pTemplate="header">
+            <div class="rev-chart-head"><strong>عبر الزمن</strong><span>مجموع شهري</span></div>
+          </ng-template>
+          @if (monthSeries(); as series) {
+            <app-chart title="الإيرادات عبر الزمن" [type]="ChartType.Line" [series]="series" [colors]="chartColors" height="280px" />
+          } @else {
+            <div class="rev-chart-empty">لا توجد بيانات للرسم.</div>
+          }
+        </p-card>
+      </article>
+    </div>
+
+    <div class="report-panel rev-table-panel">
+      <div class="rev-table-head">
+        <div>
+          <h2>تفاصيل الحركات</h2>
+          @if (report.itemsTruncated) {
+            <p class="rev-truncated">يعرض أول 5,000 حركة — استخدم التصدير للحصول على القائمة الكاملة.</p>
+          }
+        </div>
+      </div>
+      @if (report.items.length) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>نوع الإيراد</th>
+              <th>المصدر</th>
+              <th>ملاحظات</th>
+              <th class="num">المبلغ</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of report.items; track item.id) {
+              <tr>
+                <td>{{ date(item.date) }}</td>
+                <td>{{ item.revenueTypeName }}</td>
+                <td>{{ item.source }}</td>
+                <td class="rev-notes">{{ item.notes || '—' }}</td>
+                <td class="num amount-in">{{ money(item.amount) }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="rev-table-total">
+              <td colspan="4">
+                <strong>الإجمالي</strong>
+                <span class="rev-table-count">{{ report.summary.count }} حركة</span>
+              </td>
+              <td class="num amount-in"><strong>{{ money(report.summary.total) }}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      } @else {
+        <div class="empty-panel">
+          <i class="pi pi-inbox"></i>
+          <p>لا توجد إيرادات في هذه الفترة — غيّر التصفية أو أضف إيرادات من صفحة الإيرادات.</p>
+        </div>
+      }
+    </div>
+  } @else if (loaded()) {
+    <div class="report-panel empty-panel">
+      <i class="pi pi-search"></i>
+      <p>اضبط الفترة ثم اضغط «عرض التقرير».</p>
+    </div>
+  }
+</section>

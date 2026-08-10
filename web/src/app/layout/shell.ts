@@ -12,6 +12,7 @@ export class ShellComponent{private readonly store=inject(AuthStore);private rea
     {path:'/reports/owners',label:'تقارير الحسابات',icon:'pi pi-file',permission:'reports.read'},
     {path:'/reports/workers',label:'تقارير العمال',icon:'pi pi-file-excel',permission:'workers.read'},
     {path:'/reports/expenses',label:'تقرير المصروفات',icon:'pi pi-chart-bar',permission:'expenses.read'},
+    {path:'/reports/revenues',label:'تقرير الإيرادات',icon:'pi pi-chart-line',permission:'revenues.read'},
   ]},
   {path:'/todos',label:'المهام',icon:'pi pi-check-square',permission:'todos.read'},
   {path:'/users',label:'المستخدمون',icon:'pi pi-id-card',permission:'identity.users.read'},

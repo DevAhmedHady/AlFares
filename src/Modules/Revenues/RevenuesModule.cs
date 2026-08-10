@@ -60,6 +60,174 @@ public sealed record BulkDeleteRevenuesRequest(IReadOnlyList<Guid> Ids);
 /// <summary>Bulk delete response.</summary>
 public sealed record BulkDeleteRevenuesResponse(int Deleted);
 
+/// <summary>Revenue report request.</summary>
+public sealed record RevenueReportRequest(
+    DateOnly? From,
+    DateOnly? To,
+    int? Year,
+    int? Month,
+    Guid? RevenueTypeId
+);
+
+/// <summary>Revenue report summary.</summary>
+public sealed record RevenueReportSummary(
+    decimal Total,
+    int Count,
+    decimal Average,
+    string? TopCategory,
+    decimal TopCategoryAmount,
+    decimal TopCategoryShare
+);
+
+/// <summary>Revenue report breakdown row.</summary>
+public sealed record RevenueReportBreakdown(string Label, decimal Amount, decimal Share);
+
+/// <summary>Revenue report detail row.</summary>
+public sealed record RevenueReportRow(
+    Guid Id,
+    string RevenueTypeName,
+    decimal Amount,
+    DateOnly Date,
+    string Source,
+    string? Notes
+);
+
+/// <summary>Revenue report response.</summary>
+public sealed record RevenueReportResponse(
+    RevenueReportSummary Summary,
+    IReadOnlyList<RevenueReportBreakdown> ByCategory,
+    IReadOnlyList<RevenueReportBreakdown> ByMonth,
+    IReadOnlyList<RevenueReportRow> Items,
+    bool ItemsTruncated
+);
+
+/// <summary>Revenue report export request.</summary>
+public sealed record RevenueReportExportRequest(
+    DateOnly? From,
+    DateOnly? To,
+    int? Year,
+    int? Month,
+    Guid? RevenueTypeId,
+    ExportFormat Format
+);
+
+/// <summary>Builds revenue report aggregates from filtered rows.</summary>
+public static class RevenueReportBuilder
+{
+    /// <summary>Maximum detail rows returned in the report response.</summary>
+    public const int MaxItems = 5000;
+
+    /// <summary>Filters revenue rows for report scope.</summary>
+    public static IQueryable<RevenueResponse> Filter(
+        IMainDbContext db,
+        DateOnly? from,
+        DateOnly? to,
+        int? year,
+        int? month,
+        Guid? revenueTypeId
+    )
+    {
+        var q = RevenueEndpoints.Query(db);
+        if (year is >= 1 and var y && month is >= 1 and <= 12 and var m)
+        {
+            var start = new DateOnly(y, m, 1);
+            var end = new DateOnly(y, m, DateTime.DaysInMonth(y, m));
+            q = q.Where(x => x.Date >= start && x.Date <= end);
+        }
+        else
+        {
+            if (from.HasValue)
+                q = q.Where(x => x.Date >= from);
+            if (to.HasValue)
+                q = q.Where(x => x.Date <= to);
+        }
+
+        if (revenueTypeId.HasValue)
+            q = q.Where(x => x.RevenueTypeId == revenueTypeId);
+        return q;
+    }
+
+    /// <summary>Builds the revenue report from filtered rows.</summary>
+    public static async Task<RevenueReportResponse> BuildAsync(
+        IQueryable<RevenueResponse> query,
+        CancellationToken ct
+    )
+    {
+        var rows = await query
+            .Select(x => new
+            {
+                x.Id,
+                x.RevenueTypeName,
+                x.Amount,
+                x.Date,
+                x.Source,
+                x.Notes,
+            })
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        var total = rows.Sum(x => x.Amount);
+        var count = rows.Count;
+        var average = count == 0 ? 0 : total / count;
+
+        var byCategoryRaw = rows.GroupBy(x => x.RevenueTypeName)
+            .Select(g => new { Label = g.Key, Amount = g.Sum(x => x.Amount) })
+            .OrderByDescending(x => x.Amount)
+            .ToArray();
+        var byCategory = byCategoryRaw
+            .Select(x => new RevenueReportBreakdown(x.Label, x.Amount, Share(total, x.Amount)))
+            .ToArray();
+
+        var top = byCategoryRaw.FirstOrDefault();
+        var summary = new RevenueReportSummary(
+            total,
+            count,
+            average,
+            top?.Label,
+            top?.Amount ?? 0,
+            top is null ? 0 : Share(total, top.Amount)
+        );
+
+        var byMonth = rows.GroupBy(x => new { x.Date.Year, x.Date.Month })
+            .OrderBy(g => g.Key.Year)
+            .ThenBy(g => g.Key.Month)
+            .Select(g =>
+            {
+                var amount = g.Sum(x => x.Amount);
+                return new RevenueReportBreakdown(
+                    $"{g.Key.Year:D4}-{g.Key.Month:D2}",
+                    amount,
+                    Share(total, amount)
+                );
+            })
+            .ToArray();
+
+        var items = rows.OrderByDescending(x => x.Date)
+            .ThenByDescending(x => x.Amount)
+            .Take(MaxItems)
+            .Select(x => new RevenueReportRow(
+                x.Id,
+                x.RevenueTypeName,
+                x.Amount,
+                x.Date,
+                x.Source,
+                x.Notes
+            ))
+            .ToArray();
+
+        return new RevenueReportResponse(
+            summary,
+            byCategory,
+            byMonth,
+            items,
+            count > MaxItems
+        );
+    }
+
+    private static decimal Share(decimal total, decimal amount) =>
+        total == 0 ? 0 : Math.Round(amount / total * 100, 1);
+}
+
 /// <summary>Revenue module.</summary>
 public sealed class RevenuesModule : IModule
 {
@@ -79,7 +247,7 @@ public sealed class RevenuesModule : IModule
 /// <summary>Revenue endpoints.</summary>
 public sealed class RevenueEndpoints : IEndpoint
 {
-    private static IQueryable<RevenueResponse> Query(IMainDbContext db) =>
+    internal static IQueryable<RevenueResponse> Query(IMainDbContext db) =>
         from x in db.Set<Revenue>().AsNoTracking()
         join t in db.Set<RevenueType>().AsNoTracking() on x.RevenueTypeId equals t.Id
         orderby x.Date descending
@@ -163,6 +331,8 @@ public sealed class RevenueEndpoints : IEndpoint
         g.MapGet("/{id:guid}", Get).RequirePermission("revenues.read");
         g.MapPost("/grid", Grid).RequirePermission("revenues.read");
         g.MapPost("/export", Export).RequirePermission("revenues.export");
+        g.MapPost("/report", Report).RequirePermission("revenues.read");
+        g.MapPost("/report/export", ExportReport).RequirePermission("revenues.export");
         g.MapGet("/types", Types).RequirePermission("revenues.read");
         g.MapPost("/types", CreateType).RequirePermission("revenues.write");
         g.MapPut("/types/{id:guid}", UpdateType).RequirePermission("revenues.write");
@@ -311,6 +481,59 @@ public sealed class RevenueEndpoints : IEndpoint
                 ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 : "application/pdf",
             $"revenues.{(r.Format == ExportFormat.Xlsx ? "xlsx" : "pdf")}"
+        );
+    }
+
+    private static async Task<IResult> Report(
+        RevenueReportRequest r,
+        IMainDbContext db,
+        CancellationToken ct
+    ) =>
+        Results.Ok(
+            await RevenueReportBuilder
+                .BuildAsync(
+                    RevenueReportBuilder.Filter(db, r.From, r.To, r.Year, r.Month, r.RevenueTypeId),
+                    ct
+                )
+                .ConfigureAwait(false)
+        );
+
+    private static async Task<IResult> ExportReport(
+        RevenueReportExportRequest r,
+        IMainDbContext db,
+        IGridExporterFactory f,
+        CancellationToken ct
+    )
+    {
+        var rows = await RevenueReportBuilder
+            .Filter(db, r.From, r.To, r.Year, r.Month, r.RevenueTypeId)
+            .OrderByDescending(x => x.Date)
+            .ThenByDescending(x => x.Amount)
+            .Take(GridExportLimits.MaxRows)
+            .Select(x => new RevenueReportRow(
+                x.Id,
+                x.RevenueTypeName,
+                x.Amount,
+                x.Date,
+                x.Source,
+                x.Notes
+            ))
+            .ToListAsync(ct);
+        var cols = new[]
+        {
+            new ExportColumn("Date", "التاريخ", GridFieldType.Date),
+            new ExportColumn("RevenueTypeName", "نوع الإيراد", GridFieldType.Text),
+            new ExportColumn("Source", "المصدر", GridFieldType.Text),
+            new ExportColumn("Amount", "المبلغ", GridFieldType.Number),
+            new ExportColumn("Notes", "ملاحظات", GridFieldType.Text),
+        };
+        var bytes = f.For(r.Format).Export(rows, cols, "تقرير الإيرادات");
+        return Results.File(
+            bytes,
+            r.Format == ExportFormat.Xlsx
+                ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                : "application/pdf",
+            $"revenue-report.{(r.Format == ExportFormat.Xlsx ? "xlsx" : "pdf")}"
         );
     }
 

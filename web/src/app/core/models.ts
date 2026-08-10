@@ -77,6 +77,38 @@ export interface ExpenseReportRequest {
 export interface RevenueResponse { id:string; revenueTypeId:string; revenueTypeName:string; amount:number; date:string; source:string; notes?:string|null; ownerType:OwnerType; ownerId?:string|null; createdAtUtc:string; updatedAtUtc:string; }
 export interface RevenueTypeResponse { id:string; name:string; isActive:boolean; }
 
+export interface RevenueReportSummary {
+  total: number;
+  count: number;
+  average: number;
+  topCategory?: string | null;
+  topCategoryAmount: number;
+  topCategoryShare: number;
+}
+export interface RevenueReportBreakdown { label: string; amount: number; share: number; }
+export interface RevenueReportRow {
+  id: string;
+  revenueTypeName: string;
+  amount: number;
+  date: string;
+  source: string;
+  notes?: string | null;
+}
+export interface RevenueReportResponse {
+  summary: RevenueReportSummary;
+  byCategory: RevenueReportBreakdown[];
+  byMonth: RevenueReportBreakdown[];
+  items: RevenueReportRow[];
+  itemsTruncated: boolean;
+}
+export interface RevenueReportRequest {
+  from?: string | null;
+  to?: string | null;
+  year?: number | null;
+  month?: number | null;
+  revenueTypeId?: string | null;
+}
+
 // ---- Cars / Workers / Reports ----
 export enum CarType { Owned = 0, Rented = 1 }
 export interface CarResponse { id:string; name:string; plateNumber?:string|null; driverName?:string|null; type:CarType; createdAtUtc:string; updatedAtUtc:string; }
